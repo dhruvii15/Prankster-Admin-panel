@@ -8,7 +8,7 @@ import axios from 'axios';
 
 
 // img
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/logo.svg";
 import { faAppStore } from '@fortawesome/free-brands-svg-icons';
 import { faImage } from '@fortawesome/free-regular-svg-icons';
 
@@ -157,7 +157,7 @@ const DashAnalytics = () => {
       }}
     >
       <img src={logo} alt='loading....' style={{
-        animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "300px"
+        animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
       }} />
     </div>
   );
@@ -204,7 +204,7 @@ const DashAnalytics = () => {
         <Col md={6} xl={3} className='my-3'>
           <Card className="bg-c-green">
             <Card.Body>
-              <h6 className="text-white fs-6">Card-Background</h6>
+              <h6 className="text-white fs-6">Cover</h6>
               <h2 className="text-end text-white d-flex justify-content-between">
                 <FontAwesomeIcon icon={faImage} />
                 <span>{cardbackground.length}</span>

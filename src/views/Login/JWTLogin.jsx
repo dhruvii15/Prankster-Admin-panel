@@ -31,7 +31,7 @@ const JWTLogin = () => {
                 onSubmit={async (values, { setErrors, setSubmitting }) => {
                     setLoading(true); // Set loading to true when submitting starts
                     try {
-                        const response = await axios.post('https://lolcards.link/api/admin/login', {
+                        const response = await axios.post('http://localhost:5001/api/admin/login', {
                             email: values.email,
                             pass: values.pass
                         });
@@ -85,12 +85,7 @@ const JWTLogin = () => {
                             {touched.pass && errors.pass && <small className="text-danger form-text">{errors.pass}</small>}
                         </div>
 
-                        <div className="custom-control custom-checkbox text-start mb-4 mt-2">
-                            <input type="checkbox" className="custom-control-input mx-2" id="customCheck1" />
-                            <label className="custom-control-label" htmlFor="customCheck1">
-                                Save credentials.
-                            </label>
-                        </div>
+                       
 
                         {errors.submit && (
                             <Col sm={12}>
@@ -101,11 +96,11 @@ const JWTLogin = () => {
                         <Row>
                             <Col mt={2}>
                                 <Button
-                                    className="btn-block mb-4 text-white px-4 border-0"
+                                    className="btn-block mb-4 px-4 border-0"
                                     disabled={isSubmitting}
                                     size="large"
                                     type="submit"
-                                    style={{background : "linear-gradient(to bottom, #FA5D4D , #F96E45"}}
+                                    style={{background : "#FFD800"}}
                                 >
                                     {isSubmitting ? (
                                         <Spinner animation="border" size="sm" role="status" aria-hidden="true" className="mr-2" />

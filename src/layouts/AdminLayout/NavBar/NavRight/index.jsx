@@ -19,7 +19,7 @@ const NavRight = () => {
   return (
     <div className='mx-5 my-2'>
       <Button  className="bg-transparent d-flex gap-3 align-items-center" onClick={handleLogout}>
-       <div className='logout-icon'><FontAwesomeIcon icon={faArrowRightFromBracket}/></div>
+       <div className='logout-icon ps-1'><FontAwesomeIcon icon={faArrowRightFromBracket}/></div>
         Logout
       </Button>
     </div>

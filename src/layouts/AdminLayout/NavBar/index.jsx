@@ -8,7 +8,7 @@ import { ConfigContext } from '../../../contexts/ConfigContext';
 import * as actionType from '../../../store/actions';
 
 // assets
-import logo from '../../../assets/images/logo.png';
+import logo from '../../../assets/images/logo.svg';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEllipsisVertical } from '@fortawesome/free-solid-svg-icons';
 
@@ -57,7 +57,7 @@ const NavBar = () => {
                 src={logo} 
                 alt="Main Logo" 
                 className="logo img-fluid" 
-                style={{ width: "110px", cursor: "pointer" }} 
+                style={{ width: "90px", cursor: "pointer" }} 
             />
         </button>
         </Link>

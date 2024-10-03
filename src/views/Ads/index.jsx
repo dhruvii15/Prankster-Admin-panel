@@ -7,7 +7,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // img
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/logo.svg";
 
 const Ads = () => {
     const [visible, setVisible] = useState(false);
@@ -32,7 +32,7 @@ const Ads = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://lolcards.link/api/ads/read')
+        axios.post('http://localhost:5001/api/ads/read')
             .then((res) => {
                 setData(res.data.data);
                 setLoading(false);
@@ -45,7 +45,7 @@ const Ads = () => {
     };
 
     const getAdminData = () => {
-        axios.get('https://lolcards.link/api/admin/read')
+        axios.get('http://localhost:5001/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].AdsStatus); // No need to compare with 'true'
                 setAdminId(res.data.data[0]._id); // Store admin ID
@@ -74,8 +74,8 @@ const Ads = () => {
         if (!validate()) return;
 
         const request = id !== undefined
-            ? axios.patch(`https://lolcards.link/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
-            : axios.post('https://lolcards.link/api/ads/create', { AdsName: adsName, AdsId: adsId });
+            ? axios.patch(`http://localhost:5001/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
+            : axios.post('http://localhost:5001/api/ads/create', { AdsName: adsName, AdsId: adsId });
 
         request.then((res) => {
             setAdsName('');
@@ -99,7 +99,7 @@ const Ads = () => {
 
     const handleDelete = (adsId) => {
         if (window.confirm("Are you sure you want to delete this ad?")) {
-            axios.delete(`https://lolcards.link/api/ads/delete/${adsId}`)
+            axios.delete(`http://localhost:5001/api/ads/delete/${adsId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -115,7 +115,7 @@ const Ads = () => {
         const newState = !isOn;
         setIsOn(newState);
 
-        const apiEndpoint = `https://lolcards.link/api/admin/update/${adminId}`; 
+        const apiEndpoint = `http://localhost:5001/api/admin/update/${adminId}`;
         const payload = { AdsStatus: newState };
 
         try {
@@ -148,7 +148,7 @@ const Ads = () => {
             }}
         >
             <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "300px"
+                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
             }} />
         </div>
     );
@@ -174,7 +174,7 @@ const Ads = () => {
                 </Form>
             </div>
 
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Ad</Button>
+            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800" }}>Add New Ad</Button>
 
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>

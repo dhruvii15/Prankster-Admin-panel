@@ -8,7 +8,7 @@ import Breadcrumb from '../../layouts/AdminLayout/Breadcrumb';
 import AuthLogin from './JWTLogin';
 
 // assets
-import logoDark from '../../assets/images/logo.png';
+import logoDark from '../../assets/images/logo.svg';
 
 // ==============================|| SIGN IN 1 ||============================== //
 
@@ -26,7 +26,7 @@ const Signin1 = () => {
           </div>
           <Card className="borderless text-center">
             <Card.Body>
-              <img src={logoDark} alt="" className="img-fluid mb-4" />
+              <img src={logoDark} alt="" className="img-fluid mb-4" width={200}/>
               <AuthLogin />
             
             </Card.Body>

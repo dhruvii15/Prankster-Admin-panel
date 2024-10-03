@@ -2,7 +2,7 @@
 import React from 'react';
 
 // img
-import logo from "../../assets/images/logo.png"
+import logo from "../../assets/images/logo.svg"
 
 const FullPageLoader = () => (
     <div
@@ -20,7 +20,7 @@ const FullPageLoader = () => (
             animation: "1.2s ease-out infinite zoom-in-zoom-out2"
         }}
     >
-       <img src={logo} alt='loading....' style={{width:"300px"}}/>
+       <img src={logo} alt='loading....' style={{width:"200px"}}/>
     </div>
 );
 

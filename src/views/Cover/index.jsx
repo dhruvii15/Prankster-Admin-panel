@@ -9,7 +9,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 // img
-import logo from "../../assets/images/logo.png";
+import logo from "../../assets/images/logo.svg";
 
 const CardBg = () => {
     const [visible, setVisible] = useState(false);
@@ -152,7 +152,7 @@ const CardBg = () => {
             }}
         >
             <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "300px"
+                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
             }} />
         </div>
     );
@@ -165,7 +165,7 @@ const CardBg = () => {
                     <p>Utilities / CardBackground</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Background</Button>
+            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800", color: "white" }}>Add New Background</Button>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{id ? "Edit Background" : "Add New Background"}</Modal.Title>

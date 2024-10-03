@@ -10,10 +10,7 @@ import AdminProtect from './components/AdminProtect';
 
 import Dashboard from './views/dashboard';
 import Ads from './views/Ads';
-import MoreAPP from './views/MoreApp';
-import CardTitle from './views/CardTitle';
-import CardBg from './views/CardBg';
-import  Inbox  from './views/Inbox';
+import CardBg from './views/Cover';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -66,23 +63,8 @@ export const routes = [
       },
       {
         exact: true,
-        path: '/moreApp',
-        element: () => <AdminProtect><MoreAPP /></AdminProtect>
-      },
-      {
-        exact: true,
-        path: '/cardtitle',
-        element: () => <AdminProtect><CardTitle /></AdminProtect>
-      },
-      {
-        exact: true,
-        path: '/cardBackground',
+        path: '/cover',
         element: () => <AdminProtect><CardBg /></AdminProtect>
-      },
-      {
-        exact: true,
-        path: '/notification-inbox',
-        element: () => <AdminProtect><Inbox /></AdminProtect>
       },
       {
         path: '*',
