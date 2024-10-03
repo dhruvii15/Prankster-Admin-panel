@@ -1,0 +1,188 @@
+/**======================================================================
+=========================================================================
+Template Name: Gradient Able Admin Template
+Author: Codedthemes
+File: style.css
+=================================================================================
+=================================================================================== */
+
+
+// theme scrollbar
+@import 'themes/plugin/perfect-scrollbar';
+
+// main framework
+@import 'bootstrap/scss/functions';
+@import 'bootstrap/scss/variables';
+@import 'settings/custom-variables';
+@import 'settings/theme-variables';
+
+// ng module
+@import 'react-module/react-module';
+
+// bootstrap
+@import 'bootstrap/scss/bootstrap';
+
+
+@import 'themes/general';
+@import 'themes/generic';
+
+// theme layouts
+@import 'themes/layouts/menu-lite';
+
+// Dashboard Widgets
+@import 'themes/dashboard/widget';
+
+//Chat
+@import 'themes/chat/chat';
+
+// pages
+@import 'themes/pages/authentication';
+
+// custom
+@import 'themes/custom';
+
+
+
+
+// ====== Loader ===========
+@keyframes zoom-in-zoom-out2 {
+
+    0%,
+    100% {
+        transform: scale(1, 1);
+    }
+
+    50% {
+        transform: scale(1.1, 1.1);
+    }
+}
+
+// ====== NavRight =============
+.logout-icon{
+    width: 35px;
+    height: 35px;
+    border-radius: 50%;
+    color: white;
+    background: linear-gradient(to bottom, #FA5D4D , #F96E45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bg-light2{
+    background-color: rgb(240, 238, 238);
+}
+
+
+
+
+// ==========================================================================
+.dropdown-menu{
+    height: 130px !important;
+    overflow-y: scroll;
+}
+
+
+// =========================================
+
+@font-face {
+    font-family: 'BunnyFunny';
+    src: url('../Font/BunnyFunny.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.BunnyFunny {
+    font-family: 'BunnyFunny', sans-serif;
+    padding-top: 20px !important;
+    font-size: 20px !important;
+}
+
+// ========================================
+
+@font-face {
+    font-family: 'CCKillJoy';
+    src: url('../Font/CCKillJoy\ Italic.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.CCKillJoy {
+    font-family: 'CCKillJoy', sans-serif;
+    padding-top: 15px !important;
+    font-size: 16px !important;
+}
+
+// ========================================
+
+@font-face {
+    font-family: 'Pure';
+    src: url('../Font/Pure\ Joy.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.Pure {
+    font-family: 'Pure', sans-serif;
+    padding-top: 15px !important;
+    font-size: 17px !important;
+}
+
+// ========================================
+
+
+@font-face {
+    font-family: 'SHOWG';
+    src: url('../Font/SHOWG.TTF') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.SHOWG {
+    font-family: 'SHOWG', sans-serif;
+    padding-top: 15px !important;
+    font-size: 15px !important;
+}
+
+// ========================================
+
+@font-face {
+    font-family: 'Spider';
+    src: url('../Font/Spider\ Monkey_PersonalUseOnly.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+.Spider {
+    font-family: 'Spider', sans-serif;
+    padding-top: 22px !important;
+    font-size: 19px !important;
+}
+
+
+
+.heptagon {
+    width: 110px;
+    height: 110px;
+    position: relative;
+    clip-path: polygon(50% 0%,
+            90% 20%,
+            100% 60%,
+            75% 100%,
+            25% 100%,
+            0% 60%,
+            10% 20%);
+    /* Optionally, add border radius for smoothing */
+    border-radius: 4px;
+}
+
+.square {
+    width: 110px;
+    height: 110px;
+}
+
+.circle {
+    width: 110px;
+    height: 110px;
+    border-radius: 100%;
+}
