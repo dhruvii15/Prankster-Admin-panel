@@ -19,8 +19,14 @@ const AudioCharacter = () => {
     const [fileLabel, setFileLabel] = useState('Character Image Upload');
 
     const toggleModal = (mode) => {
-        if (mode === 'add') {
-            setId(undefined);
+        if (!visible) {
+            if (mode === 'add') {
+                setId(undefined);
+                setFileLabel('Character Image Upload');
+                formik.resetForm();
+            }
+        } else {
+            formik.resetForm();
             setFileLabel('Character Image Upload');
         }
         setVisible(!visible);
@@ -120,6 +126,7 @@ const AudioCharacter = () => {
         let items = [];
         const totalPagesToShow = 8;
 
+
         let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
         let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
 
@@ -163,7 +170,7 @@ const AudioCharacter = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Character Images</h4>
-                    <p>Utilities / CharacterImage</p>
+                    <p>Audio / Character</p>
                 </div>
             </div>
             <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Character Image</Button>
@@ -252,11 +259,13 @@ const AudioCharacter = () => {
                 </tbody>
             </Table>
 
-            <Pagination>
-                <Pagination.Prev onClick={() => currentPage > 1 && paginate(currentPage - 1)} disabled={currentPage === 1} />
-                {renderPaginationItems()}
-                <Pagination.Next onClick={() => currentPage < totalPages && paginate(currentPage + 1)} disabled={currentPage === totalPages} />
-            </Pagination>
+            {totalPages > 1 && (
+                <div className='d-flex justify-content-center'>
+                    <Pagination>
+                        {renderPaginationItems()}
+                    </Pagination>
+                </div>
+            )}
 
             <ToastContainer />
         </div>

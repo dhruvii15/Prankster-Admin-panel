@@ -231,6 +231,7 @@ const CoverURL = () => {
                 const categoryData = groupByCategory(category);
                 const currentPage = category === 'emoji' ? emojiPage : realisticPage;
                 const currentItems = getCurrentItems(categoryData, currentPage);
+                const totalPages = Math.ceil(categoryData.length / itemsPerPage);  // Calculate total pages
 
                 return (
                     <div key={category}>
@@ -245,7 +246,7 @@ const CoverURL = () => {
                             </thead>
                             <tbody>
                                 {currentItems.map((cover, index) => (
-                                    <tr key={cover._id} >
+                                    <tr key={cover._id}>
                                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                         <td><img src={cover.CoverURL} alt={'CoverImage'} style={{ width: '150px', height: '120px' }} /></td>
                                         <td>
@@ -260,14 +261,19 @@ const CoverURL = () => {
                                 ))}
                             </tbody>
                         </Table>
-                        <div className='d-flex justify-content-center'>
-                            <Pagination>
-                                {renderPaginationItems(category, categoryData.length)}
-                            </Pagination>
-                        </div>
+
+                        {/* Only render pagination if there is more than 1 page */}
+                        {totalPages > 1 && (
+                            <div className='d-flex justify-content-center'>
+                                <Pagination>
+                                    {renderPaginationItems(category, categoryData.length)}
+                                </Pagination>
+                            </div>
+                        )}
                     </div>
                 );
             })}
+
             <ToastContainer />
         </div>
     );
