@@ -249,18 +249,12 @@ const CoverURL = () => {
                                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                         <td><img src={cover.CoverURL} alt={'CoverImage'} style={{ width: '150px', height: '120px' }} /></td>
                                         <td>
-                                            <FontAwesomeIcon
-                                                icon={faEdit}
-                                                className='text-primary mx-2'
-                                                style={{ cursor: 'pointer' }}
-                                                onClick={() => handleEdit(cover)}
-                                            />
-                                            <FontAwesomeIcon
-                                                icon={faTrash}
-                                                className='text-danger'
-                                                style={{ cursor: 'pointer' }}
-                                                onClick={() => handleDelete(cover._id)}
-                                            />
+                                            <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cover)}>
+                                                <FontAwesomeIcon icon={faEdit} />
+                                            </Button>
+                                            <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cover._id)}>
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </Button>
                                         </td>
                                     </tr>
                                 ))}
