@@ -10,7 +10,7 @@ import AdminProtect from './components/AdminProtect';
 
 import Dashboard from './views/dashboard';
 import Ads from './views/Ads';
-import CardBg from './views/Cover';
+import Cover from './views/Cover';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -64,7 +64,7 @@ export const routes = [
       {
         exact: true,
         path: '/cover',
-        element: () => <AdminProtect><CardBg /></AdminProtect>
+        element: () => <AdminProtect><Cover /></AdminProtect>
       },
       {
         path: '*',

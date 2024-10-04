@@ -11,26 +11,26 @@ import 'react-toastify/dist/ReactToastify.css';
 // img
 import logo from "../../assets/images/logo.svg";
 
-const CardBg = () => {
+const CoverURL = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [fileLabel, setFileLabel] = useState('Background Image Upload');
+    const [fileLabel, setFileLabel] = useState('Cover Image Upload');
 
     const toggleModal = (mode) => {
         if (mode === 'add') {
             setId(undefined);
-            setFileLabel('Background Image Upload');
+            setFileLabel('Cover Image Upload');
         }
         setVisible(!visible);
     };
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://lolcards.link/api/cardBackground/read')
+        axios.post('http://localhost:5001/api/cover/read')
             .then((res) => {
-                setData(res.data.data.reverse()); 
+                setData(res.data.data.reverse());
                 setLoading(false);
             })
             .catch((err) => {
@@ -39,34 +39,36 @@ const CardBg = () => {
                 toast.error("Failed to fetch data.");
             });
     };
-    
 
     useEffect(() => {
         getData();
     }, []);
 
-    const portfolioSchema = Yup.object().shape({
-        cardBg: Yup.string().required('BackgroundImage is required'),
+    const coverSchema = Yup.object().shape({
+        CoverURL: Yup.string().required('CoverImage is required'),
+        Category: Yup.string().required('Category is required'),  // New validation for Category
     });
 
     const formik = useFormik({
         initialValues: {
-            cardBg: '',
+            CoverURL: '',
+            Category: '',  // Initial value for Category
         },
-        validationSchema: portfolioSchema,
+        validationSchema: coverSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
-            formData.append('cardBg', values.cardBg);
+            formData.append('CoverURL', values.CoverURL);
+            formData.append('Category', values.Category);  // Append Category to form data
 
             const request = id !== undefined
-                ? axios.patch(`https://lolcards.link/api/cardBackground/update/${id}`, formData)
-                : axios.post('https://lolcards.link/api/cardBackground/create', formData);
+                ? axios.patch(`http://localhost:5001/api/cover/update/${id}`, formData)
+                : axios.post('http://localhost:5001/api/cover/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setFileLabel('Background Image Upload');
+                setFileLabel('Cover Image Upload');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -78,18 +80,19 @@ const CardBg = () => {
         },
     });
 
-    const handleEdit = (cardBg) => {
+    const handleEdit = (CoverURL) => {
         formik.setValues({
-            cardBg: cardBg.backgroundImage,
+            CoverURL: CoverURL.coverImage,
+            Category: CoverURL.Category || '',  // Set Category value when editing
         });
-        setId(cardBg._id);
-        setFileLabel('Background Image Upload');
+        setId(CoverURL._id);
+        setFileLabel('Cover Image Upload');
         toggleModal('edit');
     };
 
-    const handleDelete = (cardBgId) => {
-        if (window.confirm("Are you sure you want to delete this Background?")) {
-            axios.delete(`https://lolcards.link/api/cardBackground/delete/${cardBgId}`)
+    const handleDelete = (coverId) => {
+        if (window.confirm("Are you sure you want to delete this Cover Image?")) {
+            axios.delete(`http://localhost:5001/api/cover/delete/${coverId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -116,15 +119,15 @@ const CardBg = () => {
     const renderPaginationItems = () => {
         let items = [];
         const totalPagesToShow = 8;
-    
-      
+
+
         let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
         let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
-    
+
         if (endPage - startPage < totalPagesToShow - 1) {
             startPage = Math.max(1, endPage - totalPagesToShow + 1);
         }
-    
+
         for (let i = startPage; i <= endPage; i++) {
             items.push(
                 <Pagination.Item
@@ -136,10 +139,10 @@ const CardBg = () => {
                 </Pagination.Item>
             );
         }
-    
+
         return items;
     };
-    
+
 
     if (loading) return (
         <div
@@ -161,14 +164,14 @@ const CardBg = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Card Background</h4>
-                    <p>Utilities / CardBackground</p>
+                    <h4>Cover Image</h4>
+                    <p>Utilities / CoverImage</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800", color: "white" }}>Add New Background</Button>
+            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800"}}>Add New CoverImage</Button>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{id ? "Edit Background" : "Add New Background"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit CoverImage" : "Add New CoverImage"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
@@ -177,24 +180,42 @@ const CardBg = () => {
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
-                                    id="cardBg"
-                                    name="cardBg"
+                                    id="CoverURL"
+                                    name="CoverURL"
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("cardBg", file);
-                                        setFileLabel(file ? "Background uploaded" : "Background Image Upload");
-
+                                        formik.setFieldValue("CoverURL", file);
+                                        setFileLabel(file ? "CoverImage uploaded" : "Cover Image Upload");
                                     }}
                                     onBlur={formik.handleBlur}
-                                    label="Choose File"
                                     className="d-none"
-                                    custom
                                 />
-                                <label htmlFor="cardBg" className="btn border bg-white mb-0">Select Image</label>
+                                <label htmlFor="CoverURL" className="btn border bg-white mb-0">Select Image</label>
                             </div>
-                            {formik.errors.cardBg && formik.touched.cardBg && (
+                            {formik.errors.CoverURL && formik.touched.CoverURL && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.cardBg}
+                                    {formik.errors.CoverURL}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        {/* New Category dropdown */}
+                        <Form.Group className="mb-3">
+                            <Form.Label>Category</Form.Label>
+                            <Form.Select
+                                id="Category"
+                                name="Category"
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                value={formik.values.Category}
+                            >
+                                <option value="">Select a Category</option>
+                                <option value="emoji">Emoji</option>
+                                <option value="realistic">Realistic</option>
+                            </Form.Select>
+                            {formik.errors.Category && formik.touched.Category && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Category}
                                 </div>
                             )}
                         </Form.Group>
@@ -210,20 +231,22 @@ const CardBg = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Card Background</th>
+                        <th>Cover</th>
+                        <th>Category</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {currentItems.map((cardBg, index) => (
-                        <tr key={cardBg._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
+                    {currentItems.map((cover, index) => (
+                        <tr key={cover._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                             <td>{indexOfFirstItem + index + 1}</td>
-                            <td><img src={cardBg.cardBg} alt='cardBackground' width={100} /></td>
+                            <td><img src={cover.CoverURL} alt='coverImage' width={100} /></td>
+                            <td>{cover.Category}</td>
                             <td>
-                                <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cardBg)}>
+                                <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cover)}>
                                     <FontAwesomeIcon icon={faEdit} />
                                 </Button>
-                                <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cardBg._id)}>
+                                <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cover._id)}>
                                     <FontAwesomeIcon icon={faTrash} />
                                 </Button>
                             </td>
@@ -232,16 +255,8 @@ const CardBg = () => {
                 </tbody>
             </Table>
 
-            {/* Pagination */}
-            <div className='d-flex justify-content-center'>
-                <Pagination>
-                    {renderPaginationItems()}
-                </Pagination>
-            </div>
-
-            <ToastContainer />
         </div>
     );
 };
 
-export default CardBg;
+export default CoverURL;
