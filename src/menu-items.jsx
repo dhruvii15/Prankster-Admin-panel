@@ -1,7 +1,5 @@
-
-import { faAppStore} from "@fortawesome/free-brands-svg-icons";
-import { faClipboard, faImage } from "@fortawesome/free-regular-svg-icons";
-import {faHome, faInbox, faRectangleAd} from "@fortawesome/free-solid-svg-icons";
+import {  faImage } from "@fortawesome/free-regular-svg-icons";
+import {faHome, faRectangleAd} from "@fortawesome/free-solid-svg-icons";
 
 const menuItems = {
   items: [
