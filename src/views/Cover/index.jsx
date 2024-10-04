@@ -16,7 +16,14 @@ const CoverURL = () => {
     const [data, setData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
+    const categories = ['emoji', 'realistic'];
     const [fileLabel, setFileLabel] = useState('Cover Image Upload');
+
+    // Pagination state for each category
+    const [emojiPage, setEmojiPage] = useState(1);
+    const [realisticPage, setRealisticPage] = useState(1);
+
+    const itemsPerPage = 10;  // Number of items per page
 
     const toggleModal = (mode) => {
         if (mode === 'add') {
@@ -43,6 +50,10 @@ const CoverURL = () => {
     useEffect(() => {
         getData();
     }, []);
+
+    const groupByCategory = (category) => {
+        return data.filter(cover => cover.Category === category);
+    };
 
     const coverSchema = Yup.object().shape({
         CoverURL: Yup.string().required('CoverImage is required'),
@@ -82,7 +93,7 @@ const CoverURL = () => {
 
     const handleEdit = (CoverURL) => {
         formik.setValues({
-            CoverURL: CoverURL.coverImage,
+            CoverURL: CoverURL.CoverURL,
             Category: CoverURL.Category || '',  // Set Category value when editing
         });
         setId(CoverURL._id);
@@ -104,45 +115,35 @@ const CoverURL = () => {
         }
     };
 
-    // Pagination logic
-    const itemsPerPage = 15;
-    const [currentPage, setCurrentPage] = useState(1);
+    const paginate = (pageNumber, category) => {
+        if (category === 'emoji') setEmojiPage(pageNumber);
+        if (category === 'realistic') setRealisticPage(pageNumber);
+    };
 
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const renderPaginationItems = (category, totalItems) => {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        let currentPage = category === 'emoji' ? emojiPage : realisticPage;
 
-    const totalPages = Math.ceil(data.length / itemsPerPage);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    const renderPaginationItems = () => {
         let items = [];
-        const totalPagesToShow = 8;
-
-
-        let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
-        let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
-
-        if (endPage - startPage < totalPagesToShow - 1) {
-            startPage = Math.max(1, endPage - totalPagesToShow + 1);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
+        for (let i = 1; i <= totalPages; i++) {
             items.push(
                 <Pagination.Item
                     key={i}
                     active={i === currentPage}
-                    onClick={() => paginate(i)}
+                    onClick={() => paginate(i, category)}
                 >
                     {i}
                 </Pagination.Item>
             );
         }
-
         return items;
     };
 
+    const getCurrentItems = (categoryData, currentPage) => {
+        const indexOfLastItem = currentPage * itemsPerPage;
+        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+        return categoryData.slice(indexOfFirstItem, indexOfLastItem);
+    };
 
     if (loading) return (
         <div
@@ -168,7 +169,7 @@ const CoverURL = () => {
                     <p>Utilities / CoverImage</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800"}}>Add New CoverImage</Button>
+            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800" }}>Add New CoverImage</Button>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{id ? "Edit CoverImage" : "Add New CoverImage"}</Modal.Title>
@@ -209,7 +210,6 @@ const CoverURL = () => {
                                 onBlur={formik.handleBlur}
                                 value={formik.values.Category}
                             >
-                                <option value="">Select a Category</option>
                                 <option value="emoji">Emoji</option>
                                 <option value="realistic">Realistic</option>
                             </Form.Select>
@@ -227,34 +227,54 @@ const CoverURL = () => {
                 </Modal.Body>
             </Modal>
 
-            <Table striped bordered hover responsive className='text-center fs-6'>
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Cover</th>
-                        <th>Category</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems.map((cover, index) => (
-                        <tr key={cover._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                            <td>{indexOfFirstItem + index + 1}</td>
-                            <td><img src={cover.CoverURL} alt='coverImage' width={100} /></td>
-                            <td>{cover.Category}</td>
-                            <td>
-                                <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cover)}>
-                                    <FontAwesomeIcon icon={faEdit} />
-                                </Button>
-                                <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cover._id)}>
-                                    <FontAwesomeIcon icon={faTrash} />
-                                </Button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
+            {categories.map((category) => {
+                const categoryData = groupByCategory(category);
+                const currentPage = category === 'emoji' ? emojiPage : realisticPage;
+                const currentItems = getCurrentItems(categoryData, currentPage);
 
+                return (
+                    <div key={category}>
+                        <h5 className='py-3'>{category === 'emoji' ? 'Emoji' : 'Realistic'} Category :</h5>
+                        <Table striped bordered hover responsive className='text-center fs-6'>
+                            <thead>
+                                <tr>
+                                    <th>Id</th>
+                                    <th>Cover</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {currentItems.map((cover, index) => (
+                                    <tr key={cover._id} >
+                                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                        <td><img src={cover.CoverURL} alt={'CoverImage'} style={{ width: '150px', height: '120px' }} /></td>
+                                        <td>
+                                            <FontAwesomeIcon
+                                                icon={faEdit}
+                                                className='text-primary mx-2'
+                                                style={{ cursor: 'pointer' }}
+                                                onClick={() => handleEdit(cover)}
+                                            />
+                                            <FontAwesomeIcon
+                                                icon={faTrash}
+                                                className='text-danger'
+                                                style={{ cursor: 'pointer' }}
+                                                onClick={() => handleDelete(cover._id)}
+                                            />
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </Table>
+                        <div className='d-flex justify-content-center'>
+                            <Pagination>
+                                {renderPaginationItems(category, categoryData.length)}
+                            </Pagination>
+                        </div>
+                    </div>
+                );
+            })}
+            <ToastContainer />
         </div>
     );
 };
