@@ -11,6 +11,8 @@ import AdminProtect from './components/AdminProtect';
 import Dashboard from './views/dashboard';
 import Ads from './views/Ads';
 import Cover from './views/Cover';
+import AudioCharacter from 'views/AudioCharacter';
+import Audio from 'views/Audio';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -65,6 +67,16 @@ export const routes = [
         exact: true,
         path: '/cover',
         element: () => <AdminProtect><Cover /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/audio/character',
+        element: () => <AdminProtect><AudioCharacter /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/audio/audio',
+        element: () => <AdminProtect><Audio /></AdminProtect>
       },
       {
         path: '*',
