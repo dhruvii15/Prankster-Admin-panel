@@ -52,7 +52,7 @@ const Audio = () => {
     };
 
     const getCharacters = () => {
-        axios.post('http://localhost:5001/api/audio/character/read')
+        axios.post('http://localhost:5001/api/character/read')
             .then((res) => {
                 setCharacters(res.data.data);
             })
@@ -200,7 +200,7 @@ const Audio = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Audio Files</h4>
-                    <p>Audio Management</p>
+                    <p>Audio / Audio Management</p>
                 </div>
             </div>
             <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Audio</Button>

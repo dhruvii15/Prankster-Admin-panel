@@ -19,30 +19,23 @@ const menuItems = {
       ]
     },
     {
-      id: 'utilities',
-      title: 'Utilities',
+      id: 'cover',
+      title: 'Cover',
       type: 'group',
       icon: 'icon-ui',
       children: [
         {
-          id: 'cover',
-          title: 'Cover',
+          id: 'coverImage',
+          title: 'Cover-Image',
           type: 'item',
           url: '/cover',
           icon: faImage
-        },
-        {
-          id: 'ads',
-          title: 'Ads',
-          type: 'item',
-          url: '/ads',
-          icon: faRectangleAd
         }
       ]
     },
     {
-      id: 'audio',
-      title: 'Audio',
+      id: 'Character',
+      title: 'Character',
       type: 'group',
       icon: 'icon-ui',
       children: [
@@ -50,9 +43,17 @@ const menuItems = {
           id: 'character',
           title: 'Character',
           type: 'item',
-          url: '/audio/character',
+          url: '/character',
           icon: faLayerGroup
         },
+      ]
+    },
+    {
+      id: 'Category',
+      title: 'Category',
+      type: 'group',
+      icon: 'icon-ui',
+      children: [
         {
           id: 'audio',
           title: 'Audio',
@@ -60,6 +61,21 @@ const menuItems = {
           url: '/audio/audio',
           icon: faFileAudio
         },
+      ]
+    },
+    {
+      id: 'more',
+      title: 'More',
+      type: 'group',
+      icon: 'icon-ui',
+      children: [
+        {
+          id: 'ads',
+          title: 'Ads',
+          type: 'item',
+          url: '/ads',
+          icon: faRectangleAd
+        }
       ]
     },
   ]

@@ -34,7 +34,7 @@ const AudioCharacter = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/audio/character/read')
+        axios.post('http://localhost:5001/api/character/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -53,22 +53,25 @@ const AudioCharacter = () => {
     const portfolioSchema = Yup.object().shape({
         CharacterName: Yup.string().required('Character Name is required'),
         CharacterImage: Yup.mixed().required('Character Image is required'),
+        Category: Yup.string().required('Category is required'), // Add category validation
     });
 
     const formik = useFormik({
         initialValues: {
             CharacterName: '',
             CharacterImage: '',
+            Category: '', // Initialize Category
         },
         validationSchema: portfolioSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
             formData.append('CharacterName', values.CharacterName);
             formData.append('CharacterImage', values.CharacterImage);
+            formData.append('Category', values.Category); // Append Category
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/audio/character/update/${id}`, formData)
-                : axios.post('http://localhost:5001/api/audio/character/create', formData);
+                ? axios.patch(`http://localhost:5001/api/character/update/${id}`, formData)
+                : axios.post('http://localhost:5001/api/character/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -90,6 +93,7 @@ const AudioCharacter = () => {
         formik.setValues({
             CharacterName: cardBg.CharacterName,
             CharacterImage: cardBg.CharacterImage,
+            Category: cardBg.Category || '', // Populate Category for editing
         });
         setId(cardBg._id);
         setFileLabel('Character Image Upload');
@@ -98,7 +102,7 @@ const AudioCharacter = () => {
 
     const handleDelete = (cardBgId) => {
         if (window.confirm("Are you sure you want to delete this Character?")) {
-            axios.delete(`http://localhost:5001/api/audio/character/delete/${cardBgId}`)
+            axios.delete(`http://localhost:5001/api/character/delete/${cardBgId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -125,7 +129,6 @@ const AudioCharacter = () => {
     const renderPaginationItems = () => {
         let items = [];
         const totalPagesToShow = 8;
-
 
         let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
         let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
@@ -170,7 +173,7 @@ const AudioCharacter = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Character Images</h4>
-                    <p>Audio / Character</p>
+                    <p>Character / Character</p>
                 </div>
             </div>
             <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Character Image</Button>
@@ -224,38 +227,70 @@ const AudioCharacter = () => {
                             )}
                         </Form.Group>
 
+                        {/* Category Dropdown */}
+                        <Form.Group className="mb-3">
+                            <Form.Label>Category</Form.Label>
+                            <Form.Control
+                                as="select"
+                                id="Category"
+                                name="Category"
+                                value={formik.values.Category}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.Category && !!formik.errors.Category}
+                            >
+                                <option value="">Select Category</option>
+                                <option value="audio">Audio</option>
+                                <option value="video">Video</option>
+                                <option value="gallery">Gallery</option>
+                            </Form.Control>
+                            {formik.errors.Category && formik.touched.Category && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Category}
+                                </div>
+                            )}
+                        </Form.Group>
+
                         <Button type="submit" className='bg-white border-0' disabled={formik.isSubmitting}>
                             {formik.isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>
                 </Modal.Body>
             </Modal>
-
             <Table striped bordered hover responsive className='text-center fs-6'>
                 <thead>
                     <tr>
                         <th>Id</th>
                         <th>Character Image</th>
                         <th>Character Name</th>
+                        <th>Category</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {currentItems.map((cardBg, index) => (
-                        <tr key={cardBg._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                            <td>{indexOfFirstItem + index + 1}</td>
-                            <td><img src={cardBg.CharacterImage} alt='CharacterImage' width={100} /></td>
-                            <td>{cardBg.CharacterName}</td>
-                            <td>
-                                <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cardBg)}>
-                                    <FontAwesomeIcon icon={faEdit} />
-                                </Button>
-                                <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cardBg._id)}>
-                                    <FontAwesomeIcon icon={faTrash} />
-                                </Button>
-                            </td>
+                    {currentItems && currentItems.length > 0 ? (
+                        currentItems.map((cardBg, index) => (
+                            <tr key={cardBg._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
+                                <td>{indexOfFirstItem + index + 1}</td>
+                                <td><img src={cardBg.CharacterImage} alt='CharacterImage' width={100} /></td>
+                                <td>{cardBg.CharacterName}</td>
+                                <td>{cardBg.Category}</td>
+                                <td>
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cardBg)}>
+                                        <FontAwesomeIcon icon={faEdit} />
+                                    </Button>
+                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cardBg._id)}>
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={5} className="text-center">No Data Found</td>
                         </tr>
-                    ))}
+                    )}
+
                 </tbody>
             </Table>
 

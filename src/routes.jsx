@@ -70,7 +70,7 @@ export const routes = [
       },
       {
         exact: true,
-        path: '/audio/character',
+        path: '/character',
         element: () => <AdminProtect><AudioCharacter /></AdminProtect>
       },
       {
