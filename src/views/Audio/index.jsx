@@ -20,7 +20,7 @@ const Audio = () => {
     const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
 
-    
+
     const toggleModal = (mode) => {
         if (!visible) {
             if (mode === 'add') {
@@ -72,7 +72,7 @@ const Audio = () => {
         AudioImage: Yup.mixed().required('Audio Image is required'),
         Audio: Yup.mixed().required('Audio File is required'),
         AudioPremium: Yup.boolean(),
-        CharacterName: Yup.string().required('Character Name is required'),
+        CharacterId: Yup.string().required('Character Name is required'),
     });
 
     const formik = useFormik({
@@ -81,7 +81,7 @@ const Audio = () => {
             AudioImage: '',
             Audio: '',
             AudioPremium: false,
-            CharacterName: '',
+            CharacterId: '',
         },
         validationSchema: audioSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
@@ -90,7 +90,7 @@ const Audio = () => {
             formData.append('AudioImage', values.AudioImage);
             formData.append('Audio', values.Audio);
             formData.append('AudioPremium', values.AudioPremium);
-            formData.append('CharacterName', values.CharacterName);
+            formData.append('CharacterId', values.CharacterId);
 
             const request = id !== undefined
                 ? axios.patch(`http://localhost:5001/api/audio/update/${id}`, formData)
@@ -119,7 +119,7 @@ const Audio = () => {
             AudioImage: audio.AudioImage,
             Audio: audio.Audio,
             AudioPremium: audio.AudioPremium,
-            CharacterName: audio.CharacterName,
+            CharacterId: audio.CharacterId,
         });
         setId(audio._id);
         setImageFileLabel('Audio Image Upload');
@@ -295,23 +295,28 @@ const Audio = () => {
                             <Form.Label>Character Name</Form.Label>
                             <Form.Control
                                 as="select"
-                                id="CharacterName"
-                                name="CharacterName"
-                                value={formik.values.CharacterName}
+                                id="CharacterId"
+                                name="CharacterId"
+                                value={formik.values.CharacterId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CharacterName && !!formik.errors.CharacterName}
+                                isInvalid={formik.touched.CharacterId && !!formik.errors.CharacterId}
                             >
                                 <option value="">Select a character</option>
-                                {characters.map((character) => (
-                                    <option key={character._id} value={character.CharacterName}>
-                                        {character.CharacterName}
-                                    </option>
-                                ))}
+                                {characters.map((character) => {
+                                    if (character.Category === 'audio') {
+                                        return (
+                                            <option key={character._id} value={character.CharacterId}>
+                                                {character.CharacterName}
+                                            </option>
+                                        );
+                                    }
+                                    return null; // Return null for characters not in the audio category
+                                })}
                             </Form.Control>
-                            {formik.errors.CharacterName && formik.touched.CharacterName && (
+                            {formik.errors.CharacterId && formik.touched.CharacterId && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.CharacterName}
+                                    {formik.errors.CharacterId}
                                 </div>
                             )}
                         </Form.Group>
@@ -331,7 +336,6 @@ const Audio = () => {
                         <th>Audio Image</th>
                         <th>Audio File</th>
                         <th>Premium</th>
-                        <th>Character Name</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -348,7 +352,6 @@ const Audio = () => {
                                 </audio>
                             </td>
                             <td>{audio.AudioPremium ? 'Yes' : 'No'}</td>
-                            <td>{audio.CharacterName}</td>
                             <td>
                                 <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
                                     <FontAwesomeIcon icon={faEdit} />
