@@ -245,6 +245,7 @@ const CoverURL = () => {
                                 </tr>
                             </thead>
                             <tbody>
+                                
                                 {currentItems.map((cover, index) => (
                                     <tr key={cover._id}>
                                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>

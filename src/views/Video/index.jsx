@@ -11,35 +11,35 @@ import 'react-toastify/dist/ReactToastify.css';
 // img
 import logo from "../../assets/images/logo.svg";
 
-const Audio = () => {
+const Video = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
     const [characters, setCharacters] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
-    const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
+    const [imageFileLabel, setImageFileLabel] = useState('Video Image Upload');
+    const [videoFileLabel, setVideoFileLabel] = useState('Video File Upload');
 
 
     const toggleModal = (mode) => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setImageFileLabel('Audio Image Upload');
-                setAudioFileLabel('Audio File Upload');
+                setImageFileLabel('Video Image Upload');
+                setVideoFileLabel('Video File Upload');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setImageFileLabel('Audio Image Upload');
-            setAudioFileLabel('Audio File Upload');
+            setImageFileLabel('Video Image Upload');
+            setVideoFileLabel('Video File Upload');
         }
         setVisible(!visible);
     };
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/audio/read')
+        axios.post('http://localhost:5001/api/video/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -67,41 +67,41 @@ const Audio = () => {
         getCharacters();
     }, []);
 
-    const audioSchema = Yup.object().shape({
-        AudioName: Yup.string().required('Audio Name is required'),
-        AudioImage: Yup.mixed().required('Audio Image is required'),
-        Audio: Yup.mixed().required('Audio File is required'),
-        AudioPremium: Yup.boolean(),
+    const videoSchema = Yup.object().shape({
+        VideoName: Yup.string().required('Video Name is required'),
+        VideoImage: Yup.mixed().required('Video Image is required'),
+        Video: Yup.mixed().required('Video File is required'),
+        VideoPremium: Yup.boolean(),
         CharacterId: Yup.string().required('Character Name is required'),
     });
 
     const formik = useFormik({
         initialValues: {
-            AudioName: '',
-            AudioImage: '',
-            Audio: '',
-            AudioPremium: false,
+            VideoName: '',
+            VideoImage: '',
+            Video: '',
+            VideoPremium: false,
             CharacterId: '',
         },
-        validationSchema: audioSchema,
+        validationSchema: videoSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
-            formData.append('AudioName', values.AudioName);
-            formData.append('AudioImage', values.AudioImage);
-            formData.append('Audio', values.Audio);
-            formData.append('AudioPremium', values.AudioPremium);
+            formData.append('VideoName', values.VideoName);
+            formData.append('VideoImage', values.VideoImage);
+            formData.append('Video', values.Video);
+            formData.append('VideoPremium', values.VideoPremium);
             formData.append('CharacterId', values.CharacterId);
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/audio/update/${id}`, formData)
-                : axios.post('http://localhost:5001/api/audio/create', formData);
+                ? axios.patch(`http://localhost:5001/api/video/update/${id}`, formData)
+                : axios.post('http://localhost:5001/api/video/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setImageFileLabel('Audio Image Upload');
-                setAudioFileLabel('Audio File Upload');
+                setImageFileLabel('Video Image Upload');
+                setVideoFileLabel('Video File Upload');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -113,23 +113,23 @@ const Audio = () => {
         },
     });
 
-    const handleEdit = (audio) => {
+    const handleEdit = (video) => {
         formik.setValues({
-            AudioName: audio.AudioName,
-            AudioImage: audio.AudioImage,
-            Audio: audio.Audio,
-            AudioPremium: audio.AudioPremium,
-            CharacterId: audio.CharacterId,
+            VideoName: video.VideoName,
+            VideoImage: video.VideoImage,
+            Video: video.Video,
+            VideoPremium: video.VideoPremium,
+            CharacterId: video.CharacterId,
         });
-        setId(audio._id);
-        setImageFileLabel('Audio Image Upload');
-        setAudioFileLabel('Audio File Upload');
+        setId(video._id);
+        setImageFileLabel('Video Image Upload');
+        setVideoFileLabel('Video File Upload');
         toggleModal('edit');
     };
 
-    const handleDelete = (audioId) => {
-        if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`http://localhost:5001/api/audio/delete/${audioId}`)
+    const handleDelete = (videoId) => {
+        if (window.confirm("Are you sure you want to delete this Video?")) {
+            axios.delete(`http://localhost:5001/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -199,31 +199,31 @@ const Audio = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Audio Files</h4>
-                    <p>Audio / Audio Management</p>
+                    <h4>Video Files</h4>
+                    <p>Video / Video Management</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Audio</Button>
+            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Video</Button>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{id ? "Edit Audio" : "Add New Audio"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Video" : "Add New Video"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Audio Name</Form.Label>
+                            <Form.Label>Video Name</Form.Label>
                             <Form.Control
                                 type="text"
-                                id="AudioName"
-                                name="AudioName"
-                                value={formik.values.AudioName}
+                                id="VideoName"
+                                name="VideoName"
+                                value={formik.values.VideoName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.AudioName && !!formik.errors.AudioName}
+                                isInvalid={formik.touched.VideoName && !!formik.errors.VideoName}
                             />
-                            {formik.errors.AudioName && formik.touched.AudioName && (
+                            {formik.errors.VideoName && formik.touched.VideoName && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.AudioName}
+                                    {formik.errors.VideoName}
                                 </div>
                             )}
                         </Form.Group>
@@ -233,49 +233,49 @@ const Audio = () => {
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
-                                    id="AudioImage"
-                                    name="AudioImage"
+                                    id="VideoImage"
+                                    name="VideoImage"
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("AudioImage", file);
-                                        setImageFileLabel(file ? "Audio Image uploaded" : "Audio Image Upload");
+                                        formik.setFieldValue("VideoImage", file);
+                                        setImageFileLabel(file ? "Video Image uploaded" : "Video Image Upload");
                                     }}
                                     onBlur={formik.handleBlur}
                                     label="Choose File"
                                     className="d-none"
                                     custom
                                 />
-                                <label htmlFor="AudioImage" className="btn border bg-white mb-0">Select Audio Image</label>
+                                <label htmlFor="VideoImage" className="btn border bg-white mb-0">Select Video Image</label>
                             </div>
-                            {formik.errors.AudioImage && formik.touched.AudioImage && (
+                            {formik.errors.VideoImage && formik.touched.VideoImage && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.AudioImage}
+                                    {formik.errors.VideoImage}
                                 </div>
                             )}
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>{audioFileLabel}</Form.Label>
+                            <Form.Label>{videoFileLabel}</Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
-                                    id="Audio"
-                                    name="Audio"
+                                    id="Video"
+                                    name="Video"
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("Audio", file);
-                                        setAudioFileLabel(file ? "Audio File uploaded" : "Audio File Upload");
+                                        formik.setFieldValue("Video", file);
+                                        setVideoFileLabel(file ? "Video File uploaded" : "Video File Upload");
                                     }}
                                     onBlur={formik.handleBlur}
                                     label="Choose File"
                                     className="d-none"
                                     custom
                                 />
-                                <label htmlFor="Audio" className="btn border bg-white mb-0">Select Audio File</label>
+                                <label htmlFor="Video" className="btn border bg-white mb-0">Select Video File</label>
                             </div>
-                            {formik.errors.Audio && formik.touched.Audio && (
+                            {formik.errors.Video && formik.touched.Video && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.Audio}
+                                    {formik.errors.Video}
                                 </div>
                             )}
                         </Form.Group>
@@ -283,10 +283,10 @@ const Audio = () => {
                         <Form.Group className="mb-3">
                             <Form.Check
                                 type="checkbox"
-                                id="AudioPremium"
-                                name="AudioPremium"
-                                label="Premium Audio"
-                                checked={formik.values.AudioPremium}
+                                id="VideoPremium"
+                                name="VideoPremium"
+                                label="Premium Video"
+                                checked={formik.values.VideoPremium}
                                 onChange={formik.handleChange}
                             />
                         </Form.Group>
@@ -304,14 +304,14 @@ const Audio = () => {
                             >
                                 <option value="">Select a character</option>
                                 {characters.map((character) => {
-                                    if (character.Category === 'audio') {
+                                    if (character.Category === 'video') {
                                         return (
                                             <option key={character._id} value={character.CharacterId}>
                                                 {character.CharacterName}
                                             </option>
                                         );
                                     }
-                                    return null; // Return null for characters not in the audio category
+                                    return null; // Return null for characters not in the video category
                                 })}
                             </Form.Control>
                             {formik.errors.CharacterId && formik.touched.CharacterId && (
@@ -332,34 +332,34 @@ const Audio = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Audio Name</th>
-                        <th>Audio Image</th>
-                        <th>Audio File</th>
+                        <th>Video Name</th>
+                        <th>Video Image</th>
+                        <th>Video File</th>
                         <th>Premium</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((audio, index) => (
-                            <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
+                        currentItems.map((video, index) => (
+                            <tr key={video._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
-                                <td>{audio.AudioName}</td>
+                                <td>{video.VideoName}</td>
                                 <td>
-                                    <img src={audio.AudioImage} alt="Audio thumbnail" style={{ width: '50px', height: '50px' }} />
+                                    <img src={video.VideoImage} alt="video thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
                                 <td>
-                                    <audio controls>
-                                        <source src={audio.Audio} type="audio/mpeg" />
-                                        Your browser does not support the audio element.
-                                    </audio>
+                                    <video controls width="240">
+                                        <source src={video.Video} type="video/mp4" />
+                                        Your browser does not support the video element.
+                                    </video>
                                 </td>
-                                <td>{audio.AudioPremium ? 'Yes' : 'No'}</td>
+                                <td>{video.VideoPremium ? 'Yes' : 'No'}</td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(video)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(audio._id)}>
+                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(video._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
@@ -387,4 +387,4 @@ const Audio = () => {
     );
 };
 
-export default Audio;
+export default Video;

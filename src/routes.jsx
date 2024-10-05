@@ -13,6 +13,7 @@ import Ads from './views/Ads';
 import Cover from './views/Cover';
 import AudioCharacter from 'views/AudioCharacter';
 import Audio from 'views/Audio';
+import Video from 'views/Video';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -75,8 +76,13 @@ export const routes = [
       },
       {
         exact: true,
-        path: '/audio/audio',
+        path: '/category/audio',
         element: () => <AdminProtect><Audio /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/category/video',
+        element: () => <AdminProtect><Video /></AdminProtect>
       },
       {
         path: '*',

@@ -1,5 +1,5 @@
 import { faImage } from "@fortawesome/free-regular-svg-icons";
-import {faFileAudio, faHome, faLayerGroup, faRectangleAd} from "@fortawesome/free-solid-svg-icons";
+import {faFileAudio, faHome, faLayerGroup, faRectangleAd, faVideo} from "@fortawesome/free-solid-svg-icons";
 
 const menuItems = {
   items: [
@@ -58,8 +58,15 @@ const menuItems = {
           id: 'audio',
           title: 'Audio',
           type: 'item',
-          url: '/audio/audio',
+          url: '/category/audio',
           icon: faFileAudio
+        },
+        {
+          id: 'video',
+          title: 'Video',
+          type: 'item',
+          url: '/category/video',
+          icon: faVideo
         },
       ]
     },
