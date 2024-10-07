@@ -200,7 +200,7 @@ const Video = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Video Files</h4>
-                    <p>Video / Video Management</p>
+                    <p>Category / Video Management</p>
                 </div>
             </div>
             <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Video</Button>

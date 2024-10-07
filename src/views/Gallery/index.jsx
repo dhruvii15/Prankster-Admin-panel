@@ -11,35 +11,32 @@ import 'react-toastify/dist/ReactToastify.css';
 // img
 import logo from "../../assets/images/logo.svg";
 
-const Audio = () => {
+const Gallery = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
     const [characters, setCharacters] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
-    const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
+    const [imageFileLabel, setImageFileLabel] = useState('Gallery Image Upload');
 
 
     const toggleModal = (mode) => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setImageFileLabel('Audio Image Upload');
-                setAudioFileLabel('Audio File Upload');
+                setImageFileLabel('Gallery Image Upload');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setImageFileLabel('Audio Image Upload');
-            setAudioFileLabel('Audio File Upload');
+            setImageFileLabel('Gallery Image Upload');
         }
         setVisible(!visible);
     };
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/audio/read')
+        axios.post('http://localhost:5001/api/gallery/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -67,41 +64,37 @@ const Audio = () => {
         getCharacters();
     }, []);
 
-    const audioSchema = Yup.object().shape({
-        AudioName: Yup.string().required('Audio Name is required'),
-        AudioImage: Yup.mixed().required('Audio Image is required'),
-        Audio: Yup.mixed().required('Audio File is required'),
-        AudioPremium: Yup.boolean(),
+    const gallerySchema = Yup.object().shape({
+        GalleryName: Yup.string().required('Gallery Name is required'),
+        GalleryImage: Yup.mixed().required('Gallery Image is required'),
+        GalleryPremium: Yup.boolean(),
         CharacterId: Yup.string().required('Character Name is required'),
     });
 
     const formik = useFormik({
         initialValues: {
-            AudioName: '',
-            AudioImage: '',
-            Audio: '',
-            AudioPremium: false,
+            GalleryName: '',
+            GalleryImage: '',
+            GalleryPremium: false,
             CharacterId: '',
         },
-        validationSchema: audioSchema,
+        validationSchema: gallerySchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
-            formData.append('AudioName', values.AudioName);
-            formData.append('AudioImage', values.AudioImage);
-            formData.append('Audio', values.Audio);
-            formData.append('AudioPremium', values.AudioPremium);
+            formData.append('GalleryName', values.GalleryName);
+            formData.append('GalleryImage', values.GalleryImage);
+            formData.append('GalleryPremium', values.GalleryPremium);
             formData.append('CharacterId', values.CharacterId);
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/audio/update/${id}`, formData)
-                : axios.post('http://localhost:5001/api/audio/create', formData);
+                ? axios.patch(`http://localhost:5001/api/gallery/update/${id}`, formData)
+                : axios.post('http://localhost:5001/api/gallery/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setImageFileLabel('Audio Image Upload');
-                setAudioFileLabel('Audio File Upload');
+                setImageFileLabel('Gallery Image Upload');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -113,23 +106,21 @@ const Audio = () => {
         },
     });
 
-    const handleEdit = (audio) => {
+    const handleEdit = (gallery) => {
         formik.setValues({
-            AudioName: audio.AudioName,
-            AudioImage: audio.AudioImage,
-            Audio: audio.Audio,
-            AudioPremium: audio.AudioPremium,
-            CharacterId: audio.CharacterId,
+            GalleryName: gallery.GalleryName,
+            GalleryImage: gallery.GalleryImage,
+            GalleryPremium: gallery.GalleryPremium,
+            CharacterId: gallery.CharacterId,
         });
-        setId(audio._id);
-        setImageFileLabel('Audio Image Upload');
-        setAudioFileLabel('Audio File Upload');
+        setId(gallery._id);
+        setImageFileLabel('Gallery Image Upload');
         toggleModal('edit');
     };
 
-    const handleDelete = (audioId) => {
-        if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`http://localhost:5001/api/audio/delete/${audioId}`)
+    const handleDelete = (galleryId) => {
+        if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
+            axios.delete(`http://localhost:5001/api/gallery/delete/${galleryId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -199,31 +190,31 @@ const Audio = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Audio Files</h4>
-                    <p>Category / Audio Management</p>
+                    <h4>Gallery </h4>
+                    <p>Category / Gallery Management</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Audio</Button>
+            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Gallery</Button>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{id ? "Edit Audio" : "Add New Audio"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Gallery" : "Add New Gallery"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Audio Name</Form.Label>
+                            <Form.Label>Gallery Name</Form.Label>
                             <Form.Control
                                 type="text"
-                                id="AudioName"
-                                name="AudioName"
-                                value={formik.values.AudioName}
+                                id="GalleryName"
+                                name="GalleryName"
+                                value={formik.values.GalleryName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.AudioName && !!formik.errors.AudioName}
+                                isInvalid={formik.touched.GalleryName && !!formik.errors.GalleryName}
                             />
-                            {formik.errors.AudioName && formik.touched.AudioName && (
+                            {formik.errors.GalleryName && formik.touched.GalleryName && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.AudioName}
+                                    {formik.errors.GalleryName}
                                 </div>
                             )}
                         </Form.Group>
@@ -233,49 +224,23 @@ const Audio = () => {
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
-                                    id="AudioImage"
-                                    name="AudioImage"
+                                    id="GalleryImage"
+                                    name="GalleryImage"
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("AudioImage", file);
-                                        setImageFileLabel(file ? "Audio Image uploaded" : "Audio Image Upload");
+                                        formik.setFieldValue("GalleryImage", file);
+                                        setImageFileLabel(file ? "Gallery Image uploaded" : "Gallery Image Upload");
                                     }}
                                     onBlur={formik.handleBlur}
                                     label="Choose File"
                                     className="d-none"
                                     custom
                                 />
-                                <label htmlFor="AudioImage" className="btn border bg-white mb-0">Select Audio Image</label>
+                                <label htmlFor="GalleryImage" className="btn border bg-white mb-0">Select Gallery Image</label>
                             </div>
-                            {formik.errors.AudioImage && formik.touched.AudioImage && (
+                            {formik.errors.GalleryImage && formik.touched.GalleryImage && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.AudioImage}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>{audioFileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="Audio"
-                                    name="Audio"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("Audio", file);
-                                        setAudioFileLabel(file ? "Audio File uploaded" : "Audio File Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="Audio" className="btn border bg-white mb-0">Select Audio File</label>
-                            </div>
-                            {formik.errors.Audio && formik.touched.Audio && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Audio}
+                                    {formik.errors.GalleryImage}
                                 </div>
                             )}
                         </Form.Group>
@@ -283,10 +248,10 @@ const Audio = () => {
                         <Form.Group className="mb-3">
                             <Form.Check
                                 type="checkbox"
-                                id="AudioPremium"
-                                name="AudioPremium"
-                                label="Premium Audio"
-                                checked={formik.values.AudioPremium}
+                                id="GalleryPremium"
+                                name="GalleryPremium"
+                                label="Premium Gallery"
+                                checked={formik.values.GalleryPremium}
                                 onChange={formik.handleChange}
                             />
                         </Form.Group>
@@ -304,14 +269,14 @@ const Audio = () => {
                             >
                                 <option value="">Select a character</option>
                                 {characters.map((character) => {
-                                    if (character.Category === 'audio') {
+                                    if (character.Category === 'gallery') {
                                         return (
                                             <option key={character._id} value={character.CharacterId}>
                                                 {character.CharacterName}
                                             </option>
                                         );
                                     }
-                                    return null; // Return null for characters not in the audio category
+                                    return null; // Return null for characters not in the gallery category
                                 })}
                             </Form.Control>
                             {formik.errors.CharacterId && formik.touched.CharacterId && (
@@ -332,34 +297,27 @@ const Audio = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Audio Name</th>
-                        <th>Audio Image</th>
-                        <th>Audio File</th>
+                        <th>Gallery Name</th>
+                        <th>Gallery Image</th>
                         <th>Premium</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((audio, index) => (
-                            <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
+                        currentItems.map((gallery, index) => (
+                            <tr key={gallery._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
-                                <td>{audio.AudioName}</td>
+                                <td>{gallery.GalleryName}</td>
                                 <td>
-                                    <img src={audio.AudioImage} alt="Audio thumbnail" style={{ width: '50px', height: '50px' }} />
+                                    <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
+                                <td>{gallery.GalleryPremium ? 'Yes' : 'No'}</td>
                                 <td>
-                                    <audio controls>
-                                        <source src={audio.Audio} type="audio/mpeg" />
-                                        Your browser does not support the audio element.
-                                    </audio>
-                                </td>
-                                <td>{audio.AudioPremium ? 'Yes' : 'No'}</td>
-                                <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(gallery)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(audio._id)}>
+                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(gallery._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
@@ -387,4 +345,4 @@ const Audio = () => {
     );
 };
 
-export default Audio;
+export default Gallery;
