@@ -14,9 +14,11 @@ import logo from "../../assets/images/logo.svg";
 const AudioCharacter = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [fileLabel, setFileLabel] = useState('Character Image Upload');
+    const [selectedCategory, setSelectedCategory] = useState('');
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -36,7 +38,9 @@ const AudioCharacter = () => {
         setLoading(true);
         axios.post('http://localhost:5001/api/character/read')
             .then((res) => {
-                setData(res.data.data.reverse());
+                const allData = res.data.data.reverse();
+                setData(allData);
+                filterData(allData, selectedCategory);
                 setLoading(false);
             })
             .catch((err) => {
@@ -46,28 +50,40 @@ const AudioCharacter = () => {
             });
     };
 
+    const filterData = (dataToFilter, category) => {
+        if (category) {
+            setFilteredData(dataToFilter.filter(item => item.Category === category));
+        } else {
+            setFilteredData(dataToFilter);
+        }
+    };
+
     useEffect(() => {
         getData();
     }, []);
 
+    useEffect(() => {
+        filterData(data, selectedCategory);
+    }, [selectedCategory]);
+
     const portfolioSchema = Yup.object().shape({
         CharacterName: Yup.string().required('Character Name is required'),
         CharacterImage: Yup.mixed().required('Character Image is required'),
-        Category: Yup.string().required('Category is required'), // Add category validation
+        Category: Yup.string().required('Category is required'),
     });
 
     const formik = useFormik({
         initialValues: {
             CharacterName: '',
             CharacterImage: '',
-            Category: '', // Initialize Category
+            Category: '',
         },
         validationSchema: portfolioSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
             formData.append('CharacterName', values.CharacterName);
             formData.append('CharacterImage', values.CharacterImage);
-            formData.append('Category', values.Category); // Append Category
+            formData.append('Category', values.Category);
 
             const request = id !== undefined
                 ? axios.patch(`http://localhost:5001/api/character/update/${id}`, formData)
@@ -93,7 +109,7 @@ const AudioCharacter = () => {
         formik.setValues({
             CharacterName: cardBg.CharacterName,
             CharacterImage: cardBg.CharacterImage,
-            Category: cardBg.Category || '', // Populate Category for editing
+            Category: cardBg.Category || '',
         });
         setId(cardBg._id);
         setFileLabel('Character Image Upload');
@@ -120,9 +136,9 @@ const AudioCharacter = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
 
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -167,7 +183,6 @@ const AudioCharacter = () => {
             }} />
         </div>
     );
-
     return (
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
@@ -176,7 +191,20 @@ const AudioCharacter = () => {
                     <p>Character / Character</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Character Image</Button>
+            <div className='d-flex flex-wrap justify-content-between align-items-center mb-4'>
+                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 mt-3' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Character Image</Button>
+                <Form.Select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    style={{ width: 'auto' }}
+                    className='mt-3'
+                >
+                    <option value="">All Categories</option>
+                    <option value="audio">Audio</option>
+                    <option value="video">Video</option>
+                    <option value="gallery">Gallery</option>
+                </Form.Select>
+            </div>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{id ? "Edit Character" : "Add New Character"}</Modal.Title>
@@ -290,7 +318,6 @@ const AudioCharacter = () => {
                             <td colSpan={5} className="text-center">No Data Found</td>
                         </tr>
                     )}
-
                 </tbody>
             </Table>
 
