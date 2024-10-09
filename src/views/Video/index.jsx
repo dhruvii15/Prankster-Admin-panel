@@ -351,8 +351,16 @@ const Video = () => {
                                 <td>
                                     <video controls width="240">
                                         <source src={video.Video} type="video/mp4" />
+                                        <track
+                                            kind="captions"
+                                            src={video.VideoName}
+                                            srcLang="en"
+                                            label="English"
+                                            default
+                                        />
                                         Your browser does not support the video element.
                                     </video>
+
                                 </td>
                                 <td>{video.VideoPremium ? 'Yes' : 'No'}</td>
                                 <td>

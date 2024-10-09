@@ -58,18 +58,21 @@ const CoverURL = () => {
     const coverSchema = Yup.object().shape({
         CoverURL: Yup.string().required('CoverImage is required'),
         Category: Yup.string().required('Category is required'),  // New validation for Category
+        CoverPremium: Yup.boolean(),  // Validation for the CoverPremium field
     });
 
     const formik = useFormik({
         initialValues: {
             CoverURL: '',
             Category: '',  // Initial value for Category
+            CoverPremium: false,  // Initial value for CoverPremium (false by default)
         },
         validationSchema: coverSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
             formData.append('CoverURL', values.CoverURL);
             formData.append('Category', values.Category);  // Append Category to form data
+            formData.append('CoverPremium', values.CoverPremium);  // Append CoverPremium to form data
 
             const request = id !== undefined
                 ? axios.patch(`http://localhost:5001/api/cover/update/${id}`, formData)
@@ -95,6 +98,7 @@ const CoverURL = () => {
         formik.setValues({
             CoverURL: CoverURL.CoverURL,
             Category: CoverURL.Category || '',  // Set Category value when editing
+            CoverPremium: CoverURL.CoverPremium || false,  // Set CoverPremium value when editing
         });
         setId(CoverURL._id);
         setFileLabel('Cover Image Upload');
@@ -220,6 +224,19 @@ const CoverURL = () => {
                             )}
                         </Form.Group>
 
+                        {/* New CoverPremium Checkbox */}
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="CoverPremium"
+                                name="CoverPremium"
+                                label="Premium Cover"
+                                checked={formik.values.CoverPremium}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                            />
+                        </Form.Group>
+
                         <Button type="submit" className='bg-white border-0' disabled={formik.isSubmitting}>
                             {formik.isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
@@ -241,6 +258,7 @@ const CoverURL = () => {
                                 <tr>
                                     <th>Id</th>
                                     <th>Cover</th>
+                                    <th>Premium</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -250,6 +268,7 @@ const CoverURL = () => {
                                     <tr key={cover._id}>
                                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                         <td><img src={cover.CoverURL} alt={'CoverImage'} style={{ width: '150px', height: '120px' }} /></td>
+                                        <td>{cover.CoverPremium ? 'Yes' : 'No'}</td>
                                         <td>
                                             <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cover)}>
                                                 <FontAwesomeIcon icon={faEdit} />

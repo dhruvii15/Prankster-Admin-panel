@@ -351,6 +351,13 @@ const Audio = () => {
                                 <td>
                                     <audio controls>
                                         <source src={audio.Audio} type="audio/mpeg" />
+                                        <track
+                                            kind="captions"
+                                            src={audio.AudioName}
+                                            srcLang="en"
+                                            label="English"
+                                            default
+                                        />
                                         Your browser does not support the audio element.
                                     </audio>
                                 </td>
