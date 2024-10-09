@@ -35,7 +35,7 @@ const CoverURL = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/cover/read')
+        axios.post('https://pslink.world/api/cover/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -75,8 +75,8 @@ const CoverURL = () => {
             formData.append('CoverPremium', values.CoverPremium);  // Append CoverPremium to form data
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/cover/update/${id}`, formData)
-                : axios.post('http://localhost:5001/api/cover/create', formData);
+                ? axios.patch(`https://pslink.world/api/cover/update/${id}`, formData)
+                : axios.post('https://pslink.world/api/cover/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -107,7 +107,7 @@ const CoverURL = () => {
 
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
-            axios.delete(`http://localhost:5001/api/cover/delete/${coverId}`)
+            axios.delete(`https://pslink.world/api/cover/delete/${coverId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

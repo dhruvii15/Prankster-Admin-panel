@@ -36,7 +36,7 @@ const Gallery = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/gallery/read')
+        axios.post('https://pslink.world/api/gallery/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -49,7 +49,7 @@ const Gallery = () => {
     };
 
     const getCharacters = () => {
-        axios.post('http://localhost:5001/api/character/read')
+        axios.post('https://pslink.world/api/character/read')
             .then((res) => {
                 setCharacters(res.data.data);
             })
@@ -87,8 +87,8 @@ const Gallery = () => {
             formData.append('CharacterId', values.CharacterId);
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/gallery/update/${id}`, formData)
-                : axios.post('http://localhost:5001/api/gallery/create', formData);
+                ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
+                : axios.post('https://pslink.world/api/gallery/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -120,7 +120,7 @@ const Gallery = () => {
 
     const handleDelete = (galleryId) => {
         if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
-            axios.delete(`http://localhost:5001/api/gallery/delete/${galleryId}`)
+            axios.delete(`https://pslink.world/api/gallery/delete/${galleryId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

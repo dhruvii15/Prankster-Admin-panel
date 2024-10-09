@@ -26,7 +26,7 @@ const DashAnalytics = () => {
   
   const getData = () => {
     setLoading(true);
-    axios.post('http://localhost:5001/api/cover/read')
+    axios.post('https://pslink.world/api/cover/read')
       .then((res) => {
         setData(res.data.data);
         setLoading(false);
@@ -39,7 +39,7 @@ const DashAnalytics = () => {
 
   const getData2 = () => {
     setLoading(true);
-    axios.post('http://localhost:5001/api/audio/read')
+    axios.post('https://pslink.world/api/audio/read')
       .then((res) => {
         setData2(res.data.data);
         setLoading(false);
@@ -51,7 +51,7 @@ const DashAnalytics = () => {
   };
 
   const getData3 = () => {
-    axios.post('http://localhost:5001/api/video/read')
+    axios.post('https://pslink.world/api/video/read')
       .then((res) => {
         setData3(res.data.data);
         setLoading(false);
@@ -63,7 +63,7 @@ const DashAnalytics = () => {
   };
 
   const getData4 = () => {
-    axios.post('http://localhost:5001/api/gallery/read')
+    axios.post('https://pslink.world/api/gallery/read')
       .then((res) => {
         setData4(res.data.data);
         setLoading(false);

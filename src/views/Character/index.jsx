@@ -36,7 +36,7 @@ const AudioCharacter = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/character/read')
+        axios.post('https://pslink.world/api/character/read')
             .then((res) => {
                 const allData = res.data.data.reverse();
                 setData(allData);
@@ -86,8 +86,8 @@ const AudioCharacter = () => {
             formData.append('Category', values.Category);
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/character/update/${id}`, formData)
-                : axios.post('http://localhost:5001/api/character/create', formData);
+                ? axios.patch(`https://pslink.world/api/character/update/${id}`, formData)
+                : axios.post('https://pslink.world/api/character/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -118,7 +118,7 @@ const AudioCharacter = () => {
 
     const handleDelete = (cardBgId) => {
         if (window.confirm("Are you sure you want to delete this Character?")) {
-            axios.delete(`http://localhost:5001/api/character/delete/${cardBgId}`)
+            axios.delete(`https://pslink.world/api/character/delete/${cardBgId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
