@@ -40,7 +40,7 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/video/read')
+        axios.post('https://pslink.world//api/video/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -53,7 +53,7 @@ const Video = () => {
     };
 
     const getCharacters = () => {
-        axios.post('http://localhost:5001/api/character/read')
+        axios.post('https://pslink.world//api/character/read')
             .then((res) => {
                 setCharacters(res.data.data);
             })
@@ -97,8 +97,8 @@ const Video = () => {
             formData.append('Hide', values.Hide);
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/video/update/${id}`, formData)
-                : axios.post('http://localhost:5001/api/video/create', formData);
+                ? axios.patch(`https://pslink.world//api/video/update/${id}`, formData)
+                : axios.post('https://pslink.world//api/video/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -133,7 +133,7 @@ const Video = () => {
     };
 
     const handleHideToggle = (videoId, currentHideStatus) => {
-        axios.patch(`http://localhost:5001/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world//api/video/update/${videoId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -146,7 +146,7 @@ const Video = () => {
 
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video?")) {
-            axios.delete(`http://localhost:5001/api/video/delete/${videoId}`)
+            axios.delete(`https://pslink.world//api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

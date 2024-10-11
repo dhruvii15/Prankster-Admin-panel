@@ -124,7 +124,7 @@ const Gallery = () => {
     };
 
     const handleHideToggle = (galleryId, currentHideStatus) => {
-        axios.patch(`http://localhost:5001/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world//api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);

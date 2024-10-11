@@ -39,7 +39,7 @@ const Audio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/audio/read')
+        axios.post('https://pslink.world//api/audio/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -52,7 +52,7 @@ const Audio = () => {
     };
 
     const getCharacters = () => {
-        axios.post('http://localhost:5001/api/character/read')
+        axios.post('https://pslink.world//api/character/read')
             .then((res) => {
                 setCharacters(res.data.data);
             })
@@ -96,8 +96,8 @@ const Audio = () => {
             formData.append('Hide', values.Hide);  // Add Hide field to formData
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/audio/update/${id}`, formData)
-                : axios.post('http://localhost:5001/api/audio/create', formData);
+                ? axios.patch(`https://pslink.world//api/audio/update/${id}`, formData)
+                : axios.post('https://pslink.world//api/audio/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -132,7 +132,7 @@ const Audio = () => {
     };
 
     const handleHideToggle = (audioId, currentHideStatus) => {
-        axios.patch(`http://localhost:5001/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world//api/audio/update/${audioId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -145,7 +145,7 @@ const Audio = () => {
 
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`http://localhost:5001/api/audio/delete/${audioId}`)
+            axios.delete(`https://pslink.world//api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
