@@ -6,6 +6,7 @@ import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
+import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import 'react-toastify/dist/ReactToastify.css';
 
 // img
@@ -69,6 +70,7 @@ const Gallery = () => {
         GalleryImage: Yup.mixed().required('Gallery Image is required'),
         GalleryPremium: Yup.boolean(),
         CharacterId: Yup.string().required('Character Name is required'),
+        Hide: Yup.boolean(),
     });
 
     const formik = useFormik({
@@ -77,6 +79,7 @@ const Gallery = () => {
             GalleryImage: '',
             GalleryPremium: false,
             CharacterId: '',
+            Hide: false,
         },
         validationSchema: gallerySchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
@@ -85,6 +88,7 @@ const Gallery = () => {
             formData.append('GalleryImage', values.GalleryImage);
             formData.append('GalleryPremium', values.GalleryPremium);
             formData.append('CharacterId', values.CharacterId);
+            formData.append('Hide', values.Hide);
 
             const request = id !== undefined
                 ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
@@ -112,10 +116,23 @@ const Gallery = () => {
             GalleryImage: gallery.GalleryImage,
             GalleryPremium: gallery.GalleryPremium,
             CharacterId: gallery.CharacterId,
+            Hide: gallery.Hide,
         });
         setId(gallery._id);
         setImageFileLabel('Gallery Image Upload');
         toggleModal('edit');
+    };
+
+    const handleHideToggle = (galleryId, currentHideStatus) => {
+        axios.patch(`http://localhost:5001/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
     };
 
     const handleDelete = (galleryId) => {
@@ -257,6 +274,17 @@ const Gallery = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="Hide"
+                                name="Hide"
+                                label="Hide gallery"
+                                checked={formik.values.Hide}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label>Character Name</Form.Label>
                             <Form.Control
                                 as="select"
@@ -300,6 +328,7 @@ const Gallery = () => {
                         <th>Gallery Name</th>
                         <th>Gallery Image</th>
                         <th>Premium</th>
+                        <th>Hidden</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -313,6 +342,11 @@ const Gallery = () => {
                                     <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
                                 <td>{gallery.GalleryPremium ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(gallery._id, gallery.Hide)}>
+                                        <FontAwesomeIcon icon={gallery.Hide ? faEyeSlash : faEye} />
+                                    </Button>
+                                </td>
                                 <td>
                                     <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(gallery)}>
                                         <FontAwesomeIcon icon={faEdit} />

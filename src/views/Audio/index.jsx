@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -19,7 +20,6 @@ const Audio = () => {
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
-
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -39,7 +39,7 @@ const Audio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/audio/read')
+        axios.post('http://localhost:5001/api/audio/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -52,7 +52,7 @@ const Audio = () => {
     };
 
     const getCharacters = () => {
-        axios.post('https://pslink.world/api/character/read')
+        axios.post('http://localhost:5001/api/character/read')
             .then((res) => {
                 setCharacters(res.data.data);
             })
@@ -73,6 +73,7 @@ const Audio = () => {
         Audio: Yup.mixed().required('Audio File is required'),
         AudioPremium: Yup.boolean(),
         CharacterId: Yup.string().required('Character Name is required'),
+        Hide: Yup.boolean(),  // Add Hide field to schema
     });
 
     const formik = useFormik({
@@ -82,6 +83,7 @@ const Audio = () => {
             Audio: '',
             AudioPremium: false,
             CharacterId: '',
+            Hide: false,  // Add Hide field to initial values
         },
         validationSchema: audioSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
@@ -91,10 +93,11 @@ const Audio = () => {
             formData.append('Audio', values.Audio);
             formData.append('AudioPremium', values.AudioPremium);
             formData.append('CharacterId', values.CharacterId);
+            formData.append('Hide', values.Hide);  // Add Hide field to formData
 
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/audio/create', formData);
+                ? axios.patch(`http://localhost:5001/api/audio/update/${id}`, formData)
+                : axios.post('http://localhost:5001/api/audio/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -120,6 +123,7 @@ const Audio = () => {
             Audio: audio.Audio,
             AudioPremium: audio.AudioPremium,
             CharacterId: audio.CharacterId,
+            Hide: audio.Hide,  // Set Hide value when editing
         });
         setId(audio._id);
         setImageFileLabel('Audio Image Upload');
@@ -127,9 +131,21 @@ const Audio = () => {
         toggleModal('edit');
     };
 
+    const handleHideToggle = (audioId, currentHideStatus) => {
+        axios.patch(`http://localhost:5001/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
+    };
+
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`https://pslink.world/api/audio/delete/${audioId}`)
+            axios.delete(`http://localhost:5001/api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -292,6 +308,17 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="Hide"
+                                name="Hide"
+                                label="Hide Audio"
+                                checked={formik.values.Hide}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label>Character Name</Form.Label>
                             <Form.Control
                                 as="select"
@@ -336,6 +363,7 @@ const Audio = () => {
                         <th>Audio Image</th>
                         <th>Audio File</th>
                         <th>Premium</th>
+                        <th>Hidden</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -363,6 +391,10 @@ const Audio = () => {
                                 </td>
                                 <td>{audio.AudioPremium ? 'Yes' : 'No'}</td>
                                 <td>
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(audio._id, audio.Hide)}>
+                                        <FontAwesomeIcon icon={audio.Hide ? faEyeSlash : faEye} />
+                                    </Button></td>
+                                <td>
                                     <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
@@ -374,10 +406,9 @@ const Audio = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={6} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
+                            <td colSpan={7} className="text-center">No Data Found</td>
                         </tr>
                     )}
-
                 </tbody>
             </Table>
 

@@ -7,6 +7,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -39,7 +40,7 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/video/read')
+        axios.post('http://localhost:5001/api/video/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -52,7 +53,7 @@ const Video = () => {
     };
 
     const getCharacters = () => {
-        axios.post('https://pslink.world/api/character/read')
+        axios.post('http://localhost:5001/api/character/read')
             .then((res) => {
                 setCharacters(res.data.data);
             })
@@ -73,6 +74,7 @@ const Video = () => {
         Video: Yup.mixed().required('Video File is required'),
         VideoPremium: Yup.boolean(),
         CharacterId: Yup.string().required('Character Name is required'),
+        Hide: Yup.boolean()
     });
 
     const formik = useFormik({
@@ -82,6 +84,7 @@ const Video = () => {
             Video: '',
             VideoPremium: false,
             CharacterId: '',
+            Hide: false,
         },
         validationSchema: videoSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
@@ -91,10 +94,11 @@ const Video = () => {
             formData.append('Video', values.Video);
             formData.append('VideoPremium', values.VideoPremium);
             formData.append('CharacterId', values.CharacterId);
+            formData.append('Hide', values.Hide);
 
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/video/create', formData);
+                ? axios.patch(`http://localhost:5001/api/video/update/${id}`, formData)
+                : axios.post('http://localhost:5001/api/video/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -120,6 +124,7 @@ const Video = () => {
             Video: video.Video,
             VideoPremium: video.VideoPremium,
             CharacterId: video.CharacterId,
+            Hide: video.Hide,
         });
         setId(video._id);
         setImageFileLabel('Video Image Upload');
@@ -127,9 +132,21 @@ const Video = () => {
         toggleModal('edit');
     };
 
+    const handleHideToggle = (videoId, currentHideStatus) => {
+        axios.patch(`http://localhost:5001/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
+    };
+
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video?")) {
-            axios.delete(`https://pslink.world/api/video/delete/${videoId}`)
+            axios.delete(`http://localhost:5001/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -292,6 +309,17 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="Hide"
+                                name="Hide"
+                                label="Hide video"
+                                checked={formik.values.Hide}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label>Character Name</Form.Label>
                             <Form.Control
                                 as="select"
@@ -336,6 +364,7 @@ const Video = () => {
                         <th>Video Image</th>
                         <th>Video File</th>
                         <th>Premium</th>
+                        <th>Hidden</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -363,6 +392,11 @@ const Video = () => {
 
                                 </td>
                                 <td>{video.VideoPremium ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(video._id, video.Hide)}>
+                                        <FontAwesomeIcon icon={video.Hide ? faEyeSlash : faEye} />
+                                    </Button>
+                                </td>
                                 <td>
                                     <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(video)}>
                                         <FontAwesomeIcon icon={faEdit} />
