@@ -168,7 +168,7 @@ const AudioCharacter = () => {
         return items;
     };
 
-    if (loading) return (
+   if (loading) return (
         <div
             style={{
                 height: '100vh',
@@ -179,7 +179,7 @@ const AudioCharacter = () => {
             }}
         >
             <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "300px"
+                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
             }} />
         </div>
     );

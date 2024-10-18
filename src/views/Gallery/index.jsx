@@ -124,7 +124,7 @@ const Gallery = () => {
     };
 
     const handleHideToggle = (galleryId, currentHideStatus) => {
-        axios.patch(`https://pslink.world//api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -187,7 +187,7 @@ const Gallery = () => {
         return items;
     };
 
-    if (loading) return (
+   if (loading) return (
         <div
             style={{
                 height: '100vh',
@@ -198,7 +198,7 @@ const Gallery = () => {
             }}
         >
             <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "300px"
+                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
             }} />
         </div>
     );

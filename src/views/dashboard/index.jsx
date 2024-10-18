@@ -49,6 +49,9 @@ const DashAnalytics = () => {
     }
   };
 
+  console.log(data.cover);
+  
+
   useEffect(() => {
     fetchData();
   }, []);
