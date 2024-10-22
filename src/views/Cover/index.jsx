@@ -20,11 +20,13 @@ const CoverURL = () => {
     const [previewUrls, setPreviewUrls] = useState([]);
     const [emojiPage, setEmojiPage] = useState(1);
     const [realisticPage, setRealisticPage] = useState(1);
+    const [isEditing, setIsEditing] = useState(false);
     const itemsPerPage = 10;
 
     const toggleModal = (mode) => {
         if (mode === 'add') {
             setId(undefined);
+            setIsEditing(false);
             setFileLabel('Cover Image Upload');
             setSelectedFiles([]);
             setPreviewUrls([]);
@@ -39,6 +41,7 @@ const CoverURL = () => {
             setSelectedFiles([]);
             setPreviewUrls([]);
             setFileLabel('Cover Image Upload');
+            setIsEditing(false);
         }
     }, [visible]);
 
@@ -77,39 +80,56 @@ const CoverURL = () => {
         validationSchema: coverSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
-                if (selectedFiles.length === 0) {
+                const formData = new FormData();
+                
+                // Only require files for new entries
+                if (!isEditing && selectedFiles.length === 0) {
                     toast.error("Please select at least one image");
                     return;
                 }
 
-                const formData = new FormData();
-                
-                // Append each file to formData with the same field name
-                selectedFiles.forEach((file) => {
-                    formData.append('CoverURL', file);
-                });
+                // Append files only if new files are selected during edit
+                if (selectedFiles.length > 0) {
+                    selectedFiles.forEach((file) => {
+                        formData.append('CoverURL', file);
+                    });
+                }
                 
                 formData.append('Category', values.Category);
                 formData.append('CoverPremium', values.CoverPremium);
 
-                const response = await axios.post(
-                    'https://pslink:5000/api/cover/create',
-                    formData,
-                    {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    }
-                );
+                let response;
+                if (isEditing) {
+                    response = await axios.patch(
+                        `https://pslink.world/api/cover/update/${id}`,
+                        formData,
+                        {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                            },
+                        }
+                    );
+                } else {
+                    response = await axios.post(
+                        'https://pslink.world/api/cover/create',
+                        formData,
+                        {
+                            headers: {
+                                'Content-Type': 'multipart/form-data',
+                            },
+                        }
+                    );
+                }
 
                 toast.success(response.data.message);
                 resetForm();
                 setSelectedFiles([]);
                 setPreviewUrls([]);
                 setId(undefined);
+                setIsEditing(false);
                 setFileLabel('Cover Image Upload');
                 getData();
-                toggleModal('add');
+                toggleModal();
             } catch (error) {
                 console.error(error);
                 toast.error(error.response?.data?.message || "An error occurred. Please try again.");
@@ -127,14 +147,12 @@ const CoverURL = () => {
             return;
         }
 
-        // Create preview URLs for selected files
         const newPreviewUrls = files.map(file => URL.createObjectURL(file));
         setPreviewUrls(newPreviewUrls);
         setSelectedFiles(files);
         setFileLabel(`${files.length} file(s) selected`);
     };
 
-    // Cleanup preview URLs when component unmounts
     useEffect(() => {
         return () => {
             previewUrls.forEach(url => URL.revokeObjectURL(url));
@@ -142,12 +160,20 @@ const CoverURL = () => {
     }, [previewUrls]);
 
     const handleEdit = (cover) => {
+        setIsEditing(true);
+        setId(cover._id);
+        
+        // Set the existing preview URL if available
+        if (cover.CoverURL) {
+            setPreviewUrls([cover.CoverURL]);
+        }
+        
         formik.setValues({
             Category: cover.Category || '',
             CoverPremium: cover.CoverPremium || false,
         });
-        setId(cover._id);
-        setFileLabel('Cover Image Upload');
+        
+        setFileLabel('Update Cover Image (Optional)');
         toggleModal('edit');
     };
 
@@ -184,9 +210,9 @@ const CoverURL = () => {
             <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800" }}>
                 Add New CoverImage
             </Button>
-            <Modal show={visible} onHide={() => toggleModal('add')} centered>
+            <Modal show={visible} onHide={() => toggleModal()} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{id ? "Edit CoverImage" : "Add New CoverImage"}</Modal.Title>
+                    <Modal.Title>{isEditing ? "Edit Cover Image" : "Add New Cover Image"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
@@ -198,13 +224,13 @@ const CoverURL = () => {
                                         type="file"
                                         id="CoverURL"
                                         name="CoverURL"
-                                        multiple
+                                        multiple={!isEditing}
                                         accept="image/*"
                                         onChange={handleFileChange}
                                         className="d-none"
                                     />
                                     <label htmlFor="CoverURL" className="btn border bg-white mb-0">
-                                        Select Images (Max 5)
+                                        {isEditing ? "Select New Image" : "Select Images (Max 5)"}
                                     </label>
                                 </div>
                                 
@@ -264,9 +290,9 @@ const CoverURL = () => {
                         <Button 
                             type="submit" 
                             className='bg-white border-0' 
-                            disabled={formik.isSubmitting || selectedFiles.length === 0}
+                            disabled={formik.isSubmitting || (!isEditing && selectedFiles.length === 0)}
                         >
-                            {formik.isSubmitting ? 'Submitting...' : 'Submit'}
+                            {formik.isSubmitting ? 'Submitting...' : (isEditing ? 'Update' : 'Submit')}
                         </Button>
                     </Form>
                 </Modal.Body>
