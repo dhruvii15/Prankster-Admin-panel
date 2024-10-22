@@ -7,8 +7,6 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-// img
 import logo from "../../assets/images/logo.svg";
 
 const CoverURL = () => {
@@ -18,20 +16,31 @@ const CoverURL = () => {
     const [loading, setLoading] = useState(true);
     const categories = ['emoji', 'realistic'];
     const [fileLabel, setFileLabel] = useState('Cover Image Upload');
-
-    // Pagination state for each category
+    const [selectedFiles, setSelectedFiles] = useState([]);
+    const [previewUrls, setPreviewUrls] = useState([]);
     const [emojiPage, setEmojiPage] = useState(1);
     const [realisticPage, setRealisticPage] = useState(1);
-
-    const itemsPerPage = 10;  // Number of items per page
+    const itemsPerPage = 10;
 
     const toggleModal = (mode) => {
         if (mode === 'add') {
             setId(undefined);
             setFileLabel('Cover Image Upload');
+            setSelectedFiles([]);
+            setPreviewUrls([]);
         }
         setVisible(!visible);
     };
+
+    // Reset form when modal is closed
+    useEffect(() => {
+        if (!visible) {
+            formik.resetForm();
+            setSelectedFiles([]);
+            setPreviewUrls([]);
+            setFileLabel('Cover Image Upload');
+        }
+    }, [visible]);
 
     const getData = () => {
         setLoading(true);
@@ -56,51 +65,88 @@ const CoverURL = () => {
     };
 
     const coverSchema = Yup.object().shape({
-        CoverURL: Yup.string().required('CoverImage is required'),
-        Category: Yup.string().required('Category is required'),  // New validation for Category
-        CoverPremium: Yup.boolean(),  // Validation for the CoverPremium field
+        Category: Yup.string().required('Category is required'),
+        CoverPremium: Yup.boolean(),
     });
 
     const formik = useFormik({
         initialValues: {
-            CoverURL: '',
-            Category: '',  // Initial value for Category
-            CoverPremium: false,  // Initial value for CoverPremium (false by default)
+            Category: '',
+            CoverPremium: false,
         },
         validationSchema: coverSchema,
-        onSubmit: (values, { setSubmitting, resetForm }) => {
-            const formData = new FormData();
-            formData.append('CoverURL', values.CoverURL);
-            formData.append('Category', values.Category);  // Append Category to form data
-            formData.append('CoverPremium', values.CoverPremium);  // Append CoverPremium to form data
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
+            try {
+                if (selectedFiles.length === 0) {
+                    toast.error("Please select at least one image");
+                    return;
+                }
 
-            const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/cover/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/cover/create', formData);
+                const formData = new FormData();
+                
+                // Append each file to formData with the same field name
+                selectedFiles.forEach((file) => {
+                    formData.append('CoverURL', file);
+                });
+                
+                formData.append('Category', values.Category);
+                formData.append('CoverPremium', values.CoverPremium);
 
-            request.then((res) => {
-                setSubmitting(false);
+                const response = await axios.post(
+                    'https://pslink:5000/api/cover/create',
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+
+                toast.success(response.data.message);
                 resetForm();
+                setSelectedFiles([]);
+                setPreviewUrls([]);
                 setId(undefined);
                 setFileLabel('Cover Image Upload');
                 getData();
-                toast.success(res.data.message);
                 toggleModal('add');
-            }).catch((err) => {
-                console.error(err);
+            } catch (error) {
+                console.error(error);
+                toast.error(error.response?.data?.message || "An error occurred. Please try again.");
+            } finally {
                 setSubmitting(false);
-                toast.error("An error occurred. Please try again.");
-            });
+            }
         },
     });
 
-    const handleEdit = (CoverURL) => {
+    const handleFileChange = (event) => {
+        const files = Array.from(event.currentTarget.files);
+        
+        if (files.length > 5) {
+            toast.error("Maximum 5 images allowed");
+            return;
+        }
+
+        // Create preview URLs for selected files
+        const newPreviewUrls = files.map(file => URL.createObjectURL(file));
+        setPreviewUrls(newPreviewUrls);
+        setSelectedFiles(files);
+        setFileLabel(`${files.length} file(s) selected`);
+    };
+
+    // Cleanup preview URLs when component unmounts
+    useEffect(() => {
+        return () => {
+            previewUrls.forEach(url => URL.revokeObjectURL(url));
+        };
+    }, [previewUrls]);
+
+    const handleEdit = (cover) => {
         formik.setValues({
-            CoverURL: CoverURL.CoverURL,
-            Category: CoverURL.Category || '',  // Set Category value when editing
-            CoverPremium: CoverURL.CoverPremium || false,  // Set CoverPremium value when editing
+            Category: cover.Category || '',
+            CoverPremium: cover.CoverPremium || false,
         });
-        setId(CoverURL._id);
+        setId(cover._id);
         setFileLabel('Cover Image Upload');
         toggleModal('edit');
     };
@@ -119,51 +165,13 @@ const CoverURL = () => {
         }
     };
 
-    const paginate = (pageNumber, category) => {
-        if (category === 'emoji') setEmojiPage(pageNumber);
-        if (category === 'realistic') setRealisticPage(pageNumber);
-    };
-
-    const renderPaginationItems = (category, totalItems) => {
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        let currentPage = category === 'emoji' ? emojiPage : realisticPage;
-
-        let items = [];
-        for (let i = 1; i <= totalPages; i++) {
-            items.push(
-                <Pagination.Item
-                    key={i}
-                    active={i === currentPage}
-                    onClick={() => paginate(i, category)}
-                >
-                    {i}
-                </Pagination.Item>
-            );
-        }
-        return items;
-    };
-
-    const getCurrentItems = (categoryData, currentPage) => {
-        const indexOfLastItem = currentPage * itemsPerPage;
-        const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-        return categoryData.slice(indexOfFirstItem, indexOfLastItem);
-    };
-
-    if (loading) return (
-        <div
-            style={{
-                height: '100vh',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                overflow: "hidden"
-            }}
-        >
-            <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
-            }} />
-        </div>
-    );
+    if (loading) {
+        return (
+            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: "hidden" }}>
+                <img src={logo} alt='loading....' style={{ animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px" }} />
+            </div>
+        );
+    }
 
     return (
         <div>
@@ -173,7 +181,9 @@ const CoverURL = () => {
                     <p>Utilities / CoverImage</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800" }}>Add New CoverImage</Button>
+            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800" }}>
+                Add New CoverImage
+            </Button>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{id ? "Edit CoverImage" : "Add New CoverImage"}</Modal.Title>
@@ -182,29 +192,44 @@ const CoverURL = () => {
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
                             <Form.Label>{fileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="CoverURL"
-                                    name="CoverURL"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("CoverURL", file);
-                                        setFileLabel(file ? "CoverImage uploaded" : "Cover Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    className="d-none"
-                                />
-                                <label htmlFor="CoverURL" className="btn border bg-white mb-0">Select Image</label>
-                            </div>
-                            {formik.errors.CoverURL && formik.touched.CoverURL && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.CoverURL}
+                            <div className="d-flex flex-column">
+                                <div className="d-flex align-items-center">
+                                    <Form.Control
+                                        type="file"
+                                        id="CoverURL"
+                                        name="CoverURL"
+                                        multiple
+                                        accept="image/*"
+                                        onChange={handleFileChange}
+                                        className="d-none"
+                                    />
+                                    <label htmlFor="CoverURL" className="btn border bg-white mb-0">
+                                        Select Images (Max 5)
+                                    </label>
                                 </div>
-                            )}
+                                
+                                {/* Preview section */}
+                                {previewUrls.length > 0 && (
+                                    <div className="mt-3 d-flex flex-wrap gap-2">
+                                        {previewUrls.map((url, index) => (
+                                            <div key={index} className="position-relative">
+                                                <img
+                                                    src={url}
+                                                    alt={`Preview ${index + 1}`}
+                                                    style={{
+                                                        width: '100px',
+                                                        height: '100px',
+                                                        objectFit: 'cover',
+                                                        borderRadius: '4px'
+                                                    }}
+                                                />
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </Form.Group>
 
-                        {/* New Category dropdown */}
                         <Form.Group className="mb-3">
                             <Form.Label>Category</Form.Label>
                             <Form.Select
@@ -214,6 +239,7 @@ const CoverURL = () => {
                                 onBlur={formik.handleBlur}
                                 value={formik.values.Category}
                             >
+                                <option value="">Select Category</option>
                                 <option value="emoji">Emoji</option>
                                 <option value="realistic">Realistic</option>
                             </Form.Select>
@@ -224,7 +250,6 @@ const CoverURL = () => {
                             )}
                         </Form.Group>
 
-                        {/* New CoverPremium Checkbox */}
                         <Form.Group className="mb-3">
                             <Form.Check
                                 type="checkbox"
@@ -233,11 +258,14 @@ const CoverURL = () => {
                                 label="Premium Cover"
                                 checked={formik.values.CoverPremium}
                                 onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
                             />
                         </Form.Group>
 
-                        <Button type="submit" className='bg-white border-0' disabled={formik.isSubmitting}>
+                        <Button 
+                            type="submit" 
+                            className='bg-white border-0' 
+                            disabled={formik.isSubmitting || selectedFiles.length === 0}
+                        >
                             {formik.isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>
@@ -247,12 +275,13 @@ const CoverURL = () => {
             {categories.map((category) => {
                 const categoryData = groupByCategory(category);
                 const currentPage = category === 'emoji' ? emojiPage : realisticPage;
-                const currentItems = getCurrentItems(categoryData, currentPage);
-                const totalPages = Math.ceil(categoryData.length / itemsPerPage);  // Calculate total pages
+                const indexOfLastItem = currentPage * itemsPerPage;
+                const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+                const currentItems = categoryData.slice(indexOfFirstItem, indexOfLastItem);
 
                 return (
                     <div key={category}>
-                        <h5 className='py-3'>{category === 'emoji' ? 'Emoji' : 'Realistic'} Category :</h5>
+                        <h5 className='py-3'>{category === 'emoji' ? 'Emoji' : 'Realistic'} Category:</h5>
                         <Table striped bordered hover responsive className='text-center fs-6'>
                             <thead>
                                 <tr>
@@ -263,17 +292,29 @@ const CoverURL = () => {
                                 </tr>
                             </thead>
                             <tbody>
-                                
                                 {currentItems.map((cover, index) => (
                                     <tr key={cover._id}>
                                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                                        <td><img src={cover.CoverURL} alt={'CoverImage'} style={{ width: '150px', height: '120px' }} /></td>
+                                        <td>
+                                            <img 
+                                                src={cover.CoverURL} 
+                                                alt={'CoverImage'} 
+                                                style={{ width: '150px', height: '120px', objectFit: 'cover' }} 
+                                            />
+                                        </td>
                                         <td>{cover.CoverPremium ? 'Yes' : 'No'}</td>
                                         <td>
-                                            <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cover)}>
+                                            <Button 
+                                                className='bg-transparent border-0 fs-5' 
+                                                style={{ color: "#0385C3" }} 
+                                                onClick={() => handleEdit(cover)}
+                                            >
                                                 <FontAwesomeIcon icon={faEdit} />
                                             </Button>
-                                            <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cover._id)}>
+                                            <Button 
+                                                className='bg-transparent border-0 text-danger fs-5' 
+                                                onClick={() => handleDelete(cover._id)}
+                                            >
                                                 <FontAwesomeIcon icon={faTrash} />
                                             </Button>
                                         </td>
@@ -282,11 +323,20 @@ const CoverURL = () => {
                             </tbody>
                         </Table>
 
-                        {/* Only render pagination if there is more than 1 page */}
-                        {totalPages > 1 && (
+                        {Math.ceil(categoryData.length / itemsPerPage) > 1 && (
                             <div className='d-flex justify-content-center'>
                                 <Pagination>
-                                    {renderPaginationItems(category, categoryData.length)}
+                                    {Array.from({ length: Math.ceil(categoryData.length / itemsPerPage) }).map((_, index) => (
+                                        <Pagination.Item
+                                            key={index + 1}
+                                            active={index + 1 === currentPage}
+                                            onClick={() => category === 'emoji' 
+                                                ? setEmojiPage(index + 1) 
+                                                : setRealisticPage(index + 1)}
+                                        >
+                                            {index + 1}
+                                        </Pagination.Item>
+                                    ))}
                                 </Pagination>
                             </div>
                         )}
