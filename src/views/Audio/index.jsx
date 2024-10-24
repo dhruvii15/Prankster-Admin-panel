@@ -20,6 +20,8 @@ const Audio = () => {
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
+    const [selectedAudio, setSelectedAudio] = useState("");
+    const [filteredData, setFilteredData] = useState([]);
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -41,7 +43,9 @@ const Audio = () => {
         setLoading(true);
         axios.post('https://pslink.world/api/audio/read')
             .then((res) => {
-                setData(res.data.data.reverse());
+                const newData = res.data.data.reverse();
+                setData(newData);
+                setFilteredData(newData);
                 setLoading(false);
             })
             .catch((err) => {
@@ -49,6 +53,36 @@ const Audio = () => {
                 setLoading(false);
                 toast.error("Failed to fetch data.");
             });
+    };
+
+    // Add useEffect for filtering
+    useEffect(() => {
+        filterAudioData();
+    }, [selectedAudio, data]);
+
+    // Add filtering function
+    const filterAudioData = () => {
+        let filtered = [...data];
+
+        switch (selectedAudio) {
+            case "Hide":
+                filtered = data.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = data.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = data.filter(item => item.AudioPremium === true);
+                break;
+            case "Free":
+                filtered = data.filter(item => item.AudioPremium === false);
+                break;
+            default:
+                filtered = data;
+        }
+
+        setFilteredData(filtered);
+        setCurrentPage(1); // Reset to first page when filter changes
     };
 
     const getCharacters = () => {
@@ -132,7 +166,7 @@ const Audio = () => {
     };
 
     const handlePremiumToggle = (audioId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -175,9 +209,8 @@ const Audio = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -231,7 +264,26 @@ const Audio = () => {
                     <p>Category / Audio Management</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Audio</Button>
+            <div className="d-flex justify-content-between align-items-center">
+                <Button
+                    onClick={() => toggleModal('add')}
+                    className='my-4 rounded-3 border-0'
+                    style={{ backgroundColor: "#FA5D4D", color: "white" }}
+                >
+                    Add New Audio
+                </Button>
+                <Form.Select
+                    value={selectedAudio}
+                    onChange={(e) => setSelectedAudio(e.target.value)}
+                    style={{ width: 'auto' }}
+                >
+                    <option value="">All</option>
+                    <option value="Hide">Hide</option>
+                    <option value="Unhide">Unhide</option>
+                    <option value="Premium">Premium</option>
+                    <option value="Free">Free</option>
+                </Form.Select>
+            </div>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{id ? "Edit Audio" : "Add New Audio"}</Modal.Title>

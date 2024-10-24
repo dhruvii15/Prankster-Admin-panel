@@ -20,6 +20,8 @@ const Video = () => {
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Video Image Upload');
     const [videoFileLabel, setVideoFileLabel] = useState('Video File Upload');
+    const [selectedVideo, setSelectedVideo] = useState("");
+    const [filteredData, setFilteredData] = useState([]);
 
 
     const toggleModal = (mode) => {
@@ -42,7 +44,9 @@ const Video = () => {
         setLoading(true);
         axios.post('https://pslink.world/api/video/read')
             .then((res) => {
-                setData(res.data.data.reverse());
+                const newData = res.data.data.reverse();
+                setData(newData);
+                setFilteredData(newData);
                 setLoading(false);
             })
             .catch((err) => {
@@ -50,6 +54,36 @@ const Video = () => {
                 setLoading(false);
                 toast.error("Failed to fetch data.");
             });
+    };
+
+    // Add useEffect for filtering
+    useEffect(() => {
+        filterVideoData();
+    }, [selectedVideo, data]);
+
+    // Add filtering function
+    const filterVideoData = () => {
+        let filtered = [...data];
+
+        switch (selectedVideo) {
+            case "Hide":
+                filtered = data.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = data.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = data.filter(item => item.VideoPremium === true);
+                break;
+            case "Free":
+                filtered = data.filter(item => item.VideoPremium === false);
+                break;
+            default:
+                filtered = data;
+        }
+
+        setFilteredData(filtered);
+        setCurrentPage(1); // Reset to first page when filter changes
     };
 
     const getCharacters = () => {
@@ -145,7 +179,7 @@ const Video = () => {
     };
 
     const handlePremiumToggle = (videoId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -176,9 +210,8 @@ const Video = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -232,7 +265,26 @@ const Video = () => {
                     <p>Category / Video Management</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Video</Button>
+            <div className="d-flex justify-content-between align-items-center">
+                <Button
+                    onClick={() => toggleModal('add')}
+                    className='my-4 rounded-3 border-0'
+                    style={{ backgroundColor: "#FA5D4D", color: "white" }}
+                >
+                    Add New Video
+                </Button>
+                <Form.Select
+                    value={selectedVideo}
+                    onChange={(e) => setSelectedVideo(e.target.value)}
+                    style={{ width: 'auto' }}
+                >
+                    <option value="">All</option>
+                    <option value="Hide">Hide</option>
+                    <option value="Unhide">Unhide</option>
+                    <option value="Premium">Premium</option>
+                    <option value="Free">Free</option>
+                </Form.Select>
+            </div>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{id ? "Edit Video" : "Add New Video"}</Modal.Title>

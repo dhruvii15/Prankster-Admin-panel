@@ -23,6 +23,7 @@ const CoverURL = () => {
     const [realisticPage, setRealisticPage] = useState(1);
     const [isEditing, setIsEditing] = useState(false);
     const itemsPerPage = 10;
+    const [selectedFilter, setSelectedFilter] = useState("");
 
     const toggleModal = (mode) => {
         if (mode === 'add') {
@@ -63,8 +64,25 @@ const CoverURL = () => {
         getData();
     }, []);
 
+
+    const filterData = (covers) => {
+        switch (selectedFilter) {
+            case "Hide":
+                return covers.filter(cover => cover.Hide === true);
+            case "Unhide":
+                return covers.filter(cover => cover.Hide === false);
+            case "Premium":
+                return covers.filter(cover => cover.CoverPremium === true);
+            case "Free":
+                return covers.filter(cover => cover.CoverPremium === false);
+            default:
+                return covers;
+        }
+    };
+
     const groupByCategory = (category) => {
-        return data.filter(cover => cover.Category === category);
+        const filteredData = filterData(data);
+        return filteredData.filter(cover => cover.Category === category);
     };
 
     const coverSchema = Yup.object().shape({
@@ -141,7 +159,7 @@ const CoverURL = () => {
     });
 
     const handleHideToggle = (coverId, currentHideStatus) => {
-        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -153,7 +171,7 @@ const CoverURL = () => {
     };
 
     const handlePremiumToggle = (coverId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -232,9 +250,27 @@ const CoverURL = () => {
                     <p>Utilities / CoverImage</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800" }}>
-                Add New CoverImage
-            </Button>
+            <div className="d-flex justify-content-between align-items-center">
+                <Button 
+                    onClick={() => toggleModal('add')} 
+                    className='my-4 rounded-3 border-0' 
+                    style={{ backgroundColor: "#FFD800" }}
+                >
+                    Add New CoverImage
+                </Button>
+                <Form.Select 
+                    value={selectedFilter} 
+                    onChange={(e) => setSelectedFilter(e.target.value)} 
+                    style={{ width: 'auto' }} 
+                    className='my-4'
+                >
+                    <option value="">All</option>
+                    <option value="Hide">Hide</option>
+                    <option value="Unhide">Unhide</option>
+                    <option value="Premium">Premium</option>
+                    <option value="Free">Free</option>
+                </Form.Select>
+            </div>
             <Modal show={visible} onHide={() => toggleModal()} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{isEditing ? "Edit Cover Image" : "Add New Cover Image"}</Modal.Title>

@@ -19,6 +19,8 @@ const Gallery = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Gallery Image Upload');
+    const [selectedGallery, setSelectedGallery] = useState("");
+    const [filteredData, setFilteredData] = useState([]);
 
 
     const toggleModal = (mode) => {
@@ -39,7 +41,9 @@ const Gallery = () => {
         setLoading(true);
         axios.post('https://pslink.world/api/gallery/read')
             .then((res) => {
-                setData(res.data.data.reverse());
+                const newData = res.data.data.reverse();
+                setData(newData);
+                setFilteredData(newData);
                 setLoading(false);
             })
             .catch((err) => {
@@ -47,6 +51,36 @@ const Gallery = () => {
                 setLoading(false);
                 toast.error("Failed to fetch data.");
             });
+    };
+
+    // Add useEffect for filtering
+    useEffect(() => {
+        filterGalleryData();
+    }, [selectedGallery, data]);
+
+    // Add filtering function
+    const filterGalleryData = () => {
+        let filtered = [...data];
+
+        switch (selectedGallery) {
+            case "Hide":
+                filtered = data.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = data.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = data.filter(item => item.GalleryPremium === true);
+                break;
+            case "Free":
+                filtered = data.filter(item => item.GalleryPremium === false);
+                break;
+            default:
+                filtered = data;
+        }
+
+        setFilteredData(filtered);
+        setCurrentPage(1); // Reset to first page when filter changes
     };
 
     const getCharacters = () => {
@@ -136,7 +170,7 @@ const Gallery = () => {
     };
 
     const handlePremiumToggle = (galleryId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -167,9 +201,9 @@ const Gallery = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage)
 
-    const totalPages = Math.ceil(data.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -199,7 +233,7 @@ const Gallery = () => {
         return items;
     };
 
-   if (loading) return (
+    if (loading) return (
         <div
             style={{
                 height: '100vh',
@@ -223,7 +257,26 @@ const Gallery = () => {
                     <p>Category / Gallery Management</p>
                 </div>
             </div>
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Gallery</Button>
+            <div className="d-flex justify-content-between align-items-center">
+                <Button
+                    onClick={() => toggleModal('add')}
+                    className='my-4 rounded-3 border-0'
+                    style={{ backgroundColor: "#FA5D4D", color: "white" }}
+                >
+                    Add New Gallery
+                </Button>
+                <Form.Select
+                    value={selectedGallery}
+                    onChange={(e) => setSelectedGallery(e.target.value)}
+                    style={{ width: 'auto' }}
+                >
+                    <option value="">All</option>
+                    <option value="Hide">Hide</option>
+                    <option value="Unhide">Unhide</option>
+                    <option value="Premium">Premium</option>
+                    <option value="Free">Free</option>
+                </Form.Select>
+            </div>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>{id ? "Edit Gallery" : "Add New Gallery"}</Modal.Title>
