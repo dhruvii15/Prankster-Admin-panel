@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -125,6 +125,18 @@ const Gallery = () => {
 
     const handleHideToggle = (galleryId, currentHideStatus) => {
         axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
+    };
+
+    const handlePremiumToggle = (galleryId, currentPremiumStatus) => {
+        axios.patch(`http://localhost:5000/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -341,7 +353,18 @@ const Gallery = () => {
                                 <td>
                                     <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
-                                <td>{gallery.GalleryPremium ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <Button
+                                        className='bg-transparent border-0 fs-4'
+                                        style={{ color: gallery.GalleryPremium ? "#0385C3" : "#6c757d" }}
+                                        onClick={() => handlePremiumToggle(gallery._id, gallery.GalleryPremium)}
+                                    >
+                                        <FontAwesomeIcon
+                                            icon={gallery.GalleryPremium ? faToggleOn : faToggleOff}
+                                            title={gallery.GalleryPremium ? "Premium ON" : "Premium OFF"}
+                                        />
+                                    </Button>
+                                </td>
                                 <td>
                                     <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(gallery._id, gallery.Hide)}>
                                         <FontAwesomeIcon icon={gallery.Hide ? faEyeSlash : faEye} />

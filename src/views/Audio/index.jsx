@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -131,6 +131,18 @@ const Audio = () => {
         toggleModal('edit');
     };
 
+    const handlePremiumToggle = (audioId, currentPremiumStatus) => {
+        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
+    };
+
     const handleHideToggle = (audioId, currentHideStatus) => {
         axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
             .then((res) => {
@@ -195,7 +207,7 @@ const Audio = () => {
         return items;
     };
 
-   if (loading) return (
+    if (loading) return (
         <div
             style={{
                 height: '100vh',
@@ -389,7 +401,18 @@ const Audio = () => {
                                         Your browser does not support the audio element.
                                     </audio>
                                 </td>
-                                <td>{audio.AudioPremium ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <Button
+                                        className='bg-transparent border-0 fs-4'
+                                        style={{ color: audio.AudioPremium ? "#0385C3" : "#6c757d" }}
+                                        onClick={() => handlePremiumToggle(audio._id, audio.AudioPremium)}
+                                    >
+                                        <FontAwesomeIcon
+                                            icon={audio.AudioPremium ? faToggleOn : faToggleOff}
+                                            title={audio.AudioPremium ? "Premium ON" : "Premium OFF"}
+                                        />
+                                    </Button>
+                                </td>
                                 <td>
                                     <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(audio._id, audio.Hide)}>
                                         <FontAwesomeIcon icon={audio.Hide ? faEyeSlash : faEye} />

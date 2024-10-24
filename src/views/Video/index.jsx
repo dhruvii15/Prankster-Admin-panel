@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -134,6 +134,18 @@ const Video = () => {
 
     const handleHideToggle = (videoId, currentHideStatus) => {
         axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
+    };
+
+    const handlePremiumToggle = (videoId, currentPremiumStatus) => {
+        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -391,7 +403,18 @@ const Video = () => {
                                     </video>
 
                                 </td>
-                                <td>{video.VideoPremium ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <Button
+                                        className='bg-transparent border-0 fs-4'
+                                        style={{ color: video.VideoPremium ? "#0385C3" : "#6c757d" }}
+                                        onClick={() => handlePremiumToggle(video._id, video.VideoPremium)}
+                                    >
+                                        <FontAwesomeIcon
+                                            icon={video.VideoPremium ? faToggleOn : faToggleOff}
+                                            title={video.VideoPremium ? "Premium ON" : "Premium OFF"}
+                                        />
+                                    </Button>
+                                </td>
                                 <td>
                                     <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(video._id, video.Hide)}>
                                         <FontAwesomeIcon icon={video.Hide ? faEyeSlash : faEye} />

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
@@ -142,6 +142,18 @@ const CoverURL = () => {
 
     const handleHideToggle = (coverId, currentHideStatus) => {
         axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
+    };
+
+    const handlePremiumToggle = (coverId, currentPremiumStatus) => {
+        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -353,14 +365,28 @@ const CoverURL = () => {
                                                 style={{ width: '150px', height: '120px', objectFit: 'cover' }} 
                                             />
                                         </td>
-                                        <td>{cover.CoverPremium ? 'Yes' : 'No'}</td>
+                                        <td>
+                                            <Button 
+                                                className='bg-transparent border-0 fs-4' 
+                                                style={{ color: cover.CoverPremium ? "#0385C3" : "#6c757d" }}
+                                                onClick={() => handlePremiumToggle(cover._id, cover.CoverPremium)}
+                                            >
+                                                <FontAwesomeIcon 
+                                                    icon={cover.CoverPremium ? faToggleOn : faToggleOff} 
+                                                    title={cover.CoverPremium ? "Premium ON" : "Premium OFF"}
+                                                />
+                                            </Button>
+                                        </td>
                                         <td>
                                             <Button 
                                                 className='bg-transparent border-0 fs-5' 
                                                 style={{ color: "#0385C3" }} 
                                                 onClick={() => handleHideToggle(cover._id, cover.Hide)}
                                             >
-                                                <FontAwesomeIcon icon={cover.Hide ? faEyeSlash : faEye} />
+                                                <FontAwesomeIcon 
+                                                    icon={cover.Hide ? faEyeSlash : faEye}
+                                                    title={cover.Hide ? "Hidden" : "Visible"}
+                                                />
                                             </Button>
                                         </td>
                                         <td>
