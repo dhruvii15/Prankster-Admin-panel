@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -34,7 +35,6 @@ const CoverURL = () => {
         setVisible(!visible);
     };
 
-    // Reset form when modal is closed
     useEffect(() => {
         if (!visible) {
             formik.resetForm();
@@ -70,25 +70,25 @@ const CoverURL = () => {
     const coverSchema = Yup.object().shape({
         Category: Yup.string().required('Category is required'),
         CoverPremium: Yup.boolean(),
+        Hide: Yup.boolean(), // Add Hide field to schema
     });
 
     const formik = useFormik({
         initialValues: {
             Category: '',
             CoverPremium: false,
+            Hide: false, // Add Hide field to initial values
         },
         validationSchema: coverSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 const formData = new FormData();
                 
-                // Only require files for new entries
                 if (!isEditing && selectedFiles.length === 0) {
                     toast.error("Please select at least one image");
                     return;
                 }
 
-                // Append files only if new files are selected during edit
                 if (selectedFiles.length > 0) {
                     selectedFiles.forEach((file) => {
                         formData.append('CoverURL', file);
@@ -97,6 +97,7 @@ const CoverURL = () => {
                 
                 formData.append('Category', values.Category);
                 formData.append('CoverPremium', values.CoverPremium);
+                formData.append('Hide', values.Hide); // Add Hide field to formData
 
                 let response;
                 if (isEditing) {
@@ -139,6 +140,18 @@ const CoverURL = () => {
         },
     });
 
+    const handleHideToggle = (coverId, currentHideStatus) => {
+        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
+    };
+
     const handleFileChange = (event) => {
         const files = Array.from(event.currentTarget.files);
         
@@ -163,7 +176,6 @@ const CoverURL = () => {
         setIsEditing(true);
         setId(cover._id);
         
-        // Set the existing preview URL if available
         if (cover.CoverURL) {
             setPreviewUrls([cover.CoverURL]);
         }
@@ -171,8 +183,9 @@ const CoverURL = () => {
         formik.setValues({
             Category: cover.Category || '',
             CoverPremium: cover.CoverPremium || false,
+            Hide: cover.Hide || false, // Add Hide field when editing
         });
-        
+
         setFileLabel('Update Cover Image (Optional)');
         toggleModal('edit');
     };
@@ -287,6 +300,17 @@ const CoverURL = () => {
                             />
                         </Form.Group>
 
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="Hide"
+                                name="Hide"
+                                label="Hide Cover"
+                                checked={formik.values.Hide}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
                         <Button 
                             type="submit" 
                             className='bg-white border-0' 
@@ -314,6 +338,7 @@ const CoverURL = () => {
                                     <th>Id</th>
                                     <th>Cover</th>
                                     <th>Premium</th>
+                                    <th>Hidden</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -329,6 +354,15 @@ const CoverURL = () => {
                                             />
                                         </td>
                                         <td>{cover.CoverPremium ? 'Yes' : 'No'}</td>
+                                        <td>
+                                            <Button 
+                                                className='bg-transparent border-0 fs-5' 
+                                                style={{ color: "#0385C3" }} 
+                                                onClick={() => handleHideToggle(cover._id, cover.Hide)}
+                                            >
+                                                <FontAwesomeIcon icon={cover.Hide ? faEyeSlash : faEye} />
+                                            </Button>
+                                        </td>
                                         <td>
                                             <Button 
                                                 className='bg-transparent border-0 fs-5' 
