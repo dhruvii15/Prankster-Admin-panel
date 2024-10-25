@@ -18,7 +18,6 @@ const Audio = () => {
     const [characters, setCharacters] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
     const [selectedAudio, setSelectedAudio] = useState("");
     const [filteredData, setFilteredData] = useState([]);
@@ -27,13 +26,11 @@ const Audio = () => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setImageFileLabel('Audio Image Upload');
                 setAudioFileLabel('Audio File Upload');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setImageFileLabel('Audio Image Upload');
             setAudioFileLabel('Audio File Upload');
         }
         setVisible(!visible);
@@ -103,7 +100,6 @@ const Audio = () => {
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Name is required'),
-        AudioImage: Yup.mixed().required('Audio Image is required'),
         Audio: Yup.mixed().required('Audio File is required'),
         AudioPremium: Yup.boolean(),
         CharacterId: Yup.string().required('Character Name is required'),
@@ -113,7 +109,6 @@ const Audio = () => {
     const formik = useFormik({
         initialValues: {
             AudioName: '',
-            AudioImage: '',
             Audio: '',
             AudioPremium: false,
             CharacterId: '',
@@ -123,7 +118,6 @@ const Audio = () => {
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
             formData.append('AudioName', values.AudioName);
-            formData.append('AudioImage', values.AudioImage);
             formData.append('Audio', values.Audio);
             formData.append('AudioPremium', values.AudioPremium);
             formData.append('CharacterId', values.CharacterId);
@@ -137,7 +131,6 @@ const Audio = () => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setImageFileLabel('Audio Image Upload');
                 setAudioFileLabel('Audio File Upload');
                 getData();
                 toast.success(res.data.message);
@@ -153,14 +146,12 @@ const Audio = () => {
     const handleEdit = (audio) => {
         formik.setValues({
             AudioName: audio.AudioName,
-            AudioImage: audio.AudioImage,
             Audio: audio.Audio,
             AudioPremium: audio.AudioPremium,
             CharacterId: audio.CharacterId,
             Hide: audio.Hide,  // Set Hide value when editing
         });
         setId(audio._id);
-        setImageFileLabel('Audio Image Upload');
         setAudioFileLabel('Audio File Upload');
         toggleModal('edit');
     };
@@ -304,32 +295,6 @@ const Audio = () => {
                             {formik.errors.AudioName && formik.touched.AudioName && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.AudioName}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>{imageFileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="AudioImage"
-                                    name="AudioImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("AudioImage", file);
-                                        setImageFileLabel(file ? "Audio Image uploaded" : "Audio Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="AudioImage" className="btn border bg-white mb-0">Select Audio Image</label>
-                            </div>
-                            {formik.errors.AudioImage && formik.touched.AudioImage && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.AudioImage}
                                 </div>
                             )}
                         </Form.Group>
