@@ -11,36 +11,36 @@ import 'react-toastify/dist/ReactToastify.css';
 // img
 import logo from "../../assets/images/logo.svg";
 
-const AudioCharacter = () => {
+const Category = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
     const [filteredData, setFilteredData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [fileLabel, setFileLabel] = useState('Character Image Upload');
-    const [selectedCategory, setSelectedCategory] = useState('');
+    const [fileLabel, setFileLabel] = useState('Category Image Upload');
+    const [selectedType, setSelectedType] = useState('');
 
     const toggleModal = (mode) => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setFileLabel('Character Image Upload');
+                setFileLabel('Category Image Upload');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setFileLabel('Character Image Upload');
+            setFileLabel('Category Image Upload');
         }
         setVisible(!visible);
     };
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/character/read')
+        axios.post('http://localhost:5000/api/category/read')
             .then((res) => {
                 const allData = res.data.data.reverse();
                 setData(allData);
-                filterData(allData, selectedCategory);
+                filterData(allData, selectedType);
                 setLoading(false);
             })
             .catch((err) => {
@@ -50,9 +50,9 @@ const AudioCharacter = () => {
             });
     };
 
-    const filterData = (dataToFilter, category) => {
-        if (category) {
-            setFilteredData(dataToFilter.filter(item => item.Category === category));
+    const filterData = (dataToFilter, type) => {
+        if (type) {
+            setFilteredData(dataToFilter.filter(item => item.Type === type));
         } else {
             setFilteredData(dataToFilter);
         }
@@ -63,37 +63,37 @@ const AudioCharacter = () => {
     }, []);
 
     useEffect(() => {
-        filterData(data, selectedCategory);
-    }, [selectedCategory]);
+        filterData(data, selectedType);
+    }, [selectedType]);
 
     const portfolioSchema = Yup.object().shape({
-        CharacterName: Yup.string().required('Character Name is required'),
-        CharacterImage: Yup.mixed().required('Character Image is required'),
-        Category: Yup.string().required('Category is required'),
+        CategoryName: Yup.string().required('Category Name is required'),
+        CategoryImage: Yup.mixed().required('Category Image is required'),
+        Type: Yup.string().required('Type is required'),
     });
 
     const formik = useFormik({
         initialValues: {
-            CharacterName: '',
-            CharacterImage: '',
-            Category: '',
+            CategoryName: '',
+            CategoryImage: '',
+            Type: '',
         },
         validationSchema: portfolioSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
-            formData.append('CharacterName', values.CharacterName);
-            formData.append('CharacterImage', values.CharacterImage);
-            formData.append('Category', values.Category);
+            formData.append('CategoryName', values.CategoryName);
+            formData.append('CategoryImage', values.CategoryImage);
+            formData.append('Type', values.Type);
 
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/character/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/character/create', formData);
+                ? axios.patch(`http://localhost:5000/api/category/update/${id}`, formData)
+                : axios.post('http://localhost:5000/api/category/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setFileLabel('Character Image Upload');
+                setFileLabel('Category Image Upload');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -107,18 +107,18 @@ const AudioCharacter = () => {
 
     const handleEdit = (cardBg) => {
         formik.setValues({
-            CharacterName: cardBg.CharacterName,
-            CharacterImage: cardBg.CharacterImage,
-            Category: cardBg.Category || '',
+            CategoryName: cardBg.CategoryName,
+            CategoryImage: cardBg.CategoryImage,
+            Type: cardBg.Type || '',
         });
         setId(cardBg._id);
-        setFileLabel('Character Image Upload');
+        setFileLabel('Category Image Upload');
         toggleModal('edit');
     };
 
     const handleDelete = (cardBgId) => {
-        if (window.confirm("Are you sure you want to delete this Character?")) {
-            axios.delete(`https://pslink.world/api/character/delete/${cardBgId}`)
+        if (window.confirm("Are you sure you want to delete this Category?")) {
+            axios.delete(`http://localhost:5000/api/category/delete/${cardBgId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -187,19 +187,19 @@ const AudioCharacter = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Character Images</h4>
-                    <p>Character / Character</p>
+                    <h4>Category Images</h4>
+                    <p>Category / Category</p>
                 </div>
             </div>
             <div className='d-flex flex-wrap justify-content-between align-items-center mb-4'>
-                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 mt-3' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Character Image</Button>
+                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 mt-3' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Category Image</Button>
                 <Form.Select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
                     style={{ width: 'auto' }}
                     className='mt-3'
                 >
-                    <option value="">All Categories</option>
+                    <option value="">All Types</option>
                     <option value="audio">Audio</option>
                     <option value="video">Video</option>
                     <option value="gallery">Gallery</option>
@@ -207,24 +207,24 @@ const AudioCharacter = () => {
             </div>
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{id ? "Edit Character" : "Add New Character"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Category" : "Add New Category"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Character Name</Form.Label>
+                            <Form.Label>Category Name</Form.Label>
                             <Form.Control
                                 type="text"
-                                id="CharacterName"
-                                name="CharacterName"
-                                value={formik.values.CharacterName}
+                                id="CategoryName"
+                                name="CategoryName"
+                                value={formik.values.CategoryName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CharacterName && !!formik.errors.CharacterName}
+                                isInvalid={formik.touched.CategoryName && !!formik.errors.CategoryName}
                             />
-                            {formik.errors.CharacterName && formik.touched.CharacterName && (
+                            {formik.errors.CategoryName && formik.touched.CategoryName && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.CharacterName}
+                                    {formik.errors.CategoryName}
                                 </div>
                             )}
                         </Form.Group>
@@ -234,47 +234,47 @@ const AudioCharacter = () => {
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
-                                    id="CharacterImage"
-                                    name="CharacterImage"
+                                    id="CategoryImage"
+                                    name="CategoryImage"
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("CharacterImage", file);
-                                        setFileLabel(file ? "Character Image uploaded" : "Character Image Upload");
+                                        formik.setFieldValue("CategoryImage", file);
+                                        setFileLabel(file ? "Category Image uploaded" : "Category Image Upload");
                                     }}
                                     onBlur={formik.handleBlur}
                                     label="Choose File"
                                     className="d-none"
                                     custom
                                 />
-                                <label htmlFor="CharacterImage" className="btn border bg-white mb-0">Select Image</label>
+                                <label htmlFor="CategoryImage" className="btn border bg-white mb-0">Select Image</label>
                             </div>
-                            {formik.errors.CharacterImage && formik.touched.CharacterImage && (
+                            {formik.errors.CategoryImage && formik.touched.CategoryImage && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.CharacterImage}
+                                    {formik.errors.CategoryImage}
                                 </div>
                             )}
                         </Form.Group>
 
-                        {/* Category Dropdown */}
+                        {/* Type Dropdown */}
                         <Form.Group className="mb-3">
-                            <Form.Label>Category</Form.Label>
+                            <Form.Label>Type</Form.Label>
                             <Form.Control
                                 as="select"
-                                id="Category"
-                                name="Category"
-                                value={formik.values.Category}
+                                id="Type"
+                                name="Type"
+                                value={formik.values.Type}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.Category && !!formik.errors.Category}
+                                isInvalid={formik.touched.Type && !!formik.errors.Type}
                             >
-                                <option value="">Select Category</option>
+                                <option value="">Select Type</option>
                                 <option value="audio">Audio</option>
                                 <option value="video">Video</option>
                                 <option value="gallery">Gallery</option>
                             </Form.Control>
-                            {formik.errors.Category && formik.touched.Category && (
+                            {formik.errors.Type && formik.touched.Type && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.Category}
+                                    {formik.errors.Type}
                                 </div>
                             )}
                         </Form.Group>
@@ -289,9 +289,9 @@ const AudioCharacter = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Character Image</th>
-                        <th>Character Name</th>
-                        <th>Category</th>
+                        <th>Category Image</th>
+                        <th>Category Name</th>
+                        <th>Type</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -300,9 +300,9 @@ const AudioCharacter = () => {
                         currentItems.map((cardBg, index) => (
                             <tr key={cardBg._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
-                                <td><img src={cardBg.CharacterImage} alt='CharacterImage' width={100} /></td>
-                                <td>{cardBg.CharacterName}</td>
-                                <td>{cardBg.Category}</td>
+                                <td><img src={cardBg.CategoryImage} alt='CategoryImage' width={100} /></td>
+                                <td>{cardBg.CategoryName}</td>
+                                <td>{cardBg.Type}</td>
                                 <td>
                                     <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cardBg)}>
                                         <FontAwesomeIcon icon={faEdit} />
@@ -334,4 +334,4 @@ const AudioCharacter = () => {
     );
 };
 
-export default AudioCharacter;
+export default Category;

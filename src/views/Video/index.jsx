@@ -15,7 +15,7 @@ import logo from "../../assets/images/logo.svg";
 const Video = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [characters, setCharacters] = useState([]);
+    const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Video Image Upload');
@@ -42,7 +42,7 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/video/read')
+        axios.post('http://localhost:5000/api/video/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -86,20 +86,20 @@ const Video = () => {
         setCurrentPage(1); // Reset to first page when filter changes
     };
 
-    const getCharacters = () => {
-        axios.post('https://pslink.world/api/character/read')
+    const getCategory = () => {
+        axios.post('http://localhost:5000/api/category/read')
             .then((res) => {
-                setCharacters(res.data.data);
+                setCategory(res.data.data);
             })
             .catch((err) => {
                 console.error(err);
-                toast.error("Failed to fetch characters.");
+                toast.error("Failed to fetch category.");
             });
     };
 
     useEffect(() => {
         getData();
-        getCharacters();
+        getCategory();
     }, []);
 
     const videoSchema = Yup.object().shape({
@@ -107,7 +107,7 @@ const Video = () => {
         VideoImage: Yup.mixed().required('Video Image is required'),
         Video: Yup.mixed().required('Video File is required'),
         VideoPremium: Yup.boolean(),
-        CharacterId: Yup.string().required('Character Name is required'),
+        CategoryId: Yup.string().required('Category Name is required'),
         Hide: Yup.boolean()
     });
 
@@ -117,7 +117,7 @@ const Video = () => {
             VideoImage: '',
             Video: '',
             VideoPremium: false,
-            CharacterId: '',
+            CategoryId: '',
             Hide: false,
         },
         validationSchema: videoSchema,
@@ -127,12 +127,12 @@ const Video = () => {
             formData.append('VideoImage', values.VideoImage);
             formData.append('Video', values.Video);
             formData.append('VideoPremium', values.VideoPremium);
-            formData.append('CharacterId', values.CharacterId);
+            formData.append('CategoryId', values.CategoryId);
             formData.append('Hide', values.Hide);
 
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/video/create', formData);
+                ? axios.patch(`http://localhost:5000/api/video/update/${id}`, formData)
+                : axios.post('http://localhost:5000/api/video/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -157,7 +157,7 @@ const Video = () => {
             VideoImage: video.VideoImage,
             Video: video.Video,
             VideoPremium: video.VideoPremium,
-            CharacterId: video.CharacterId,
+            CategoryId: video.CategoryId,
             Hide: video.Hide,
         });
         setId(video._id);
@@ -167,7 +167,7 @@ const Video = () => {
     };
 
     const handleHideToggle = (videoId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -179,7 +179,7 @@ const Video = () => {
     };
 
     const handlePremiumToggle = (videoId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -192,7 +192,7 @@ const Video = () => {
 
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video?")) {
-            axios.delete(`https://pslink.world/api/video/delete/${videoId}`)
+            axios.delete(`http://localhost:5000/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -384,31 +384,31 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Character Name</Form.Label>
+                            <Form.Label>Category Name</Form.Label>
                             <Form.Control
                                 as="select"
-                                id="CharacterId"
-                                name="CharacterId"
-                                value={formik.values.CharacterId}
+                                id="CategoryId"
+                                name="CategoryId"
+                                value={formik.values.CategoryId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CharacterId && !!formik.errors.CharacterId}
+                                isInvalid={formik.touched.CategoryId && !!formik.errors.CategoryId}
                             >
-                                <option value="">Select a character</option>
-                                {characters.map((character) => {
-                                    if (character.Category === 'video') {
+                                <option value="">Select a category</option>
+                                {category.map((category) => {
+                                    if (category.Type === 'video') {
                                         return (
-                                            <option key={character._id} value={character.CharacterId}>
-                                                {character.CharacterName}
+                                            <option key={category._id} value={category.CategoryId}>
+                                                {category.CategoryName}
                                             </option>
                                         );
                                     }
-                                    return null; // Return null for characters not in the video category
+                                    return null; // Return null for category not in the video category
                                 })}
                             </Form.Control>
-                            {formik.errors.CharacterId && formik.touched.CharacterId && (
+                            {formik.errors.CategoryId && formik.touched.CategoryId && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.CharacterId}
+                                    {formik.errors.CategoryId}
                                 </div>
                             )}
                         </Form.Group>

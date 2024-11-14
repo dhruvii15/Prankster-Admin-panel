@@ -34,23 +34,23 @@ const menuItems = {
       ]
     },
     {
-      id: 'Character',
-      title: 'Character',
+      id: 'Category',
+      title: 'Category',
       type: 'group',
       icon: 'icon-ui',
       children: [
         {
-          id: 'character',
-          title: 'Character',
+          id: 'category',
+          title: 'Category',
           type: 'item',
-          url: '/character',
+          url: '/category',
           icon: faLayerGroup
         },
       ]
     },
     {
-      id: 'Category',
-      title: 'Category',
+      id: 'Type',
+      title: 'Type',
       type: 'group',
       icon: 'icon-ui',
       children: [
@@ -73,6 +73,35 @@ const menuItems = {
           title: 'Gallery',
           type: 'item',
           url: '/category/gallery',
+          icon: faPhotoFilm
+        },
+      ]
+    },
+    {
+      id: 'User',
+      title: 'User-upload',
+      type: 'group',
+      icon: 'icon-ui',
+      children: [
+        {
+          id: 'audio',
+          title: 'Audio',
+          type: 'item',
+          url: '/user/audio',
+          icon: faFileAudio
+        },
+        {
+          id: 'video',
+          title: 'Video',
+          type: 'item',
+          url: '/category/video',
+          icon: faVideo
+        },
+        {
+          id: 'gallery',
+          title: 'Gallery',
+          type: 'item',
+          url: '/user/gallery',
           icon: faPhotoFilm
         },
       ]

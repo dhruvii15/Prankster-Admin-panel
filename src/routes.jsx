@@ -11,10 +11,11 @@ import AdminProtect from './components/AdminProtect';
 import Dashboard from './views/dashboard';
 import Ads from './views/Ads';
 import Cover from './views/Cover';
-import AudioCharacter from 'views/Character';
+import Category from 'views/Category';
 import Audio from 'views/Audio';
 import Video from 'views/Video';
 import Gallery from 'views/Gallery';
+import UserGallery from 'views/UserGallery';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -72,8 +73,8 @@ export const routes = [
       },
       {
         exact: true,
-        path: '/character',
-        element: () => <AdminProtect><AudioCharacter /></AdminProtect>
+        path: '/category',
+        element: () => <AdminProtect><Category /></AdminProtect>
       },
       {
         exact: true,
@@ -89,6 +90,11 @@ export const routes = [
         exact: true,
         path: '/category/gallery',
         element: () => <AdminProtect><Gallery /></AdminProtect>
+      },,
+      {
+        exact: true,
+        path: '/user/gallery',
+        element: () => <AdminProtect><UserGallery /></AdminProtect>
       },
       {
         path: '*',

@@ -19,19 +19,19 @@ const DashAnalytics = () => {
     audio: [],
     video: [],
     gallery: [],
-    character: []
+    category: []
   });
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
-      const [users, cover, audio, video, gallery, character] = await Promise.all([
-        axios.post('https://pslink.world/api/users'),
-        axios.post('https://pslink.world/api/cover/read'),
-        axios.post('https://pslink.world/api/audio/read'),
-        axios.post('https://pslink.world/api/video/read'),
-        axios.post('https://pslink.world/api/gallery/read'),
-        axios.post('https://pslink.world/api/character/read')
+      const [users, cover, audio, video, gallery, category] = await Promise.all([
+        axios.post('http://localhost:5000/api/users'),
+        axios.post('http://localhost:5000/api/cover/read'),
+        axios.post('http://localhost:5000/api/audio/read'),
+        axios.post('http://localhost:5000/api/video/read'),
+        axios.post('http://localhost:5000/api/gallery/read'),
+        axios.post('http://localhost:5000/api/category/read')
       ]);
 
       setData({
@@ -40,7 +40,7 @@ const DashAnalytics = () => {
         audio: audio.data.data,
         video: video.data.data,
         gallery: gallery.data.data,
-        character: character.data.data
+        category: category.data.data
       });
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -91,9 +91,9 @@ const DashAnalytics = () => {
   //     {
   //       label: "# of Items",
   //       data: [
-  //         data.character.filter(item => item.Category === "audio").length,
-  //         data.character.filter(item => item.Category === "video").length,
-  //         data.character.filter(item => item.Category === "gallery").length
+  //         data.category.filter(item => item.Category === "audio").length,
+  //         data.category.filter(item => item.Category === "video").length,
+  //         data.category.filter(item => item.Category === "gallery").length
   //       ],
   //       backgroundColor: [
   //         "rgba(255, 99, 132, 0.2)",
@@ -165,7 +165,7 @@ const DashAnalytics = () => {
       ))}
       {/* <Col md={4} className='my-4'>
         <div className='bg-white h-100 p-3'>
-          <h3>Character</h3>
+          <h3>Category</h3>
           <Doughnut data={doughnutData} options={doughnutOptions} />
         </div>
       </Col> */}

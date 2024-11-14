@@ -15,7 +15,7 @@ import logo from "../../assets/images/logo.svg";
 const Gallery = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [characters, setCharacters] = useState([]);
+    const [category , setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Gallery Image Upload');
@@ -39,7 +39,7 @@ const Gallery = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/gallery/read')
+        axios.post('http://localhost:5000/api/gallery/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -83,27 +83,27 @@ const Gallery = () => {
         setCurrentPage(1); // Reset to first page when filter changes
     };
 
-    const getCharacters = () => {
-        axios.post('https://pslink.world/api/character/read')
+    const getCategory = () => {
+        axios.post('http://localhost:5000/api/category/read')
             .then((res) => {
-                setCharacters(res.data.data);
+                setCategory(res.data.data);
             })
             .catch((err) => {
                 console.error(err);
-                toast.error("Failed to fetch characters.");
+                toast.error("Failed to fetch category.");
             });
     };
 
     useEffect(() => {
         getData();
-        getCharacters();
+        getCategory();
     }, []);
 
     const gallerySchema = Yup.object().shape({
         GalleryName: Yup.string().required('Gallery Name is required'),
         GalleryImage: Yup.mixed().required('Gallery Image is required'),
         GalleryPremium: Yup.boolean(),
-        CharacterId: Yup.string().required('Character Name is required'),
+        CategoryId: Yup.string().required('Category Name is required'),
         Hide: Yup.boolean(),
     });
 
@@ -112,7 +112,7 @@ const Gallery = () => {
             GalleryName: '',
             GalleryImage: '',
             GalleryPremium: false,
-            CharacterId: '',
+            CategoryId: '',
             Hide: false,
         },
         validationSchema: gallerySchema,
@@ -121,12 +121,12 @@ const Gallery = () => {
             formData.append('GalleryName', values.GalleryName);
             formData.append('GalleryImage', values.GalleryImage);
             formData.append('GalleryPremium', values.GalleryPremium);
-            formData.append('CharacterId', values.CharacterId);
+            formData.append('CategoryId', values.CategoryId);
             formData.append('Hide', values.Hide);
 
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/gallery/create', formData);
+                ? axios.patch(`http://localhost:5000/api/gallery/update/${id}`, formData)
+                : axios.post('http://localhost:5000/api/gallery/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -149,7 +149,7 @@ const Gallery = () => {
             GalleryName: gallery.GalleryName,
             GalleryImage: gallery.GalleryImage,
             GalleryPremium: gallery.GalleryPremium,
-            CharacterId: gallery.CharacterId,
+            CategoryId: gallery.CategoryId,
             Hide: gallery.Hide,
         });
         setId(gallery._id);
@@ -158,7 +158,7 @@ const Gallery = () => {
     };
 
     const handleHideToggle = (galleryId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5000/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -170,7 +170,7 @@ const Gallery = () => {
     };
 
     const handlePremiumToggle = (galleryId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5000/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -183,7 +183,7 @@ const Gallery = () => {
 
     const handleDelete = (galleryId) => {
         if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
-            axios.delete(`https://pslink.world/api/gallery/delete/${galleryId}`)
+            axios.delete(`http://localhost:5000/api/gallery/delete/${galleryId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -350,31 +350,31 @@ const Gallery = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Character Name</Form.Label>
+                            <Form.Label>Category Name</Form.Label>
                             <Form.Control
                                 as="select"
-                                id="CharacterId"
-                                name="CharacterId"
-                                value={formik.values.CharacterId}
+                                id="CategoryId"
+                                name="CategoryId"
+                                value={formik.values.CategoryId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CharacterId && !!formik.errors.CharacterId}
+                                isInvalid={formik.touched.CategoryId && !!formik.errors.CategoryId}
                             >
-                                <option value="">Select a character</option>
-                                {characters.map((character) => {
-                                    if (character.Category === 'gallery') {
+                                <option value="">Select a category</option>
+                                {category.map((category) => {
+                                    if (category.Type === 'gallery') {
                                         return (
-                                            <option key={character._id} value={character.CharacterId}>
-                                                {character.CharacterName}
+                                            <option key={category._id} value={category.CategoryId}>
+                                                {category.CategoryName}
                                             </option>
                                         );
                                     }
-                                    return null; // Return null for characters not in the gallery category
+                                    return null; // Return null for category not in the gallery category
                                 })}
                             </Form.Control>
-                            {formik.errors.CharacterId && formik.touched.CharacterId && (
+                            {formik.errors.CategoryId && formik.touched.CategoryId && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.CharacterId}
+                                    {formik.errors.CategoryId}
                                 </div>
                             )}
                         </Form.Group>

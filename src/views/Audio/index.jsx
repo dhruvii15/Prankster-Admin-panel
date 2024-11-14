@@ -15,7 +15,7 @@ import logo from "../../assets/images/logo.svg";
 const Audio = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [characters, setCharacters] = useState([]);
+    const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
@@ -38,7 +38,7 @@ const Audio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/audio/read')
+        axios.post('http://localhost:5000/api/audio/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -82,27 +82,27 @@ const Audio = () => {
         setCurrentPage(1); // Reset to first page when filter changes
     };
 
-    const getCharacters = () => {
-        axios.post('https://pslink.world/api/character/read')
+    const getCategory = () => {
+        axios.post('http://localhost:5000/api/category/read')
             .then((res) => {
-                setCharacters(res.data.data);
+                setCategory(res.data.data);
             })
             .catch((err) => {
                 console.error(err);
-                toast.error("Failed to fetch characters.");
+                toast.error("Failed to fetch category.");
             });
     };
 
     useEffect(() => {
         getData();
-        getCharacters();
+        getCategory();
     }, []);
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Name is required'),
         Audio: Yup.mixed().required('Audio File is required'),
         AudioPremium: Yup.boolean(),
-        CharacterId: Yup.string().required('Character Name is required'),
+        CategoryId: Yup.string().required('Category Name is required'),
         Hide: Yup.boolean(),  // Add Hide field to schema
     });
 
@@ -111,7 +111,7 @@ const Audio = () => {
             AudioName: '',
             Audio: '',
             AudioPremium: false,
-            CharacterId: '',
+            CategoryId: '',
             Hide: false,  // Add Hide field to initial values
         },
         validationSchema: audioSchema,
@@ -120,12 +120,12 @@ const Audio = () => {
             formData.append('AudioName', values.AudioName);
             formData.append('Audio', values.Audio);
             formData.append('AudioPremium', values.AudioPremium);
-            formData.append('CharacterId', values.CharacterId);
+            formData.append('CategoryId', values.CategoryId);
             formData.append('Hide', values.Hide);  // Add Hide field to formData
 
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/audio/create', formData);
+                ? axios.patch(`http://localhost:5000/api/audio/update/${id}`, formData)
+                : axios.post('http://localhost:5000/api/audio/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
@@ -148,7 +148,7 @@ const Audio = () => {
             AudioName: audio.AudioName,
             Audio: audio.Audio,
             AudioPremium: audio.AudioPremium,
-            CharacterId: audio.CharacterId,
+            CategoryId: audio.CategoryId,
             Hide: audio.Hide,  // Set Hide value when editing
         });
         setId(audio._id);
@@ -157,7 +157,7 @@ const Audio = () => {
     };
 
     const handlePremiumToggle = (audioId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -169,7 +169,7 @@ const Audio = () => {
     };
 
     const handleHideToggle = (audioId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -182,7 +182,7 @@ const Audio = () => {
 
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`https://pslink.world/api/audio/delete/${audioId}`)
+            axios.delete(`http://localhost:5000/api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -348,31 +348,31 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Character Name</Form.Label>
+                            <Form.Label>Category Name</Form.Label>
                             <Form.Control
                                 as="select"
-                                id="CharacterId"
-                                name="CharacterId"
-                                value={formik.values.CharacterId}
+                                id="CategoryId"
+                                name="CategoryId"
+                                value={formik.values.CategoryId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CharacterId && !!formik.errors.CharacterId}
+                                isInvalid={formik.touched.CategoryId && !!formik.errors.CategoryId}
                             >
-                                <option value="">Select a character</option>
-                                {characters.map((character) => {
-                                    if (character.Category === 'audio') {
+                                <option value="">Select a category</option>
+                                {category.map((category) => {
+                                    if (category.Type === 'audio') {
                                         return (
-                                            <option key={character._id} value={character.CharacterId}>
-                                                {character.CharacterName}
+                                            <option key={category._id} value={category.CategoryId}>
+                                                {category.CategoryName}
                                             </option>
                                         );
                                     }
-                                    return null; // Return null for characters not in the audio category
+                                    return null; // Return null for category not in the audio category
                                 })}
                             </Form.Control>
-                            {formik.errors.CharacterId && formik.touched.CharacterId && (
+                            {formik.errors.CategoryId && formik.touched.CategoryId && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.CharacterId}
+                                    {formik.errors.CategoryId}
                                 </div>
                             )}
                         </Form.Group>
