@@ -56,72 +56,72 @@ const DashAnalytics = () => {
     fetchData();
   }, []);
 
-  const processData = useMemo(() => {
-    const userCountByDate = {};
-    data.users.forEach(user => {
-      const date = new Date(user.createdAt);
-      if (!isNaN(date.getTime())) {
-        const formattedDate = `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
-        userCountByDate[formattedDate] = (userCountByDate[formattedDate] || 0) + 1;
-      }
-    });
-    return {
-      labels: Object.keys(userCountByDate),
-      data: Object.values(userCountByDate),
-    };
-  }, [data.users]);
+  // const processData = useMemo(() => {
+  //   const userCountByDate = {};
+  //   data.users.forEach(user => {
+  //     const date = new Date(user.createdAt);
+  //     if (!isNaN(date.getTime())) {
+  //       const formattedDate = `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
+  //       userCountByDate[formattedDate] = (userCountByDate[formattedDate] || 0) + 1;
+  //     }
+  //   });
+  //   return {
+  //     labels: Object.keys(userCountByDate),
+  //     data: Object.values(userCountByDate),
+  //   };
+  // }, [data.users]);
 
   // Data for the line chart (User Creation Trend)
-  const chartData = {
-    labels: processData.labels,
-    datasets: [{
-      label: 'Users Created per Day',
-      data: processData.data,
-      borderColor: 'rgba(75, 192, 192, 1)',
-      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-      fill: true,
-      tension: 0.1,
-    }],
-  };
+  // const chartData = {
+  //   labels: processData.labels,
+  //   datasets: [{
+  //     label: 'Users Created per Day',
+  //     data: processData.data,
+  //     borderColor: 'rgba(75, 192, 192, 1)',
+  //     backgroundColor: 'rgba(75, 192, 192, 0.2)',
+  //     fill: true,
+  //     tension: 0.1,
+  //   }],
+  // };
 
   // Data for the doughnut chart (Category Distribution)
-  const doughnutData = {
-    labels: ["Audio", "Video", "Gallery"],
-    datasets: [
-      {
-        label: "# of Items",
-        data: [
-          data.character.filter(item => item.Category === "audio").length,
-          data.character.filter(item => item.Category === "video").length,
-          data.character.filter(item => item.Category === "gallery").length
-        ],
-        backgroundColor: [
-          "rgba(255, 99, 132, 0.2)",
-          "rgba(54, 162, 235, 0.2)",
-          "rgba(1,197,1, 0.2)",
-        ],
-        borderColor: [
-          "rgba(255, 99, 132, 1)",
-          "rgba(54, 162, 235, 1)",
-          "rgba(75, 192, 192, 1)",
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
+  // const doughnutData = {
+  //   labels: ["Audio", "Video", "Gallery"],
+  //   datasets: [
+  //     {
+  //       label: "# of Items",
+  //       data: [
+  //         data.character.filter(item => item.Category === "audio").length,
+  //         data.character.filter(item => item.Category === "video").length,
+  //         data.character.filter(item => item.Category === "gallery").length
+  //       ],
+  //       backgroundColor: [
+  //         "rgba(255, 99, 132, 0.2)",
+  //         "rgba(54, 162, 235, 0.2)",
+  //         "rgba(1,197,1, 0.2)",
+  //       ],
+  //       borderColor: [
+  //         "rgba(255, 99, 132, 1)",
+  //         "rgba(54, 162, 235, 1)",
+  //         "rgba(75, 192, 192, 1)",
+  //       ],
+  //       borderWidth: 1,
+  //     },
+  //   ],
+  // };
 
-  // Options for the doughnut chart
-  const doughnutOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      tooltip: {
-        enabled: true,
-      },
-    },
-  };
+  // // Options for the doughnut chart
+  // const doughnutOptions = {
+  //   responsive: true,
+  //   plugins: {
+  //     legend: {
+  //       position: "top",
+  //     },
+  //     tooltip: {
+  //       enabled: true,
+  //     },
+  //   },
+  // };
 
   if (loading) {
     return (
@@ -163,18 +163,18 @@ const DashAnalytics = () => {
           </Card>
         </Col>
       ))}
-      <Col md={4} className='my-4'>
+      {/* <Col md={4} className='my-4'>
         <div className='bg-white h-100 p-3'>
           <h3>Character</h3>
           <Doughnut data={doughnutData} options={doughnutOptions} />
         </div>
-      </Col>
-      <Col md={8} className='my-4'>
+      </Col> */}
+      {/* <Col md={8} className='my-4'>
         <div className='bg-white rounded-3 p-3'>
           <h3>User Creation Trend:</h3>
           <Line data={chartData} />
         </div>
-      </Col>
+      </Col> */}
     </Row>
   );
 };
