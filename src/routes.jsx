@@ -78,17 +78,17 @@ export const routes = [
       },
       {
         exact: true,
-        path: '/category/audio',
+        path: '/type/audio',
         element: () => <AdminProtect><Audio /></AdminProtect>
       },
       {
         exact: true,
-        path: '/category/video',
+        path: '/type/video',
         element: () => <AdminProtect><Video /></AdminProtect>
       },
       {
         exact: true,
-        path: '/category/gallery',
+        path: '/type/gallery',
         element: () => <AdminProtect><Gallery /></AdminProtect>
       },,
       {

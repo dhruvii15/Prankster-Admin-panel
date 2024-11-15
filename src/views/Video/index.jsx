@@ -262,7 +262,7 @@ const Video = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Video Files</h4>
-                    <p>Category / Video Management</p>
+                    <p>Type / Video Management</p>
                 </div>
             </div>
             <div className="d-flex justify-content-between align-items-center">

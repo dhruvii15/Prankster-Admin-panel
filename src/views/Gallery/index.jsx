@@ -254,7 +254,7 @@ const Gallery = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Gallery </h4>
-                    <p>Category / Gallery Management</p>
+                    <p>Type / Gallery Management</p>
                 </div>
             </div>
             <div className="d-flex justify-content-between align-items-center">

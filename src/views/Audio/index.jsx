@@ -252,7 +252,7 @@ const Audio = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Audio Files</h4>
-                    <p>Category / Audio Management</p>
+                    <p>Type / Audio Management</p>
                 </div>
             </div>
             <div className="d-flex justify-content-between align-items-center">

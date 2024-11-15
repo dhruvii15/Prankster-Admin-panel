@@ -58,21 +58,21 @@ const menuItems = {
           id: 'audio',
           title: 'Audio',
           type: 'item',
-          url: '/category/audio',
+          url: '/type/audio',
           icon: faFileAudio
         },
         {
           id: 'video',
           title: 'Video',
           type: 'item',
-          url: '/category/video',
+          url: '/type/video',
           icon: faVideo
         },
         {
           id: 'gallery',
           title: 'Gallery',
           type: 'item',
-          url: '/category/gallery',
+          url: '/type/gallery',
           icon: faPhotoFilm
         },
       ]
