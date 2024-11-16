@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faCheck} from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -33,7 +33,7 @@ const UserGallery = () => {
                 toast.error("Failed to fetch data.");
             });
     };
-    
+
 
     useEffect(() => {
         getData();
@@ -96,6 +96,21 @@ const UserGallery = () => {
         return items;
     };
 
+    const handleDelete = (galleryId) => {
+        if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
+            axios.delete(`http://localhost:5000/api/users/delete/${galleryId}?TypeId=3`)
+                .then((res) => {
+                    getData();
+                    toast.success(res.data.message);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    toast.error("An error occurred. Please try again.");
+                });
+        }
+    };
+    
+
     if (loading) return (
         <div
             style={{
@@ -147,6 +162,9 @@ const UserGallery = () => {
                                         onClick={() => handlePlusClick(gallery)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
+                                    </Button>
+                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(gallery._id)}>
+                                        <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
                             </tr>
