@@ -160,11 +160,13 @@ const Spin = () => {
         return items;
     };
 
-    if (loading) return (
-        <div className="h-screen flex justify-center items-center overflow-hidden">
-            <img src={logo} alt='loading....' className="w-48 animate-pulse" />
-        </div>
-    );
+    if (loading) {
+        return (
+            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: "hidden" }}>
+                <img src={logo} alt='loading....' style={{ animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px" }} />
+            </div>
+        );
+    }
 
     const MediaDisplay = ({ type, file, name }) => {
         switch (type.toLowerCase()) {
@@ -197,7 +199,6 @@ const Spin = () => {
                     </video>
                 );
             case 'gallery':
-            case 'message':
                 return (
                     <img src={file} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
                 );

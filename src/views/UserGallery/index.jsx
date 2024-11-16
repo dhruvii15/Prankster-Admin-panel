@@ -96,7 +96,7 @@ const UserGallery = () => {
 
     const handleDelete = (galleryId) => {
         if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
-            axios.delete(`http://localhost:5000/api/users/delete/${galleryId}?TypeId=3`)
+            axios.delete(`https://pslink.world/api/users/delete/${galleryId}?TypeId=3`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

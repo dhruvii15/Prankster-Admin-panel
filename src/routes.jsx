@@ -18,6 +18,7 @@ import Gallery from 'views/Gallery';
 import UserGallery from 'views/UserGallery';
 import UserAudio from 'views/UserAudio';
 import UserVideo from 'views/UserVideo';
+import UserCover from 'views/UserCover';
 import Spin from 'views/Spin';
 
 // ==============================|| ROUTES ||============================== //
@@ -113,6 +114,11 @@ export const routes = [
         exact: true,
         path: '/user/gallery',
         element: () => <AdminProtect><UserGallery /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/user/cover',
+        element: () => <AdminProtect><UserCover /></AdminProtect>
       },
       {
         path: '*',

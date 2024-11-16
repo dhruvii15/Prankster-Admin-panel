@@ -9,7 +9,7 @@ import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
 // img
 import logo from "../../assets/images/logo.svg";
 
-const UserAudio = () => {
+const UserCover = () => {
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
 
@@ -19,7 +19,7 @@ const UserAudio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/users/read', { TypeId: "1" })
+        axios.post('https://pslink.world/api/users/read', { TypeId: "4" })
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setFilteredData(newData); // Set filtered data initially to all data
@@ -37,17 +37,17 @@ const UserAudio = () => {
         getData();
     }, []);
 
-    const handlePlusClick = (audio) => {
+    const handlePlusClick = (cover) => {
         const formData = new FormData();
-        formData.append('AudioName', audio.AudioName);
-        formData.append('Audio', audio.Audio);
-        formData.append('AudioPremium', false);
+        formData.append('Category', 'realistic');
+        formData.append('CoverURL', cover.CoverURL);
+        formData.append('CoverPremium', false);
         formData.append('Hide', false);
-        formData.append('role', audio._id);
+        formData.append('role', cover._id);
 
 
-        if (window.confirm("Are you sure you want to move this Audio?")) {
-            axios.post('https://pslink.world/api/audio/create', formData)
+        if (window.confirm("Are you sure you want to move this Cover Image?")) {
+            axios.post('https://pslink.world/api/cover/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -94,9 +94,9 @@ const UserAudio = () => {
         return items;
     };
 
-    const handleDelete = (audioId) => {
-        if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`https://pslink.world/api/users/delete/${audioId}?TypeId=1`)
+    const handleDelete = (coverId) => {
+        if (window.confirm("Are you sure you want to delete this Cover Image?")) {
+            axios.delete(`https://pslink.world/api/users/delete/${coverId}?TypeId=4`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -107,6 +107,7 @@ const UserAudio = () => {
                 });
         }
     };
+    
 
     if (loading) return (
         <div
@@ -129,8 +130,8 @@ const UserAudio = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center pb-5'>
                 <div>
-                    <h4>Audio </h4>
-                    <p>User / Audio Management</p>
+                    <h4>Cover </h4>
+                    <p>User / Cover Management</p>
                 </div>
             </div>
 
@@ -138,39 +139,27 @@ const UserAudio = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Audio Name</th>
-                        <th>Audio</th>
+                        <th>Cover Image</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((audio, index) => (
-                            <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
+                        currentItems.map((cover, index) => (
+                            <tr key={cover._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
-                                <td>{audio.AudioName}</td>
                                 <td>
-                                    <audio controls>
-                                        <source src={audio.Audio} type="audio/mpeg" />
-                                        <track
-                                            kind="captions"
-                                            src={audio.AudioName}
-                                            srcLang="en"
-                                            label="English"
-                                            default
-                                        />
-                                        Your browser does not support the audio element.
-                                    </audio>
+                                    <img src={cover.CoverURL} alt="cover thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
                                 <td>
                                     <Button
                                         className='bg-transparent border-0 fs-4'
                                         style={{ color: "#0385C3" }}
-                                        onClick={() => handlePlusClick(audio)}
+                                        onClick={() => handlePlusClick(cover)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(audio._id)}>
+                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cover._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
@@ -197,4 +186,4 @@ const UserAudio = () => {
     );
 };
 
-export default UserAudio;
+export default UserCover;

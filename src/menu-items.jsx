@@ -119,6 +119,13 @@ const menuItems = {
           url: '/user/gallery',
           icon: faPhotoFilm
         },
+        {
+          id: 'cover',
+          title: 'Cover',
+          type: 'item',
+          url: '/user/cover',
+          icon: faImage
+        },
       ]
     },
     {
