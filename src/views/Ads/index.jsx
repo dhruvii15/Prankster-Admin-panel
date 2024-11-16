@@ -32,7 +32,7 @@ const Ads = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/ads/read')
+        axios.post('https://pslink.world/api/ads/read')
             .then((res) => {
                 setData(res.data.data);
                 setLoading(false);
@@ -45,7 +45,7 @@ const Ads = () => {
     };
 
     const getAdminData = () => {
-        axios.get('http://localhost:5000/api/admin/read')
+        axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].AdsStatus); // No need to compare with 'true'
                 setAdminId(res.data.data[0]._id); // Store admin ID
@@ -74,8 +74,8 @@ const Ads = () => {
         if (!validate()) return;
 
         const request = id !== undefined
-            ? axios.patch(`http://localhost:5000/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
-            : axios.post('http://localhost:5000/api/ads/create', { AdsName: adsName, AdsId: adsId });
+            ? axios.patch(`https://pslink.world/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
+            : axios.post('https://pslink.world/api/ads/create', { AdsName: adsName, AdsId: adsId });
 
         request.then((res) => {
             setAdsName('');
@@ -99,7 +99,7 @@ const Ads = () => {
 
     const handleDelete = (adsId) => {
         if (window.confirm("Are you sure you want to delete this ad?")) {
-            axios.delete(`http://localhost:5000/api/ads/delete/${adsId}`)
+            axios.delete(`https://pslink.world/api/ads/delete/${adsId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -115,7 +115,7 @@ const Ads = () => {
         const newState = !isOn;
         setIsOn(newState);
 
-        const apiEndpoint = `http://localhost:5000/api/admin/update/${adminId}`;
+        const apiEndpoint = `https://pslink.world/api/admin/update/${adminId}`;
         const payload = { AdsStatus: newState };
 
         try {

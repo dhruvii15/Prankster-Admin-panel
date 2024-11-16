@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faSquarePlus } from '@fortawesome/free-solid-svg-icons';
+import { faCheck} from '@fortawesome/free-solid-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -20,7 +20,7 @@ const UserGallery = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/users/read')
+        axios.post('https://pslink.world/api/users/read', { TypeId: "3" })
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -33,6 +33,7 @@ const UserGallery = () => {
                 toast.error("Failed to fetch data.");
             });
     };
+    
 
     useEffect(() => {
         getData();
@@ -48,7 +49,7 @@ const UserGallery = () => {
 
 
         if (window.confirm("Are you sure you want to move this Gallery Image?")) {
-            axios.post('http://localhost:5000/api/gallery/create', formData)
+            axios.post('https://pslink.world/api/gallery/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -145,7 +146,7 @@ const UserGallery = () => {
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handlePlusClick(gallery)}
                                     >
-                                        <FontAwesomeIcon icon={faSquarePlus} />
+                                        <FontAwesomeIcon icon={faCheck} />
                                     </Button>
                                 </td>
                             </tr>

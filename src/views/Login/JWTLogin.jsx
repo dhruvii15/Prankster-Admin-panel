@@ -31,7 +31,7 @@ const JWTLogin = () => {
                 onSubmit={async (values, { setErrors, setSubmitting }) => {
                     setLoading(true); // Set loading to true when submitting starts
                     try {
-                        const response = await axios.post('http://localhost:5000/api/admin/login', {
+                        const response = await axios.post('https://pslink.world/api/admin/login', {
                             email: values.email,
                             pass: values.pass
                         });

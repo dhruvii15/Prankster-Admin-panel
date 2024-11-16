@@ -25,17 +25,15 @@ const DashAnalytics = () => {
 
   const fetchData = async () => {
     try {
-      const [users, cover, audio, video, gallery, category] = await Promise.all([
-        axios.post('http://localhost:5000/api/users'),
-        axios.post('http://localhost:5000/api/cover/read'),
-        axios.post('http://localhost:5000/api/audio/read'),
-        axios.post('http://localhost:5000/api/video/read'),
-        axios.post('http://localhost:5000/api/gallery/read'),
-        axios.post('http://localhost:5000/api/category/read')
+      const [cover, audio, video, gallery, category] = await Promise.all([
+        axios.post('https://pslink.world/api/cover/read'),
+        axios.post('https://pslink.world/api/audio/read'),
+        axios.post('https://pslink.world/api/video/read'),
+        axios.post('https://pslink.world/api/gallery/read'),
+        axios.post('https://pslink.world/api/category/read')
       ]);
 
       setData({
-        users: users.data.data,
         cover: cover.data.data,
         audio: audio.data.data,
         video: video.data.data,
@@ -48,9 +46,6 @@ const DashAnalytics = () => {
       setLoading(false);
     }
   };
-
-  console.log(data.cover);
-  
 
   useEffect(() => {
     fetchData();

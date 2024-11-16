@@ -48,7 +48,7 @@ const CoverURL = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/cover/read')
+        axios.post('https://pslink.world/api/cover/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -120,7 +120,7 @@ const CoverURL = () => {
                 let response;
                 if (isEditing) {
                     response = await axios.patch(
-                        `http://localhost:5000/api/cover/update/${id}`,
+                        `https://pslink.world/api/cover/update/${id}`,
                         formData,
                         {
                             headers: {
@@ -130,7 +130,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'http://localhost:5000/api/cover/create',
+                        'https://pslink.world/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -159,7 +159,7 @@ const CoverURL = () => {
     });
 
     const handleHideToggle = (coverId, currentHideStatus) => {
-        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -171,7 +171,7 @@ const CoverURL = () => {
     };
 
     const handlePremiumToggle = (coverId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -222,7 +222,7 @@ const CoverURL = () => {
 
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
-            axios.delete(`http://localhost:5000/api/cover/delete/${coverId}`)
+            axios.delete(`https://pslink.world/api/cover/delete/${coverId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

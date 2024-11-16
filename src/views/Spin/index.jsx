@@ -8,39 +8,38 @@ import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// img
+// Assuming you have a logo import
 import logo from "../../assets/images/logo.svg";
 
-const Category = () => {
+const Spin = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [fileLabel, setFileLabel] = useState('Category Image Upload');
-    const [selectedType, setSelectedType] = useState('');
+    const [coverImageLabel, setCoverImageLabel] = useState('Cover Image Upload');
+    const [fileLabel, setFileLabel] = useState('File Upload');
 
     const toggleModal = (mode) => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setFileLabel('Category Image Upload');
+                setCoverImageLabel('Cover Image Upload');
+                setFileLabel('File Upload');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setFileLabel('Category Image Upload');
+            setCoverImageLabel('Cover Image Upload');
+            setFileLabel('File Upload');
         }
         setVisible(!visible);
     };
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/category/read')
+        axios.post('https://pslink.world/api/admin/spin/read')
             .then((res) => {
-                const allData = res.data.data.reverse();
-                setData(allData);
-                filterData(allData, selectedType);
+                setData(res.data.data.reverse());
                 setLoading(false);
             })
             .catch((err) => {
@@ -50,50 +49,42 @@ const Category = () => {
             });
     };
 
-    const filterData = (dataToFilter, type) => {
-        if (type) {
-            setFilteredData(dataToFilter.filter(item => item.Type === type));
-        } else {
-            setFilteredData(dataToFilter);
-        }
-    };
-
     useEffect(() => {
         getData();
     }, []);
 
-    useEffect(() => {
-        filterData(data, selectedType);
-    }, [selectedType]);
-
-    const portfolioSchema = Yup.object().shape({
-        CategoryName: Yup.string().required('Category Name is required'),
-        CategoryImage: Yup.mixed().required('Category Image is required'),
+    const spinSchema = Yup.object().shape({
+        Name: Yup.string().required('Name is required'),
+        CoverImage: Yup.mixed().required('Cover Image is required'),
+        File: Yup.mixed().required('File is required'),
         Type: Yup.string().required('Type is required'),
     });
 
     const formik = useFormik({
         initialValues: {
-            CategoryName: '',
-            CategoryImage: '',
+            Name: '',
+            CoverImage: '',
+            File: '',
             Type: '',
         },
-        validationSchema: portfolioSchema,
+        validationSchema: spinSchema,
         onSubmit: (values, { setSubmitting, resetForm }) => {
             const formData = new FormData();
-            formData.append('CategoryName', values.CategoryName);
-            formData.append('CategoryImage', values.CategoryImage);
+            formData.append('Name', values.Name);
+            formData.append('CoverImage', values.CoverImage);
+            formData.append('File', values.File);
             formData.append('Type', values.Type);
 
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/category/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/category/create', formData);
+                ? axios.patch(`https://pslink.world/api/admin/spin/update/${id}`, formData)
+                : axios.post('https://pslink.world/api/admin/spin/create', formData);
 
             request.then((res) => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setFileLabel('Category Image Upload');
+                setCoverImageLabel('Cover Image Upload');
+                setFileLabel('File Upload');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -105,20 +96,22 @@ const Category = () => {
         },
     });
 
-    const handleEdit = (cardBg) => {
+    const handleEdit = (spin) => {
         formik.setValues({
-            CategoryName: cardBg.CategoryName,
-            CategoryImage: cardBg.CategoryImage,
-            Type: cardBg.Type || '',
+            Name: spin.Name,
+            CoverImage: spin.CoverImage,
+            File: spin.File,
+            Type: spin.Type,
         });
-        setId(cardBg._id);
-        setFileLabel('Category Image Upload');
+        setId(spin._id);
+        setCoverImageLabel('Cover Image Upload');
+        setFileLabel('File Upload');
         toggleModal('edit');
     };
 
-    const handleDelete = (cardBgId) => {
-        if (window.confirm("Are you sure you want to delete this Category?")) {
-            axios.delete(`https://pslink.world/api/category/delete/${cardBgId}`)
+    const handleDelete = (spinId) => {
+        if (window.confirm("Are you sure you want to delete this Spin?")) {
+            axios.delete(`https://pslink.world/api/admin/spin/delete/${spinId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -136,9 +129,8 @@ const Category = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(data.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -168,63 +160,113 @@ const Category = () => {
         return items;
     };
 
-   if (loading) return (
-        <div
-            style={{
-                height: '100vh',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                overflow: "hidden"
-            }}
-        >
-            <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
-            }} />
+    if (loading) return (
+        <div className="h-screen flex justify-center items-center overflow-hidden">
+            <img src={logo} alt='loading....' className="w-48 animate-pulse" />
         </div>
     );
+
+    const MediaDisplay = ({ type, file, name }) => {
+        switch (type.toLowerCase()) {
+            case 'audio':
+                return (
+                    <audio controls>
+                        <source src={file} type="audio/mpeg" />
+                        <track
+                            kind="captions"
+                            src={name}
+                            srcLang="en"
+                            label="English"
+                            default
+                        />
+                        Your browser does not support the audio element.
+                    </audio>
+                );
+            case 'video':
+                return (
+                    <video controls width="240">
+                        <source src={file} type="video/mp4" />
+                        <track
+                            kind="captions"
+                            src={name}
+                            srcLang="en"
+                            label="English"
+                            default
+                        />
+                        Your browser does not support the video element.
+                    </video>
+                );
+            case 'gallery':
+            case 'message':
+                return (
+                    <img src={file} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
+                );
+            default:
+                return <span>{file}</span>;
+        }
+    };
+
     return (
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Category Images</h4>
-                    <p>Category / Category</p>
+                    <h4>Spin Management</h4>
+                    <p>Type / Spin Management</p>
                 </div>
             </div>
-            <div className='d-flex flex-wrap justify-content-between align-items-center mb-4'>
-                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 mt-3' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Category Image</Button>
-                <Form.Select
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    style={{ width: 'auto' }}
-                    className='mt-3'
-                >
-                    <option value="">All Types</option>
-                    <option value="audio">Audio</option>
-                    <option value="video">Video</option>
-                    <option value="gallery">Gallery</option>
-                </Form.Select>
-            </div>
+
+            <Button
+                onClick={() => toggleModal('add')}
+                className='my-4 rounded-3 border-0'
+                style={{ backgroundColor: "#FA5D4D", color: "white" }}
+            >
+                Add New Spin
+            </Button>
+
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
-                    <Modal.Title>{id ? "Edit Category" : "Add New Category"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Spin" : "Add New Spin"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Category Name</Form.Label>
+                            <Form.Label>Name</Form.Label>
                             <Form.Control
                                 type="text"
-                                id="CategoryName"
-                                name="CategoryName"
-                                value={formik.values.CategoryName}
+                                id="Name"
+                                name="Name"
+                                value={formik.values.Name}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CategoryName && !!formik.errors.CategoryName}
+                                isInvalid={formik.touched.Name && !!formik.errors.Name}
                             />
-                            {formik.errors.CategoryName && formik.touched.CategoryName && (
+                            {formik.errors.Name && formik.touched.Name && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.CategoryName}
+                                    {formik.errors.Name}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>{coverImageLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="CoverImage"
+                                    name="CoverImage"
+                                    onChange={(event) => {
+                                        const file = event.currentTarget.files[0];
+                                        formik.setFieldValue("CoverImage", file);
+                                        setCoverImageLabel(file ? "Cover Image uploaded" : "Cover Image Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    className="d-none"
+                                />
+                                <label htmlFor="CoverImage" className="btn border bg-white mb-0">Select Cover Image</label>
+                            </div>
+                            {formik.errors.CoverImage && formik.touched.CoverImage && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.CoverImage}
                                 </div>
                             )}
                         </Form.Group>
@@ -234,32 +276,28 @@ const Category = () => {
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
-                                    id="CategoryImage"
-                                    name="CategoryImage"
+                                    id="File"
+                                    name="File"
                                     onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("CategoryImage", file);
-                                        setFileLabel(file ? "Category Image uploaded" : "Category Image Upload");
+                                        const file = event.currentTarget.files[0];
+                                        formik.setFieldValue("File", file);
+                                        setFileLabel(file ? "File uploaded" : "File Upload");
                                     }}
                                     onBlur={formik.handleBlur}
-                                    label="Choose File"
                                     className="d-none"
-                                    custom
                                 />
-                                <label htmlFor="CategoryImage" className="btn border bg-white mb-0">Select Image</label>
+                                <label htmlFor="File" className="btn border bg-white mb-0">Select File</label>
                             </div>
-                            {formik.errors.CategoryImage && formik.touched.CategoryImage && (
+                            {formik.errors.File && formik.touched.File && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.CategoryImage}
+                                    {formik.errors.File}
                                 </div>
                             )}
                         </Form.Group>
 
-                        {/* Type Dropdown */}
                         <Form.Group className="mb-3">
-                            <Form.Label>Type</Form.Label>
-                            <Form.Control
-                                as="select"
+                            <Form.Label>Prank Type</Form.Label>
+                            <Form.Select
                                 id="Type"
                                 name="Type"
                                 value={formik.values.Type}
@@ -271,7 +309,7 @@ const Category = () => {
                                 <option value="audio">Audio</option>
                                 <option value="video">Video</option>
                                 <option value="gallery">Gallery</option>
-                            </Form.Control>
+                            </Form.Select>
                             {formik.errors.Type && formik.touched.Type && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.Type}
@@ -285,29 +323,36 @@ const Category = () => {
                     </Form>
                 </Modal.Body>
             </Modal>
+
             <Table striped bordered hover responsive className='text-center fs-6'>
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Category Image</th>
-                        <th>Category Name</th>
+                        <th>Name</th>
+                        <th>Cover Image</th>
+                        <th>File</th>
                         <th>Type</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((cardBg, index) => (
-                            <tr key={cardBg._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
+                        currentItems.map((spin, index) => (
+                            <tr key={spin._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
-                                <td><img src={cardBg.CategoryImage} alt='CategoryImage' width={100} /></td>
-                                <td>{cardBg.CategoryName}</td>
-                                <td>{cardBg.Type}</td>
+                                <td>{spin.Name}</td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cardBg)}>
+                                    <img src={spin.CoverImage} alt="cover" style={{ width: '100px', height: '100px' }} />
+                                </td>
+                                <td>
+                                    <MediaDisplay type={spin.Type} file={spin.File} name={spin.Name} />
+                                </td>
+                                <td>{spin.Type}</td>
+                                <td>
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(spin)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cardBg._id)}>
+                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(spin._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
@@ -315,7 +360,7 @@ const Category = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={5} className="text-center">No Data Found</td>
+                            <td colSpan={7} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>
@@ -334,4 +379,4 @@ const Category = () => {
     );
 };
 
-export default Category;
+export default Spin;
