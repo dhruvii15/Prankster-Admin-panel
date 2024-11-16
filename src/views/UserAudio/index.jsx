@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -94,6 +94,20 @@ const UserAudio = () => {
         return items;
     };
 
+    const handleDelete = (audioId) => {
+        if (window.confirm("Are you sure you want to delete this Audio?")) {
+            axios.delete(`http://localhost:5000/api/users/delete/${audioId}?TypeId=1`)
+                .then((res) => {
+                    getData();
+                    toast.success(res.data.message);
+                })
+                .catch((err) => {
+                    console.error(err);
+                    toast.error("An error occurred. Please try again.");
+                });
+        }
+    };
+
     if (loading) return (
         <div
             style={{
@@ -155,6 +169,9 @@ const UserAudio = () => {
                                         onClick={() => handlePlusClick(audio)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
+                                    </Button>
+                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(audio._id)}>
+                                        <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
                             </tr>

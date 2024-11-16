@@ -10,7 +10,6 @@ import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
 import logo from "../../assets/images/logo.svg";
 
 const UserGallery = () => {
-    const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
 
@@ -23,7 +22,6 @@ const UserGallery = () => {
         axios.post('https://pslink.world/api/users/read', { TypeId: "3" })
             .then((res) => {
                 const newData = res.data.data.reverse();
-                setData(newData);
                 setFilteredData(newData); // Set filtered data initially to all data
                 setLoading(false);
             })
