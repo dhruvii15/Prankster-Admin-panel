@@ -109,7 +109,7 @@ const menuItems = {
           id: 'video',
           title: 'Video',
           type: 'item',
-          url: '/category/video',
+          url: '/user/video',
           icon: faVideo
         },
         {
