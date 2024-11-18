@@ -101,6 +101,7 @@ const Audio = () => {
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Name is required'),
+        ArtistName: Yup.string().required('Artist Name is required'),
         Audio: Yup.mixed().required('Audio File is required'),
         AudioPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Category Name is required'),
@@ -110,6 +111,7 @@ const Audio = () => {
     const formik = useFormik({
         initialValues: {
             AudioName: '',
+            ArtistName: '',
             Audio: '',
             AudioPremium: false,
             CategoryId: '',
@@ -122,6 +124,7 @@ const Audio = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
                 formData.append('AudioName', values.AudioName);
+                formData.append('ArtistName', values.ArtistName);
                 formData.append('Audio', values.Audio);
                 formData.append('AudioPremium', values.AudioPremium);
                 formData.append('CategoryId', values.CategoryId);
@@ -152,6 +155,7 @@ const Audio = () => {
     const handleEdit = (audio) => {
         formik.setValues({
             AudioName: audio.AudioName,
+            ArtistName: audio.ArtistName,
             Audio: audio.Audio,
             AudioPremium: audio.AudioPremium,
             CategoryId: audio.CategoryId,
@@ -312,6 +316,24 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Label>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="ArtistName"
+                                name="ArtistName"
+                                value={formik.values.ArtistName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
+                            />
+                            {formik.errors.ArtistName && formik.touched.ArtistName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.ArtistName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label>{audioFileLabel}</Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
@@ -401,6 +423,7 @@ const Audio = () => {
                     <tr>
                         <th>Id</th>
                         <th>Audio Name</th>
+                        <th>Artist Name</th>
                         <th>Audio Image</th>
                         <th>Audio File</th>
                         <th>Premium</th>
@@ -414,6 +437,7 @@ const Audio = () => {
                             <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{audio.AudioName}</td>
+                                <td>{audio.ArtistName}</td>
                                 <td>
                                     <img src={audio.AudioImage} alt="Audio thumbnail" style={{ width: '50px', height: '50px' }} />
                                 </td>

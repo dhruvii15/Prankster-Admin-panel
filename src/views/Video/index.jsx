@@ -105,6 +105,7 @@ const Video = () => {
 
     const videoSchema = Yup.object().shape({
         VideoName: Yup.string().required('Video Name is required'),
+        ArtistName: Yup.string().required('Artist Name is required'),
         VideoImage: Yup.mixed().required('Video Image is required'),
         Video: Yup.mixed().required('Video File is required'),
         VideoPremium: Yup.boolean(),
@@ -115,6 +116,7 @@ const Video = () => {
     const formik = useFormik({
         initialValues: {
             VideoName: '',
+            ArtistName: '',
             VideoImage: '',
             Video: '',
             VideoPremium: false,
@@ -127,6 +129,7 @@ const Video = () => {
             setIsSubmitting(true);
             const formData = new FormData();
             formData.append('VideoName', values.VideoName);
+            formData.append('ArtistName', values.ArtistName);
             formData.append('VideoImage', values.VideoImage);
             formData.append('Video', values.Video);
             formData.append('VideoPremium', values.VideoPremium);
@@ -159,6 +162,7 @@ const Video = () => {
     const handleEdit = (video) => {
         formik.setValues({
             VideoName: video.VideoName,
+            ArtistName: video.ArtistName,
             VideoImage: video.VideoImage,
             Video: video.Video,
             VideoPremium: video.VideoPremium,
@@ -321,6 +325,24 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Label>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="ArtistName"
+                                name="ArtistName"
+                                value={formik.values.ArtistName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
+                            />
+                            {formik.errors.ArtistName && formik.touched.ArtistName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.ArtistName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label>{imageFileLabel}</Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
@@ -436,6 +458,7 @@ const Video = () => {
                     <tr>
                         <th>Id</th>
                         <th>Video Name</th>
+                        <th>Artist Name</th>
                         <th>Video Image</th>
                         <th>Video File</th>
                         <th>Premium</th>
@@ -449,6 +472,7 @@ const Video = () => {
                             <tr key={video._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{video.VideoName}</td>
+                                <td>{video.ArtistName}</td>
                                 <td>
                                     <img src={video.VideoImage} alt="video thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>

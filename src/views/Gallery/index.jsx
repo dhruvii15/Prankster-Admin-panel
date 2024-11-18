@@ -102,6 +102,7 @@ const Gallery = () => {
 
     const gallerySchema = Yup.object().shape({
         GalleryName: Yup.string().required('Gallery Name is required'),
+        ArtistName: Yup.string().required('Artist Name is required'),
         GalleryImage: Yup.mixed().required('Gallery Image is required'),
         GalleryPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Category Name is required'),
@@ -111,6 +112,7 @@ const Gallery = () => {
     const formik = useFormik({
         initialValues: {
             GalleryName: '',
+            ArtistName: '',
             GalleryImage: '',
             GalleryPremium: false,
             CategoryId: '',
@@ -122,6 +124,7 @@ const Gallery = () => {
             setIsSubmitting(true);
             const formData = new FormData();
             formData.append('GalleryName', values.GalleryName);
+            formData.append('ArtistName', values.ArtistName);
             formData.append('GalleryImage', values.GalleryImage);
             formData.append('GalleryPremium', values.GalleryPremium);
             formData.append('CategoryId', values.CategoryId);
@@ -152,6 +155,7 @@ const Gallery = () => {
     const handleEdit = (gallery) => {
         formik.setValues({
             GalleryName: gallery.GalleryName,
+            ArtistName: gallery.ArtistName,
             GalleryImage: gallery.GalleryImage,
             GalleryPremium: gallery.GalleryPremium,
             CategoryId: gallery.CategoryId,
@@ -313,6 +317,24 @@ const Gallery = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Label>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="ArtistName"
+                                name="ArtistName"
+                                value={formik.values.ArtistName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
+                            />
+                            {formik.errors.ArtistName && formik.touched.ArtistName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.ArtistName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label>{imageFileLabel}</Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
@@ -402,6 +424,7 @@ const Gallery = () => {
                     <tr>
                         <th>Id</th>
                         <th>Gallery Name</th>
+                        <th>Artist Name</th>
                         <th>Gallery Image</th>
                         <th>Premium</th>
                         <th>Hidden</th>
@@ -414,6 +437,7 @@ const Gallery = () => {
                             <tr key={gallery._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{gallery.GalleryName}</td>
+                                <td>{gallery.ArtistName}</td>
                                 <td>
                                     <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
