@@ -20,6 +20,7 @@ const Spin = () => {
     const [coverImageLabel, setCoverImageLabel] = useState('Cover Image Upload');
     const [fileLabel, setFileLabel] = useState('File Upload');
     const [selectedType, setSelectedType] = useState(''); // Add selected type state
+    const [isSubmitting, setIsSubmitting] = useState(true);
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -85,7 +86,9 @@ const Spin = () => {
             Type: '',
         },
         validationSchema: spinSchema,
-        onSubmit: (values, { setSubmitting, resetForm }) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
+            try{
+                setIsSubmitting(true);
             const formData = new FormData();
             formData.append('Name', values.Name);
             formData.append('CoverImage', values.CoverImage);
@@ -96,7 +99,7 @@ const Spin = () => {
                 ? axios.patch(`https://pslink.world/api/admin/spin/update/${id}`, formData)
                 : axios.post('https://pslink.world/api/admin/spin/create', formData);
 
-            request.then((res) => {
+                const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
@@ -105,11 +108,13 @@ const Spin = () => {
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
-            }).catch((err) => {
+            } catch (err) {
                 console.error(err);
-                setSubmitting(false);
                 toast.error("An error occurred. Please try again.");
-            });
+            } finally {
+                setIsSubmitting(false);
+                setSubmitting(false);
+            }
         },
     });
 
@@ -254,8 +259,14 @@ const Spin = () => {
                 </Form.Select>
             </div>
 
-            <Modal show={visible} onHide={() => toggleModal('add')} centered>
-                <Modal.Header closeButton>
+            <Modal 
+                show={visible} 
+                onHide={() => !isSubmitting && toggleModal('add')} 
+                centered
+                backdrop={isSubmitting ? 'static' : true}
+                keyboard={!isSubmitting}
+            >
+                <Modal.Header closeButton={!isSubmitting}>
                     <Modal.Title>{id ? "Edit Spin" : "Add New Spin"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -348,8 +359,8 @@ const Spin = () => {
                             )}
                         </Form.Group>
 
-                        <Button type="submit" className='bg-white border-0' disabled={formik.isSubmitting}>
-                            {formik.isSubmitting ? 'Submitting...' : 'Submit'}
+                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>
                 </Modal.Body>

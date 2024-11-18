@@ -21,6 +21,7 @@ const Audio = () => {
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
     const [selectedAudio, setSelectedAudio] = useState("");
     const [filteredData, setFilteredData] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -115,19 +116,22 @@ const Audio = () => {
             Hide: false,  // Add Hide field to initial values
         },
         validationSchema: audioSchema,
-        onSubmit: (values, { setSubmitting, resetForm }) => {
-            const formData = new FormData();
-            formData.append('AudioName', values.AudioName);
-            formData.append('Audio', values.Audio);
-            formData.append('AudioPremium', values.AudioPremium);
-            formData.append('CategoryId', values.CategoryId);
-            formData.append('Hide', values.Hide);  // Add Hide field to formData
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
 
-            const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/audio/create', formData);
+            try {
+                setIsSubmitting(true);
+                const formData = new FormData();
+                formData.append('AudioName', values.AudioName);
+                formData.append('Audio', values.Audio);
+                formData.append('AudioPremium', values.AudioPremium);
+                formData.append('CategoryId', values.CategoryId);
+                formData.append('Hide', values.Hide);  // Add Hide field to formData
 
-            request.then((res) => {
+                const request = id !== undefined
+                    ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/audio/create', formData);
+
+                const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
@@ -135,11 +139,13 @@ const Audio = () => {
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
-            }).catch((err) => {
+            } catch (err) {
                 console.error(err);
-                setSubmitting(false);
                 toast.error("An error occurred. Please try again.");
-            });
+            } finally {
+                setIsSubmitting(false);
+                setSubmitting(false);
+            }
         },
     });
 
@@ -275,8 +281,14 @@ const Audio = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
-            <Modal show={visible} onHide={() => toggleModal('add')} centered>
-                <Modal.Header closeButton>
+            <Modal 
+                show={visible} 
+                onHide={() => !isSubmitting && toggleModal('add')} 
+                centered
+                backdrop={isSubmitting ? 'static' : true}
+                keyboard={!isSubmitting}
+            >
+                <Modal.Header closeButton={!isSubmitting}>
                     <Modal.Title>{id ? "Edit Audio" : "Add New Audio"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -377,8 +389,8 @@ const Audio = () => {
                             )}
                         </Form.Group>
 
-                        <Button type="submit" className='bg-white border-0' disabled={formik.isSubmitting}>
-                            {formik.isSubmitting ? 'Submitting...' : 'Submit'}
+                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>
                 </Modal.Body>

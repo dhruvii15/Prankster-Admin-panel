@@ -22,6 +22,7 @@ const Video = () => {
     const [videoFileLabel, setVideoFileLabel] = useState('Video File Upload');
     const [selectedVideo, setSelectedVideo] = useState("");
     const [filteredData, setFilteredData] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
 
     const toggleModal = (mode) => {
@@ -121,7 +122,9 @@ const Video = () => {
             Hide: false,
         },
         validationSchema: videoSchema,
-        onSubmit: (values, { setSubmitting, resetForm }) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
+            try{
+            setIsSubmitting(true);
             const formData = new FormData();
             formData.append('VideoName', values.VideoName);
             formData.append('VideoImage', values.VideoImage);
@@ -134,7 +137,7 @@ const Video = () => {
                 ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
                 : axios.post('https://pslink.world/api/video/create', formData);
 
-            request.then((res) => {
+                const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
@@ -143,11 +146,13 @@ const Video = () => {
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
-            }).catch((err) => {
+            } catch (err) {
                 console.error(err);
-                setSubmitting(false);
                 toast.error("An error occurred. Please try again.");
-            });
+            } finally {
+                setIsSubmitting(false);
+                setSubmitting(false);
+            }
         },
     });
 
@@ -285,8 +290,14 @@ const Video = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
-            <Modal show={visible} onHide={() => toggleModal('add')} centered>
-                <Modal.Header closeButton>
+            <Modal 
+                show={visible} 
+                onHide={() => !isSubmitting && toggleModal('add')} 
+                centered
+                backdrop={isSubmitting ? 'static' : true}
+                keyboard={!isSubmitting}
+            >
+                <Modal.Header closeButton={!isSubmitting}>
                     <Modal.Title>{id ? "Edit Video" : "Add New Video"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -413,8 +424,8 @@ const Video = () => {
                             )}
                         </Form.Group>
 
-                        <Button type="submit" className='bg-white border-0' disabled={formik.isSubmitting}>
-                            {formik.isSubmitting ? 'Submitting...' : 'Submit'}
+                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>
                 </Modal.Body>

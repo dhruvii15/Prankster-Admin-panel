@@ -17,17 +17,20 @@ const Ads = () => {
     const [adsName, setAdsName] = useState('');
     const [adsId, setAdsId] = useState('');
     const [errors, setErrors] = useState({});
-    const [isOn, setIsOn] = useState(false); // Initial state of the toggle button
-    const [adminId, setAdminId] = useState(null); // State to store the admin ID
+    const [isOn, setIsOn] = useState(false);
+    const [adminId, setAdminId] = useState(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleModal = (mode) => {
-        if (mode === 'add') {
-            setAdsName('');
-            setAdsId('');
-            setId(undefined); // Ensure id is cleared for adding
+        if (!isSubmitting) {
+            if (mode === 'add') {
+                setAdsName('');
+                setAdsId('');
+                setId(undefined);
+            }
+            setErrors({});
+            setVisible(!visible);
         }
-        setErrors({});
-        setVisible(!visible);
     };
 
     const getData = () => {
@@ -47,8 +50,8 @@ const Ads = () => {
     const getAdminData = () => {
         axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
-                setIsOn(res.data.data[0].AdsStatus); // No need to compare with 'true'
-                setAdminId(res.data.data[0]._id); // Store admin ID
+                setIsOn(res.data.data[0].AdsStatus);
+                setAdminId(res.data.data[0]._id);
             })
             .catch((err) => {
                 console.error(err);
@@ -69,71 +72,80 @@ const Ads = () => {
         return Object.keys(newErrors).length === 0;
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
+        
+        try {
+            setIsSubmitting(true);
+            const request = id !== undefined
+                ? axios.patch(`https://pslink.world/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
+                : axios.post('https://pslink.world/api/ads/create', { AdsName: adsName, AdsId: adsId });
 
-        const request = id !== undefined
-            ? axios.patch(`https://pslink.world/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
-            : axios.post('https://pslink.world/api/ads/create', { AdsName: adsName, AdsId: adsId });
-
-        request.then((res) => {
+            const res = await request;
             setAdsName('');
             setAdsId('');
             setId(undefined);
             getData();
             toast.success(res.data.message);
-            toggleModal('add'); // Close modal after submit
-        }).catch((err) => {
+            toggleModal('add');
+        } catch (err) {
             console.error(err);
             toast.error("An error occurred. Please try again.");
-        });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleEdit = (ads) => {
-        setAdsName(ads.AdsName);
-        setAdsId(ads.AdsId);
-        setId(ads._id);
-        toggleModal('edit'); // Open modal in edit mode
+        if (!isSubmitting) {
+            setAdsName(ads.AdsName);
+            setAdsId(ads.AdsId);
+            setId(ads._id);
+            toggleModal('edit');
+        }
     };
 
-    const handleDelete = (adsId) => {
-        if (window.confirm("Are you sure you want to delete this ad?")) {
-            axios.delete(`https://pslink.world/api/ads/delete/${adsId}`)
-                .then((res) => {
-                    getData();
-                    toast.success(res.data.message);
-                })
-                .catch((err) => {
-                    console.error(err);
-                    toast.error("An error occurred. Please try again.");
-                });
+    const handleDelete = async (adsId) => {
+        if (!isSubmitting && window.confirm("Are you sure you want to delete this ad?")) {
+            try {
+                setIsSubmitting(true);
+                const res = await axios.delete(`https://pslink.world/api/ads/delete/${adsId}`);
+                getData();
+                toast.success(res.data.message);
+            } catch (err) {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            } finally {
+                setIsSubmitting(false);
+            }
         }
     };
 
     const handleToggle = async () => {
-        const newState = !isOn;
-        setIsOn(newState);
-
-        const apiEndpoint = `https://pslink.world/api/admin/update/${adminId}`;
-        const payload = { AdsStatus: newState };
-
-        try {
-            if (adminId) { // Ensure adminId is set before making the request
-                const response = await axios.patch(apiEndpoint, payload);
-                toast.success(response.data.message); // Assuming your API returns a success message
-
-                // Optionally, fetch updated admin data again to ensure consistency
-                getAdminData();
-            } else {
-                toast.error("Admin ID not available.");
+        if (!isSubmitting) {
+            const newState = !isOn;
+            try {
+                setIsSubmitting(true);
+                setIsOn(newState);
+                
+                if (adminId) {
+                    const response = await axios.patch(`https://pslink.world/api/admin/update/${adminId}`, {
+                        AdsStatus: newState
+                    });
+                    toast.success(response.data.message);
+                    getAdminData();
+                } else {
+                    toast.error("Admin ID not available.");
+                    setIsOn(!newState);
+                }
+            } catch (error) {
+                console.error('Error updating AdsStatus:', error);
+                toast.error("Failed to update AdsStatus.");
+                setIsOn(!newState);
+            } finally {
+                setIsSubmitting(false);
             }
-        } catch (error) {
-            console.error('Error updating AdsStatus:', error);
-            toast.error("Failed to update AdsStatus.");
-
-            // Revert UI state on failure if needed
-            setIsOn(!newState); // Revert back to the previous state
         }
     };
 
@@ -170,14 +182,28 @@ const Ads = () => {
                         onChange={handleToggle}
                         className="custom-switch-lg"
                         style={{ transform: 'scale(1.3)' }}
+                        disabled={isSubmitting}
                     />
                 </Form>
             </div>
 
-            <Button onClick={() => toggleModal('add')} className='my-4 rounded-3 border-0' style={{ backgroundColor: "#FFD800" }}>Add New Ad</Button>
+            <Button 
+                onClick={() => toggleModal('add')} 
+                className='my-4 rounded-3 border-0' 
+                style={{ backgroundColor: "#FFD800" }}
+                disabled={isSubmitting}
+            >
+                Add New Ad
+            </Button>
 
-            <Modal show={visible} onHide={() => toggleModal('add')} centered>
-                <Modal.Header closeButton>
+            <Modal 
+                show={visible} 
+                onHide={() => !isSubmitting && toggleModal('add')} 
+                centered
+                backdrop={isSubmitting ? 'static' : true}
+                keyboard={!isSubmitting}
+            >
+                <Modal.Header closeButton={!isSubmitting}>
                     <Modal.Title>{id ? "Edit Ads" : "Add New Ads"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -191,6 +217,7 @@ const Ads = () => {
                                 onChange={(e) => setAdsName(e.target.value)}
                                 className="py-2 overflow-hidden"
                                 isInvalid={!!errors.adsName}
+                                disabled={isSubmitting}
                             >
                                 <option value="" label="Select Ads Name" />
                                 <option value="banner" label="Banner" />
@@ -214,14 +241,19 @@ const Ads = () => {
                                 value={adsId}
                                 onChange={(e) => setAdsId(e.target.value)}
                                 isInvalid={!!errors.adsId}
+                                disabled={isSubmitting}
                             />
                             <Form.Control.Feedback type="invalid">
                                 {errors.adsId}
                             </Form.Control.Feedback>
                         </Form.Group>
 
-                        <Button type="submit" className='bg-white border-0'>
-                            {id ? 'Update' : 'Submit'}
+                        <Button 
+                            type="submit" 
+                            className='bg-white border-0' 
+                            disabled={isSubmitting}
+                        >
+                            {isSubmitting ? 'Processing...' : (id ? 'Update' : 'Submit')}
                         </Button>
                     </Form>
                 </Modal.Body>
@@ -243,10 +275,19 @@ const Ads = () => {
                             <td>{ads.AdsName}</td>
                             <td>{ads.AdsId}</td>
                             <td>
-                                <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(ads)}>
+                                <Button 
+                                    className='bg-transparent border-0 fs-5' 
+                                    style={{ color: "#0385C3" }} 
+                                    onClick={() => handleEdit(ads)}
+                                    disabled={isSubmitting}
+                                >
                                     <FontAwesomeIcon icon={faEdit} />
                                 </Button>
-                                <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(ads._id)}>
+                                <Button 
+                                    className='bg-transparent border-0 text-danger fs-5' 
+                                    onClick={() => handleDelete(ads._id)}
+                                    disabled={isSubmitting}
+                                >
                                     <FontAwesomeIcon icon={faTrash} />
                                 </Button>
                             </td>

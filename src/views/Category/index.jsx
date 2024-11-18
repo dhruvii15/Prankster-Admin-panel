@@ -19,6 +19,7 @@ const Category = () => {
     const [loading, setLoading] = useState(true);
     const [fileLabel, setFileLabel] = useState('Category Image Upload');
     const [selectedType, setSelectedType] = useState('');
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -79,17 +80,19 @@ const Category = () => {
             Type: '',
         },
         validationSchema: portfolioSchema,
-        onSubmit: (values, { setSubmitting, resetForm }) => {
-            const formData = new FormData();
-            formData.append('CategoryName', values.CategoryName);
-            formData.append('CategoryImage', values.CategoryImage);
-            formData.append('Type', values.Type);
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
+            try {
+                setIsSubmitting(true);
+                const formData = new FormData();
+                formData.append('CategoryName', values.CategoryName);
+                formData.append('CategoryImage', values.CategoryImage);
+                formData.append('Type', values.Type);
 
-            const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/category/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/category/create', formData);
+                const request = id !== undefined
+                    ? axios.patch(`https://pslink.world/api/category/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/category/create', formData);
 
-            request.then((res) => {
+                const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
@@ -97,11 +100,13 @@ const Category = () => {
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
-            }).catch((err) => {
+            } catch (err) {
                 console.error(err);
-                setSubmitting(false);
                 toast.error("An error occurred. Please try again.");
-            });
+            } finally {
+                setIsSubmitting(false);
+                setSubmitting(false);
+            }
         },
     });
 
@@ -205,8 +210,14 @@ const Category = () => {
                     <option value="gallery">Gallery</option>
                 </Form.Select>
             </div>
-            <Modal show={visible} onHide={() => toggleModal('add')} centered>
-                <Modal.Header closeButton>
+            <Modal 
+                show={visible} 
+                onHide={() => !isSubmitting && toggleModal('add')} 
+                centered
+                backdrop={isSubmitting ? 'static' : true}
+                keyboard={!isSubmitting}
+            >
+                <Modal.Header closeButton={!isSubmitting}>
                     <Modal.Title>{id ? "Edit Category" : "Add New Category"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -279,8 +290,8 @@ const Category = () => {
                             )}
                         </Form.Group>
 
-                        <Button type="submit" className='bg-white border-0' disabled={formik.isSubmitting}>
-                            {formik.isSubmitting ? 'Submitting...' : 'Submit'}
+                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>
                 </Modal.Body>

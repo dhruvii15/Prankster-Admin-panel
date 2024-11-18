@@ -21,6 +21,7 @@ const Gallery = () => {
     const [imageFileLabel, setImageFileLabel] = useState('Gallery Image Upload');
     const [selectedGallery, setSelectedGallery] = useState("");
     const [filteredData, setFilteredData] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
 
     const toggleModal = (mode) => {
@@ -116,7 +117,9 @@ const Gallery = () => {
             Hide: false,
         },
         validationSchema: gallerySchema,
-        onSubmit: (values, { setSubmitting, resetForm }) => {
+        onSubmit: async (values, { setSubmitting, resetForm }) => {
+            try{
+            setIsSubmitting(true);
             const formData = new FormData();
             formData.append('GalleryName', values.GalleryName);
             formData.append('GalleryImage', values.GalleryImage);
@@ -128,7 +131,7 @@ const Gallery = () => {
                 ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
                 : axios.post('https://pslink.world/api/gallery/create', formData);
 
-            request.then((res) => {
+                const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
@@ -136,11 +139,13 @@ const Gallery = () => {
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
-            }).catch((err) => {
+            } catch (err) {
                 console.error(err);
-                setSubmitting(false);
                 toast.error("An error occurred. Please try again.");
-            });
+            } finally {
+                setIsSubmitting(false);
+                setSubmitting(false);
+            }
         },
     });
 
@@ -277,8 +282,14 @@ const Gallery = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
-            <Modal show={visible} onHide={() => toggleModal('add')} centered>
-                <Modal.Header closeButton>
+            <Modal 
+                show={visible} 
+                onHide={() => !isSubmitting && toggleModal('add')} 
+                centered
+                backdrop={isSubmitting ? 'static' : true}
+                keyboard={!isSubmitting}
+            >
+                <Modal.Header closeButton={!isSubmitting}>
                     <Modal.Title>{id ? "Edit Gallery" : "Add New Gallery"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -379,8 +390,8 @@ const Gallery = () => {
                             )}
                         </Form.Group>
 
-                        <Button type="submit" className='bg-white border-0' disabled={formik.isSubmitting}>
-                            {formik.isSubmitting ? 'Submitting...' : 'Submit'}
+                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                            {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>
                 </Modal.Body>

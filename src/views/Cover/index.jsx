@@ -24,16 +24,19 @@ const CoverURL = () => {
     const [isEditing, setIsEditing] = useState(false);
     const itemsPerPage = 10;
     const [selectedFilter, setSelectedFilter] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleModal = (mode) => {
-        if (mode === 'add') {
-            setId(undefined);
-            setIsEditing(false);
-            setFileLabel('Cover Image Upload');
-            setSelectedFiles([]);
-            setPreviewUrls([]);
+        if (!isSubmitting) {  // Only allow toggle if not submitting
+            if (mode === 'add') {
+                setId(undefined);
+                setIsEditing(false);
+                setFileLabel('Cover Image Upload');
+                setSelectedFiles([]);
+                setPreviewUrls([]);
+            }
+            setVisible(!visible);
         }
-        setVisible(!visible);
     };
 
     useEffect(() => {
@@ -95,11 +98,12 @@ const CoverURL = () => {
         initialValues: {
             Category: '',
             CoverPremium: false,
-            Hide: false, // Add Hide field to initial values
+            Hide: false,
         },
         validationSchema: coverSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
+                setIsSubmitting(true);  // Set submitting state at start
                 const formData = new FormData();
                 
                 if (!isEditing && selectedFiles.length === 0) {
@@ -115,7 +119,7 @@ const CoverURL = () => {
                 
                 formData.append('Category', values.Category);
                 formData.append('CoverPremium', values.CoverPremium);
-                formData.append('Hide', values.Hide); // Add Hide field to formData
+                formData.append('Hide', values.Hide);
 
                 let response;
                 if (isEditing) {
@@ -130,7 +134,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'http://localhost:5000/api/cover/create',
+                        'https://pslink.world/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -153,6 +157,7 @@ const CoverURL = () => {
                 console.error(error);
                 toast.error(error.response?.data?.message || "An error occurred. Please try again.");
             } finally {
+                setIsSubmitting(false);  // Reset submitting state
                 setSubmitting(false);
             }
         },
@@ -271,8 +276,14 @@ const CoverURL = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
-            <Modal show={visible} onHide={() => toggleModal()} centered>
-                <Modal.Header closeButton>
+            <Modal 
+                show={visible} 
+                onHide={() => !isSubmitting && toggleModal()} 
+                centered
+                backdrop={isSubmitting ? 'static' : true}
+                keyboard={!isSubmitting}
+            >
+                <Modal.Header closeButton={!isSubmitting}>
                     <Modal.Title>{isEditing ? "Edit Cover Image" : "Add New Cover Image"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -362,9 +373,9 @@ const CoverURL = () => {
                         <Button 
                             type="submit" 
                             className='bg-white border-0' 
-                            disabled={formik.isSubmitting || (!isEditing && selectedFiles.length === 0)}
+                            disabled={isSubmitting || (!isEditing && selectedFiles.length === 0)}
                         >
-                            {formik.isSubmitting ? 'Submitting...' : (isEditing ? 'Update' : 'Submit')}
+                            {isSubmitting ? 'Submitting...' : (isEditing ? 'Update' : 'Submit')}
                         </Button>
                     </Form>
                 </Modal.Body>
