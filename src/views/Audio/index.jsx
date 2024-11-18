@@ -39,7 +39,7 @@ const Audio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/audio/read')
+        axios.post('http://localhost:5000/api/audio/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -84,7 +84,7 @@ const Audio = () => {
     };
 
     const getCategory = () => {
-        axios.post('https://pslink.world/api/category/read')
+        axios.post('http://localhost:5000/api/category/read')
             .then((res) => {
                 setCategory(res.data.data);
             })
@@ -128,8 +128,8 @@ const Audio = () => {
                 formData.append('Hide', values.Hide);  // Add Hide field to formData
 
                 const request = id !== undefined
-                    ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
-                    : axios.post('https://pslink.world/api/audio/create', formData);
+                    ? axios.patch(`http://localhost:5000/api/audio/update/${id}`, formData)
+                    : axios.post('http://localhost:5000/api/audio/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -163,7 +163,7 @@ const Audio = () => {
     };
 
     const handlePremiumToggle = (audioId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -175,7 +175,7 @@ const Audio = () => {
     };
 
     const handleHideToggle = (audioId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -188,7 +188,7 @@ const Audio = () => {
 
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`https://pslink.world/api/audio/delete/${audioId}`)
+            axios.delete(`http://localhost:5000/api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

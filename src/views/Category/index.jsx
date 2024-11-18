@@ -37,7 +37,7 @@ const Category = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/category/read')
+        axios.post('http://localhost:5000/api/category/read')
             .then((res) => {
                 const allData = res.data.data.reverse();
                 setData(allData);
@@ -89,8 +89,8 @@ const Category = () => {
                 formData.append('Type', values.Type);
 
                 const request = id !== undefined
-                    ? axios.patch(`https://pslink.world/api/category/update/${id}`, formData)
-                    : axios.post('https://pslink.world/api/category/create', formData);
+                    ? axios.patch(`http://localhost:5000/api/category/update/${id}`, formData)
+                    : axios.post('http://localhost:5000/api/category/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -123,7 +123,7 @@ const Category = () => {
 
     const handleDelete = (cardBgId) => {
         if (window.confirm("Are you sure you want to delete this Category?")) {
-            axios.delete(`https://pslink.world/api/category/delete/${cardBgId}`)
+            axios.delete(`http://localhost:5000/api/category/delete/${cardBgId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

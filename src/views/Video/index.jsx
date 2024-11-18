@@ -43,7 +43,7 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/video/read')
+        axios.post('http://localhost:5000/api/video/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -88,7 +88,7 @@ const Video = () => {
     };
 
     const getCategory = () => {
-        axios.post('https://pslink.world/api/category/read')
+        axios.post('http://localhost:5000/api/category/read')
             .then((res) => {
                 setCategory(res.data.data);
             })
@@ -134,8 +134,8 @@ const Video = () => {
             formData.append('Hide', values.Hide);
 
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/video/create', formData);
+                ? axios.patch(`http://localhost:5000/api/video/update/${id}`, formData)
+                : axios.post('http://localhost:5000/api/video/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -172,7 +172,7 @@ const Video = () => {
     };
 
     const handleHideToggle = (videoId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -184,7 +184,7 @@ const Video = () => {
     };
 
     const handlePremiumToggle = (videoId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -197,7 +197,7 @@ const Video = () => {
 
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video?")) {
-            axios.delete(`https://pslink.world/api/video/delete/${videoId}`)
+            axios.delete(`http://localhost:5000/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

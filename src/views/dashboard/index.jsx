@@ -25,11 +25,11 @@ const DashAnalytics = () => {
   const fetchData = async () => {
     try {
       const [cover, audio, video, gallery, category] = await Promise.all([
-        axios.post('https://pslink.world/api/cover/read'),
-        axios.post('https://pslink.world/api/audio/read'),
-        axios.post('https://pslink.world/api/video/read'),
-        axios.post('https://pslink.world/api/gallery/read'),
-        axios.post('https://pslink.world/api/category/read')
+        axios.post('http://localhost:5000/api/cover/read'),
+        axios.post('http://localhost:5000/api/audio/read'),
+        axios.post('http://localhost:5000/api/video/read'),
+        axios.post('http://localhost:5000/api/gallery/read'),
+        axios.post('http://localhost:5000/api/category/read')
       ]);
 
       setData({

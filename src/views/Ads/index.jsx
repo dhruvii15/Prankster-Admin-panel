@@ -35,7 +35,7 @@ const Ads = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/ads/read')
+        axios.post('http://localhost:5000/api/ads/read')
             .then((res) => {
                 setData(res.data.data);
                 setLoading(false);
@@ -48,7 +48,7 @@ const Ads = () => {
     };
 
     const getAdminData = () => {
-        axios.get('https://pslink.world/api/admin/read')
+        axios.get('http://localhost:5000/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].AdsStatus);
                 setAdminId(res.data.data[0]._id);
@@ -79,8 +79,8 @@ const Ads = () => {
         try {
             setIsSubmitting(true);
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
-                : axios.post('https://pslink.world/api/ads/create', { AdsName: adsName, AdsId: adsId });
+                ? axios.patch(`http://localhost:5000/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
+                : axios.post('http://localhost:5000/api/ads/create', { AdsName: adsName, AdsId: adsId });
 
             const res = await request;
             setAdsName('');
@@ -110,7 +110,7 @@ const Ads = () => {
         if (!isSubmitting && window.confirm("Are you sure you want to delete this ad?")) {
             try {
                 setIsSubmitting(true);
-                const res = await axios.delete(`https://pslink.world/api/ads/delete/${adsId}`);
+                const res = await axios.delete(`http://localhost:5000/api/ads/delete/${adsId}`);
                 getData();
                 toast.success(res.data.message);
             } catch (err) {
@@ -130,7 +130,7 @@ const Ads = () => {
                 setIsOn(newState);
                 
                 if (adminId) {
-                    const response = await axios.patch(`https://pslink.world/api/admin/update/${adminId}`, {
+                    const response = await axios.patch(`http://localhost:5000/api/admin/update/${adminId}`, {
                         AdsStatus: newState
                     });
                     toast.success(response.data.message);
