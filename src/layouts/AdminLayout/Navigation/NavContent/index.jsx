@@ -111,7 +111,7 @@ const NavContent = ({ navigation }) => {
   } else {
     mainContent = (
       <div className="navbar-content next-scroll">
-        <PerfectScrollbar>
+        <PerfectScrollbar className='border pb-4'>
           <ListGroup variant="flush" as="ul" bsPrefix=" " className="nav pcoded-inner-navbar" id="nav-ps-next">
             {navItems}
           </ListGroup>

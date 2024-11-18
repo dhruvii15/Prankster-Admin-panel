@@ -259,7 +259,7 @@ const Audio = () => {
                 <Button
                     onClick={() => toggleModal('add')}
                     className='my-4 rounded-3 border-0'
-                    style={{ backgroundColor: "#FA5D4D", color: "white" }}
+                    style={{ backgroundColor: "#FFD800", color: "black" }}
                 >
                     Add New Audio
                 </Button>

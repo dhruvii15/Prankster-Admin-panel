@@ -130,7 +130,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'https://pslink.world/api/cover/create',
+                        'http://localhost:5000/api/cover/create',
                         formData,
                         {
                             headers: {

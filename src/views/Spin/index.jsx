@@ -14,10 +14,12 @@ import logo from "../../assets/images/logo.svg";
 const Spin = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
+    const [filteredData, setFilteredData] = useState([]); // Add filtered data state
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [coverImageLabel, setCoverImageLabel] = useState('Cover Image Upload');
     const [fileLabel, setFileLabel] = useState('File Upload');
+    const [selectedType, setSelectedType] = useState(''); // Add selected type state
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -35,11 +37,22 @@ const Spin = () => {
         setVisible(!visible);
     };
 
+    // Add filter data function
+    const filterData = (dataToFilter, type) => {
+        if (type) {
+            setFilteredData(dataToFilter.filter(item => item.Type === type));
+        } else {
+            setFilteredData(dataToFilter);
+        }
+    };
+
     const getData = () => {
         setLoading(true);
         axios.post('https://pslink.world/api/admin/spin/read')
             .then((res) => {
-                setData(res.data.data.reverse());
+                const allData = res.data.data.reverse();
+                setData(allData);
+                filterData(allData, selectedType); // Filter data when fetched
                 setLoading(false);
             })
             .catch((err) => {
@@ -52,6 +65,10 @@ const Spin = () => {
     useEffect(() => {
         getData();
     }, []);
+
+    useEffect(() => {
+        filterData(data, selectedType);
+    }, [selectedType]);
 
     const spinSchema = Yup.object().shape({
         Name: Yup.string().required('Name is required'),
@@ -129,8 +146,8 @@ const Spin = () => {
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -211,18 +228,31 @@ const Spin = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Spin Management</h4>
-                    <p>Type / Spin Management</p>
+                    <h4>Prank Management</h4>
+                    <p>Spin / Prank Management</p>
                 </div>
             </div>
 
-            <Button
-                onClick={() => toggleModal('add')}
-                className='my-4 rounded-3 border-0'
-                style={{ backgroundColor: "#FA5D4D", color: "white" }}
-            >
-                Add New Spin
-            </Button>
+            <div className='d-flex flex-wrap justify-content-between align-items-center mb-4'>
+                <Button
+                    onClick={() => toggleModal('add')}
+                    className='rounded-3 border-0 mt-3'
+                    style={{ backgroundColor: "#FFD800", color: "black" }}
+                >
+                    Add New Spin
+                </Button>
+                <Form.Select
+                    value={selectedType}
+                    onChange={(e) => setSelectedType(e.target.value)}
+                    style={{ width: 'auto' }}
+                    className='mt-3'
+                >
+                    <option value="">All Types</option>
+                    <option value="audio">Audio</option>
+                    <option value="video">Video</option>
+                    <option value="gallery">Gallery</option>
+                </Form.Select>
+            </div>
 
             <Modal show={visible} onHide={() => toggleModal('add')} centered>
                 <Modal.Header closeButton>
@@ -273,6 +303,28 @@ const Spin = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Label>Prank Type</Form.Label>
+                            <Form.Select
+                                id="Type"
+                                name="Type"
+                                value={formik.values.Type}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.Type && !!formik.errors.Type}
+                            >
+                                <option value="">Select Type</option>
+                                <option value="audio">Audio</option>
+                                <option value="video">Video</option>
+                                <option value="gallery">Gallery</option>
+                            </Form.Select>
+                            {formik.errors.Type && formik.touched.Type && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Type}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label>{fileLabel}</Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
@@ -292,28 +344,6 @@ const Spin = () => {
                             {formik.errors.File && formik.touched.File && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.File}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Prank Type</Form.Label>
-                            <Form.Select
-                                id="Type"
-                                name="Type"
-                                value={formik.values.Type}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.Type && !!formik.errors.Type}
-                            >
-                                <option value="">Select Type</option>
-                                <option value="audio">Audio</option>
-                                <option value="video">Video</option>
-                                <option value="gallery">Gallery</option>
-                            </Form.Select>
-                            {formik.errors.Type && formik.touched.Type && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Type}
                                 </div>
                             )}
                         </Form.Group>

@@ -192,7 +192,7 @@ const Category = () => {
                 </div>
             </div>
             <div className='d-flex flex-wrap justify-content-between align-items-center mb-4'>
-                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 mt-3' style={{ backgroundColor: "#FA5D4D", color: "white" }}>Add New Category Image</Button>
+                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 mt-3' style={{ backgroundColor: "#FFD800", color: "black" }}>Add New Category Image</Button>
                 <Form.Select
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
