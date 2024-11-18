@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -14,11 +14,10 @@ import logo from "../../assets/images/logo.svg";
 const Category = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [fileLabel, setFileLabel] = useState('Category Image Upload');
-    const [selectedType, setSelectedType] = useState('');
+    const [activeTab, setActiveTab] = useState('audio');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleModal = (mode) => {
@@ -41,7 +40,6 @@ const Category = () => {
             .then((res) => {
                 const allData = res.data.data.reverse();
                 setData(allData);
-                filterData(allData, selectedType);
                 setLoading(false);
             })
             .catch((err) => {
@@ -51,21 +49,15 @@ const Category = () => {
             });
     };
 
-    const filterData = (dataToFilter, type) => {
-        if (type) {
-            setFilteredData(dataToFilter.filter(item => item.Type === type));
-        } else {
-            setFilteredData(dataToFilter);
-        }
+    // Get filtered data based on active tab
+    const getFilteredData = () => {
+        return data.filter(item => item.Type.toLowerCase() === activeTab.toLowerCase());
     };
 
     useEffect(() => {
         getData();
     }, []);
 
-    useEffect(() => {
-        filterData(data, selectedType);
-    }, [selectedType]);
 
     const portfolioSchema = Yup.object().shape({
         CategoryName: Yup.string().required('Category Name is required'),
@@ -139,11 +131,12 @@ const Category = () => {
     const itemsPerPage = 15;
     const [currentPage, setCurrentPage] = useState(1);
 
+    const filteredItems = getFilteredData();
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
 
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -196,19 +189,49 @@ const Category = () => {
                     <p>Category / Category</p>
                 </div>
             </div>
-            <div className='d-flex flex-wrap justify-content-between align-items-center mb-4'>
-                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 mt-3' style={{ backgroundColor: "#FFD800", color: "black" }}>Add New Category Image</Button>
-                <Form.Select
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    style={{ width: 'auto' }}
-                    className='mt-3'
-                >
-                    <option value="">All Types</option>
-                    <option value="audio">Audio</option>
-                    <option value="video">Video</option>
-                    <option value="gallery">Gallery</option>
-                </Form.Select>
+            <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
+                {/* Tabs Navigation */}
+                <Nav variant="tabs" className='my-2'>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'audio'}
+                            className={activeTab === 'audio' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('audio');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Audio
+                        </Nav.Link>
+                    </Nav.Item>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'video'}
+                            className={activeTab === 'video' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('video');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Video
+                        </Nav.Link>
+                    </Nav.Item>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'gallery'}
+                            className={activeTab === 'gallery' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('gallery');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Gallery
+                        </Nav.Link>
+                    </Nav.Item>
+                </Nav>
+
+                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-2' style={{ backgroundColor: "#FFD800", color: "black" }}>Add New Category Image</Button>
+                
             </div>
             <Modal 
                 show={visible} 

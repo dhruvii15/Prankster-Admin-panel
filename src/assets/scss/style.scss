@@ -208,3 +208,20 @@ File: style.css
 // .pagination .page-item .page-link:hover {
 //     background-color: #e9ecef;  /* Change this to your desired hover color */
 // }
+
+.active-tab {
+    color: black !important;
+    background-color: #FFD800 !important; 
+    border-radius: 4px;
+}
+
+.nav-tabs .nav-link:hover {
+    color: black; 
+    background-color: #f8f9fa; 
+    border-radius: 4px; 
+}
+
+
+.nav-tabs .nav-link {
+    border: 1px solid #E3EAEF !important; 
+}

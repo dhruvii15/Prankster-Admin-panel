@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -7,20 +7,17 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-// Assuming you have a logo import
 import logo from "../../assets/images/logo.svg";
 
 const Spin = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [filteredData, setFilteredData] = useState([]); // Add filtered data state
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [coverImageLabel, setCoverImageLabel] = useState('Cover Image Upload');
     const [fileLabel, setFileLabel] = useState('File Upload');
-    const [selectedType, setSelectedType] = useState(''); // Add selected type state
-    const [isSubmitting, setIsSubmitting] = useState(true);
+    const [activeTab, setActiveTab] = useState('audio'); // Default tab is audio
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -38,22 +35,16 @@ const Spin = () => {
         setVisible(!visible);
     };
 
-    // Add filter data function
-    const filterData = (dataToFilter, type) => {
-        if (type) {
-            setFilteredData(dataToFilter.filter(item => item.Type === type));
-        } else {
-            setFilteredData(dataToFilter);
-        }
+    // Get filtered data based on active tab
+    const getFilteredData = () => {
+        return data.filter(item => item.Type.toLowerCase() === activeTab.toLowerCase());
     };
 
     const getData = () => {
         setLoading(true);
         axios.post('http://localhost:5000/api/admin/spin/read')
             .then((res) => {
-                const allData = res.data.data.reverse();
-                setData(allData);
-                filterData(allData, selectedType); // Filter data when fetched
+                setData(res.data.data.reverse());
                 setLoading(false);
             })
             .catch((err) => {
@@ -66,10 +57,6 @@ const Spin = () => {
     useEffect(() => {
         getData();
     }, []);
-
-    useEffect(() => {
-        filterData(data, selectedType);
-    }, [selectedType]);
 
     const spinSchema = Yup.object().shape({
         Name: Yup.string().required('Name is required'),
@@ -87,17 +74,17 @@ const Spin = () => {
         },
         validationSchema: spinSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
-            try{
+            try {
                 setIsSubmitting(true);
-            const formData = new FormData();
-            formData.append('Name', values.Name);
-            formData.append('CoverImage', values.CoverImage);
-            formData.append('File', values.File);
-            formData.append('Type', values.Type);
+                const formData = new FormData();
+                formData.append('Name', values.Name);
+                formData.append('CoverImage', values.CoverImage);
+                formData.append('File', values.File);
+                formData.append('Type', values.Type);
 
-            const request = id !== undefined
-                ? axios.patch(`http://localhost:5000/api/admin/spin/update/${id}`, formData)
-                : axios.post('http://localhost:5000/api/admin/spin/create', formData);
+                const request = id !== undefined
+                    ? axios.patch(`http://localhost:5000/api/admin/spin/update/${id}`, formData)
+                    : axios.post('http://localhost:5000/api/admin/spin/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -149,10 +136,11 @@ const Spin = () => {
     const itemsPerPage = 15;
     const [currentPage, setCurrentPage] = useState(1);
 
+    const filteredItems = getFilteredData();
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(filteredItems.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -181,14 +169,6 @@ const Spin = () => {
 
         return items;
     };
-
-    if (loading) {
-        return (
-            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: "hidden" }}>
-                <img src={logo} alt='loading....' style={{ animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px" }} />
-            </div>
-        );
-    }
 
     const MediaDisplay = ({ type, file, name }) => {
         switch (type.toLowerCase()) {
@@ -229,6 +209,14 @@ const Spin = () => {
         }
     };
 
+    if (loading) {
+        return (
+            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: "hidden" }}>
+                <img src={logo} alt='loading....' style={{ animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px" }} />
+            </div>
+        );
+    }
+
     return (
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
@@ -238,30 +226,61 @@ const Spin = () => {
                 </div>
             </div>
 
-            <div className='d-flex flex-wrap justify-content-between align-items-center mb-4'>
+            <div className="d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row">
+
+                {/* Tabs Navigation */}
+                <Nav variant="tabs" className="my-2">
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'audio'}
+                            className={activeTab === 'audio' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('audio');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Audio
+                        </Nav.Link>
+                    </Nav.Item>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'video'}
+                            className={activeTab === 'video' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('video');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Video
+                        </Nav.Link>
+                    </Nav.Item>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'gallery'}
+                            className={activeTab === 'gallery' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('gallery');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            Gallery
+                        </Nav.Link>
+                    </Nav.Item>
+                </Nav>
+
                 <Button
                     onClick={() => toggleModal('add')}
-                    className='rounded-3 border-0 mt-3'
+                    className="rounded-3 border-0 my-2"
                     style={{ backgroundColor: "#FFD800", color: "black" }}
                 >
                     Add New Spin
                 </Button>
-                <Form.Select
-                    value={selectedType}
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    style={{ width: 'auto' }}
-                    className='mt-3'
-                >
-                    <option value="">All Types</option>
-                    <option value="audio">Audio</option>
-                    <option value="video">Video</option>
-                    <option value="gallery">Gallery</option>
-                </Form.Select>
             </div>
 
-            <Modal 
-                show={visible} 
-                onHide={() => !isSubmitting && toggleModal('add')} 
+
+            <Modal
+                show={visible}
+                onHide={() => !isSubmitting && toggleModal('add')}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
@@ -359,7 +378,7 @@ const Spin = () => {
                             )}
                         </Form.Group>
 
-                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                        <Button type="submit" className='bg-white border-0' disabled={isSubmitting}>
                             {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>
