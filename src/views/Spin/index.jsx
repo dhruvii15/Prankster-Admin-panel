@@ -158,7 +158,7 @@ const Spin = () => {
 
     const renderPaginationItems = () => {
         let items = [];
-        const totalPagesToShow = 8;
+        const totalPagesToShow = 4;
 
         let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
         let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);

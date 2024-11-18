@@ -187,3 +187,24 @@ File: style.css
     height: 110px;
     border-radius: 100%;
 }
+
+// ================= Paginatio =========================
+/* For the active/selected page button */
+.pagination .page-item.active .page-link {
+    background-color: #FFD800;  
+    border-color:  #ababac;     
+    color:  black;
+    margin: 10px 3px;
+}
+
+/* For inactive/unselected page buttons */
+.pagination .page-item .page-link {
+    background-color: #ffffff; 
+    color:  #ababac;   
+    margin: 10px 3px;    
+}
+
+// /* Hover state for inactive buttons */
+// .pagination .page-item .page-link:hover {
+//     background-color: #e9ecef;  /* Change this to your desired hover color */
+// }
