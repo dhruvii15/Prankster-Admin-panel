@@ -49,7 +49,7 @@ const NavBar = () => {
         </Link>
         <Link to="#" className="b-brand rounded-2 p-2">
         <button 
-            onClick={() => window.location.href = "http://localhost:5000/"} 
+            onClick={() => window.location.href = "https://pslink.world/"} 
             style={{ border: 'none', background: 'none', padding: 0 }}
         >
             <img 

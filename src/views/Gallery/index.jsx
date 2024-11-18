@@ -40,7 +40,7 @@ const Gallery = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/gallery/read')
+        axios.post('https://pslink.world/api/gallery/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -85,7 +85,7 @@ const Gallery = () => {
     };
 
     const getCategory = () => {
-        axios.post('http://localhost:5000/api/category/read')
+        axios.post('https://pslink.world/api/category/read')
             .then((res) => {
                 setCategory(res.data.data);
             })
@@ -131,8 +131,8 @@ const Gallery = () => {
             formData.append('Hide', values.Hide);
 
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5000/api/gallery/update/${id}`, formData)
-                : axios.post('http://localhost:5000/api/gallery/create', formData);
+                ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
+                : axios.post('https://pslink.world/api/gallery/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -167,7 +167,7 @@ const Gallery = () => {
     };
 
     const handleHideToggle = (galleryId, currentHideStatus) => {
-        axios.patch(`http://localhost:5000/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -179,7 +179,7 @@ const Gallery = () => {
     };
 
     const handlePremiumToggle = (galleryId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -192,7 +192,7 @@ const Gallery = () => {
 
     const handleDelete = (galleryId) => {
         if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
-            axios.delete(`http://localhost:5000/api/gallery/delete/${galleryId}`)
+            axios.delete(`https://pslink.world/api/gallery/delete/${galleryId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

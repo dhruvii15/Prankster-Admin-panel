@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
@@ -15,19 +15,44 @@ const CoverURL = () => {
     const [data, setData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const categories = ['emoji', 'realistic'];
     const [fileLabel, setFileLabel] = useState('Cover Image Upload');
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
-    const [emojiPage, setEmojiPage] = useState(1);
-    const [realisticPage, setRealisticPage] = useState(1);
     const [isEditing, setIsEditing] = useState(false);
-    const itemsPerPage = 10;
+    const [activeTab, setActiveTab] = useState('emoji');
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 15;
     const [selectedFilter, setSelectedFilter] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const renderPaginationItems = () => {
+        const totalPages = Math.ceil(filterData(data).length / itemsPerPage);
+        const totalPagesToShow = 4;
+        let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
+        const items = [];
+
+        if (endPage - startPage < totalPagesToShow - 1) {
+            startPage = Math.max(1, endPage - totalPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            items.push(
+                <Pagination.Item
+                    key={i}
+                    active={i === currentPage}
+                    onClick={() => setCurrentPage(i)}
+                >
+                    {i}
+                </Pagination.Item>
+            );
+        }
+
+        return items;
+    };
+
     const toggleModal = (mode) => {
-        if (!isSubmitting) {  // Only allow toggle if not submitting
+        if (!isSubmitting) {
             if (mode === 'add') {
                 setId(undefined);
                 setIsEditing(false);
@@ -51,7 +76,7 @@ const CoverURL = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/cover/read')
+        axios.post('https://pslink.world/api/cover/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -67,31 +92,32 @@ const CoverURL = () => {
         getData();
     }, []);
 
-
     const filterData = (covers) => {
+        const categoryData = covers.filter(cover => cover.Category === activeTab);
+
         switch (selectedFilter) {
             case "Hide":
-                return covers.filter(cover => cover.Hide === true);
+                return categoryData.filter(cover => cover.Hide === true);
             case "Unhide":
-                return covers.filter(cover => cover.Hide === false);
+                return categoryData.filter(cover => cover.Hide === false);
             case "Premium":
-                return covers.filter(cover => cover.CoverPremium === true);
+                return categoryData.filter(cover => cover.CoverPremium === true);
             case "Free":
-                return covers.filter(cover => cover.CoverPremium === false);
+                return categoryData.filter(cover => cover.CoverPremium === false);
             default:
-                return covers;
+                return categoryData;
         }
     };
 
-    const groupByCategory = (category) => {
-        const filteredData = filterData(data);
-        return filteredData.filter(cover => cover.Category === category);
+    const handleTabSelect = (tab) => {
+        setActiveTab(tab);
+        setCurrentPage(1);
     };
 
     const coverSchema = Yup.object().shape({
         Category: Yup.string().required('Category is required'),
         CoverPremium: Yup.boolean(),
-        Hide: Yup.boolean(), // Add Hide field to schema
+        Hide: Yup.boolean(),
     });
 
     const formik = useFormik({
@@ -103,9 +129,9 @@ const CoverURL = () => {
         validationSchema: coverSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
-                setIsSubmitting(true);  // Set submitting state at start
+                setIsSubmitting(true);
                 const formData = new FormData();
-                
+
                 if (!isEditing && selectedFiles.length === 0) {
                     toast.error("Please select at least one image");
                     return;
@@ -116,7 +142,7 @@ const CoverURL = () => {
                         formData.append('CoverURL', file);
                     });
                 }
-                
+
                 formData.append('Category', values.Category);
                 formData.append('CoverPremium', values.CoverPremium);
                 formData.append('Hide', values.Hide);
@@ -124,7 +150,7 @@ const CoverURL = () => {
                 let response;
                 if (isEditing) {
                     response = await axios.patch(
-                        `http://localhost:5000/api/cover/update/${id}`,
+                        `https://pslink.world/api/cover/update/${id}`,
                         formData,
                         {
                             headers: {
@@ -134,7 +160,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'http://localhost:5000/api/cover/create',
+                        'https://pslink.world/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -157,14 +183,14 @@ const CoverURL = () => {
                 console.error(error);
                 toast.error(error.response?.data?.message || "An error occurred. Please try again.");
             } finally {
-                setIsSubmitting(false);  // Reset submitting state
+                setIsSubmitting(false);
                 setSubmitting(false);
             }
         },
     });
 
     const handleHideToggle = (coverId, currentHideStatus) => {
-        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -176,7 +202,7 @@ const CoverURL = () => {
     };
 
     const handlePremiumToggle = (coverId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -189,7 +215,7 @@ const CoverURL = () => {
 
     const handleFileChange = (event) => {
         const files = Array.from(event.currentTarget.files);
-        
+
         if (files.length > 5) {
             toast.error("Maximum 5 images allowed");
             return;
@@ -210,15 +236,15 @@ const CoverURL = () => {
     const handleEdit = (cover) => {
         setIsEditing(true);
         setId(cover._id);
-        
+
         if (cover.CoverURL) {
             setPreviewUrls([cover.CoverURL]);
         }
-        
+
         formik.setValues({
             Category: cover.Category || '',
             CoverPremium: cover.CoverPremium || false,
-            Hide: cover.Hide || false, // Add Hide field when editing
+            Hide: cover.Hide || false,
         });
 
         setFileLabel('Update Cover Image (Optional)');
@@ -227,7 +253,7 @@ const CoverURL = () => {
 
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
-            axios.delete(`http://localhost:5000/api/cover/delete/${coverId}`)
+            axios.delete(`https://pslink.world/api/cover/delete/${coverId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -247,6 +273,11 @@ const CoverURL = () => {
         );
     }
 
+    const filteredItems = filterData(data);
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
+
     return (
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
@@ -255,18 +286,19 @@ const CoverURL = () => {
                     <p>Utilities / CoverImage</p>
                 </div>
             </div>
+
             <div className="d-flex justify-content-between align-items-center">
-                <Button 
-                    onClick={() => toggleModal('add')} 
-                    className='my-4 rounded-3 border-0' 
+                <Button
+                    onClick={() => toggleModal('add')}
+                    className='my-4 rounded-3 border-0'
                     style={{ backgroundColor: "#FFD800" }}
                 >
                     Add New CoverImage
                 </Button>
-                <Form.Select 
-                    value={selectedFilter} 
-                    onChange={(e) => setSelectedFilter(e.target.value)} 
-                    style={{ width: 'auto' }} 
+                <Form.Select
+                    value={selectedFilter}
+                    onChange={(e) => setSelectedFilter(e.target.value)}
+                    style={{ width: 'auto' }}
                     className='my-4'
                 >
                     <option value="">All</option>
@@ -276,9 +308,104 @@ const CoverURL = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
-            <Modal 
-                show={visible} 
-                onHide={() => !isSubmitting && toggleModal()} 
+
+            <Nav variant="tabs" className="mt-3">
+                <Nav.Item>
+                    <Nav.Link
+                        active={activeTab === 'emoji'}
+                        onClick={() => handleTabSelect('emoji')}
+                        className={activeTab === 'emoji' ? 'active-tab' : ''}
+                    >
+                        Emoji
+                    </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                    <Nav.Link
+                        active={activeTab === 'realistic'}
+                        onClick={() => handleTabSelect('realistic')}
+                        className={activeTab === 'realistic' ? 'active-tab' : ''}
+                    >
+                        Realistic
+                    </Nav.Link>
+                </Nav.Item>
+            </Nav>
+
+            <Table striped bordered hover responsive className='text-center fs-6'>
+                <thead>
+                    <tr>
+                        <th>Id</th>
+                        <th>Cover</th>
+                        <th>Premium</th>
+                        <th>Hidden</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {currentItems.map((cover, index) => (
+                        <tr key={cover._id}>
+                            <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                            <td>
+                                <img
+                                    src={cover.CoverURL}
+                                    alt={'CoverImage'}
+                                    style={{ width: '150px', height: '120px', objectFit: 'cover' }}
+                                />
+                            </td>
+                            <td>
+                                <Button
+                                    className='bg-transparent border-0 fs-4'
+                                    style={{ color: cover.CoverPremium ? "#0385C3" : "#6c757d" }}
+                                    onClick={() => handlePremiumToggle(cover._id, cover.CoverPremium)}
+                                >
+                                    <FontAwesomeIcon
+                                        icon={cover.CoverPremium ? faToggleOn : faToggleOff}
+                                        title={cover.CoverPremium ? "Premium ON" : "Premium OFF"}
+                                    />
+                                </Button>
+                            </td>
+                            <td>
+                                <Button
+                                    className='bg-transparent border-0 fs-5'
+                                    style={{ color: "#0385C3" }}
+                                    onClick={() => handleHideToggle(cover._id, cover.Hide)}
+                                >
+                                    <FontAwesomeIcon
+                                        icon={cover.Hide ? faEyeSlash : faEye}
+                                        title={cover.Hide ? "Hidden" : "Visible"}
+                                    />
+                                </Button>
+                            </td>
+                            <td>
+                                <Button
+                                    className='bg-transparent border-0 fs-5'
+                                    style={{ color: "#0385C3" }}
+                                    onClick={() => handleEdit(cover)}
+                                >
+                                    <FontAwesomeIcon icon={faEdit} />
+                                </Button>
+                                <Button
+                                    className='bg-transparent border-0 text-danger fs-5'
+                                    onClick={() => handleDelete(cover._id)}
+                                >
+                                    <FontAwesomeIcon icon={faTrash} />
+                                </Button>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </Table>
+
+            {Math.ceil(filteredItems.length / itemsPerPage) > 1 && (
+                <div className='d-flex justify-content-center'>
+                    <Pagination>
+                        {renderPaginationItems()}
+                    </Pagination>
+                </div>
+            )}
+
+            <Modal
+                show={visible}
+                onHide={() => !isSubmitting && toggleModal()}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
@@ -305,7 +432,7 @@ const CoverURL = () => {
                                         {isEditing ? "Select New Image" : "Select Images (Max 5)"}
                                     </label>
                                 </div>
-                                
+
                                 {/* Preview section */}
                                 {previewUrls.length > 0 && (
                                     <div className="mt-3 d-flex flex-wrap gap-2">
@@ -370,9 +497,9 @@ const CoverURL = () => {
                             />
                         </Form.Group>
 
-                        <Button 
-                            type="submit" 
-                            className='bg-white border-0' 
+                        <Button
+                            type="submit"
+                            className='bg-white border-0'
                             disabled={isSubmitting || (!isEditing && selectedFiles.length === 0)}
                         >
                             {isSubmitting ? 'Submitting...' : (isEditing ? 'Update' : 'Submit')}
@@ -381,105 +508,9 @@ const CoverURL = () => {
                 </Modal.Body>
             </Modal>
 
-            {categories.map((category) => {
-                const categoryData = groupByCategory(category);
-                const currentPage = category === 'emoji' ? emojiPage : realisticPage;
-                const indexOfLastItem = currentPage * itemsPerPage;
-                const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-                const currentItems = categoryData.slice(indexOfFirstItem, indexOfLastItem);
-
-                return (
-                    <div key={category}>
-                        <h5 className='py-3'>{category === 'emoji' ? 'Emoji' : 'Realistic'} Category:</h5>
-                        <Table striped bordered hover responsive className='text-center fs-6'>
-                            <thead>
-                                <tr>
-                                    <th>Id</th>
-                                    <th>Cover</th>
-                                    <th>Premium</th>
-                                    <th>Hidden</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {currentItems.map((cover, index) => (
-                                    <tr key={cover._id}>
-                                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                                        <td>
-                                            <img 
-                                                src={cover.CoverURL} 
-                                                alt={'CoverImage'} 
-                                                style={{ width: '150px', height: '120px', objectFit: 'cover' }} 
-                                            />
-                                        </td>
-                                        <td>
-                                            <Button 
-                                                className='bg-transparent border-0 fs-4' 
-                                                style={{ color: cover.CoverPremium ? "#0385C3" : "#6c757d" }}
-                                                onClick={() => handlePremiumToggle(cover._id, cover.CoverPremium)}
-                                            >
-                                                <FontAwesomeIcon 
-                                                    icon={cover.CoverPremium ? faToggleOn : faToggleOff} 
-                                                    title={cover.CoverPremium ? "Premium ON" : "Premium OFF"}
-                                                />
-                                            </Button>
-                                        </td>
-                                        <td>
-                                            <Button 
-                                                className='bg-transparent border-0 fs-5' 
-                                                style={{ color: "#0385C3" }} 
-                                                onClick={() => handleHideToggle(cover._id, cover.Hide)}
-                                            >
-                                                <FontAwesomeIcon 
-                                                    icon={cover.Hide ? faEyeSlash : faEye}
-                                                    title={cover.Hide ? "Hidden" : "Visible"}
-                                                />
-                                            </Button>
-                                        </td>
-                                        <td>
-                                            <Button 
-                                                className='bg-transparent border-0 fs-5' 
-                                                style={{ color: "#0385C3" }} 
-                                                onClick={() => handleEdit(cover)}
-                                            >
-                                                <FontAwesomeIcon icon={faEdit} />
-                                            </Button>
-                                            <Button 
-                                                className='bg-transparent border-0 text-danger fs-5' 
-                                                onClick={() => handleDelete(cover._id)}
-                                            >
-                                                <FontAwesomeIcon icon={faTrash} />
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-
-                        {Math.ceil(categoryData.length / itemsPerPage) > 1 && (
-                            <div className='d-flex justify-content-center'>
-                                <Pagination>
-                                    {Array.from({ length: Math.ceil(categoryData.length / itemsPerPage) }).map((_, index) => (
-                                        <Pagination.Item
-                                            key={index + 1}
-                                            active={index + 1 === currentPage}
-                                            onClick={() => category === 'emoji' 
-                                                ? setEmojiPage(index + 1) 
-                                                : setRealisticPage(index + 1)}
-                                        >
-                                            {index + 1}
-                                        </Pagination.Item>
-                                    ))}
-                                </Pagination>
-                            </div>
-                        )}
-                    </div>
-                );
-            })}
-
             <ToastContainer />
         </div>
     );
-};
 
+};
 export default CoverURL;

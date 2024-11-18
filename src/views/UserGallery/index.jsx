@@ -19,7 +19,7 @@ const UserGallery = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/users/read', { TypeId: "3" })
+        axios.post('https://pslink.world/api/users/read', { TypeId: "3" })
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setFilteredData(newData); // Set filtered data initially to all data
@@ -47,7 +47,7 @@ const UserGallery = () => {
 
 
         if (window.confirm("Are you sure you want to move this Gallery Image?")) {
-            axios.post('http://localhost:5000/api/gallery/create', formData)
+            axios.post('https://pslink.world/api/gallery/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -96,7 +96,7 @@ const UserGallery = () => {
 
     const handleDelete = (galleryId) => {
         if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
-            axios.delete(`http://localhost:5000/api/users/delete/${galleryId}?TypeId=3`)
+            axios.delete(`https://pslink.world/api/users/delete/${galleryId}?TypeId=3`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

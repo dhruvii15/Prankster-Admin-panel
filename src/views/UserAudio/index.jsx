@@ -19,7 +19,7 @@ const UserAudio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/users/read', { TypeId: "1" })
+        axios.post('https://pslink.world/api/users/read', { TypeId: "1" })
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setFilteredData(newData); // Set filtered data initially to all data
@@ -47,7 +47,7 @@ const UserAudio = () => {
 
 
         if (window.confirm("Are you sure you want to move this Audio?")) {
-            axios.post('http://localhost:5000/api/audio/create', formData)
+            axios.post('https://pslink.world/api/audio/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -96,7 +96,7 @@ const UserAudio = () => {
 
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`http://localhost:5000/api/users/delete/${audioId}?TypeId=1`)
+            axios.delete(`https://pslink.world/api/users/delete/${audioId}?TypeId=1`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

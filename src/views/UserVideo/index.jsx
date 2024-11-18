@@ -19,7 +19,7 @@ const UserVideo = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/users/read', { TypeId: "2" })
+        axios.post('https://pslink.world/api/users/read', { TypeId: "2" })
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setFilteredData(newData); // Set filtered data initially to all data
@@ -42,13 +42,13 @@ const UserVideo = () => {
         formData.append('VideoName', video.VideoName);
         formData.append('Video', video.Video);
         formData.append('VideoPremium', false);
-        formData.append('VideoImage', 'http://localhost:5000/api/public/images/video.jpg');
+        formData.append('VideoImage', 'https://pslink.world/api/public/images/video.jpg');
         formData.append('Hide', false);
         formData.append('role', video._id);
 
 
         if (window.confirm("Are you sure you want to move this Video?")) {
-            axios.post('http://localhost:5000/api/video/create', formData)
+            axios.post('https://pslink.world/api/video/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -97,7 +97,7 @@ const UserVideo = () => {
 
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video?")) {
-            axios.delete(`http://localhost:5000/api/users/delete/${videoId}?TypeId=2`)
+            axios.delete(`https://pslink.world/api/users/delete/${videoId}?TypeId=2`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

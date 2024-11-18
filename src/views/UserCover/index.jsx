@@ -19,7 +19,7 @@ const UserCover = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/users/read', { TypeId: "4" })
+        axios.post('https://pslink.world/api/users/read', { TypeId: "4" })
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setFilteredData(newData); // Set filtered data initially to all data
@@ -47,7 +47,7 @@ const UserCover = () => {
 
 
         if (window.confirm("Are you sure you want to move this Cover Image?")) {
-            axios.post('http://localhost:5000/api/cover/create', formData)
+            axios.post('https://pslink.world/api/cover/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -96,7 +96,7 @@ const UserCover = () => {
 
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
-            axios.delete(`http://localhost:5000/api/users/delete/${coverId}?TypeId=4`)
+            axios.delete(`https://pslink.world/api/users/delete/${coverId}?TypeId=4`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

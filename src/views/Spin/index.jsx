@@ -42,7 +42,7 @@ const Spin = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/admin/spin/read')
+        axios.post('https://pslink.world/api/admin/spin/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -83,8 +83,8 @@ const Spin = () => {
                 formData.append('Type', values.Type);
 
                 const request = id !== undefined
-                    ? axios.patch(`http://localhost:5000/api/admin/spin/update/${id}`, formData)
-                    : axios.post('http://localhost:5000/api/admin/spin/create', formData);
+                    ? axios.patch(`https://pslink.world/api/admin/spin/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/admin/spin/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -120,7 +120,7 @@ const Spin = () => {
 
     const handleDelete = (spinId) => {
         if (window.confirm("Are you sure you want to delete this Spin?")) {
-            axios.delete(`http://localhost:5000/api/admin/spin/delete/${spinId}`)
+            axios.delete(`https://pslink.world/api/admin/spin/delete/${spinId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
