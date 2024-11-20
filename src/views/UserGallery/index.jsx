@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination } from 'react-bootstrap';
+import { Button, Table, Pagination, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -12,6 +12,8 @@ import logo from "../../assets/images/logo.svg";
 const UserGallery = () => {
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
+    const [category, setCategory] = useState([]);
+    const [selectedCategories, setSelectedCategories] = useState({});
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -33,17 +35,45 @@ const UserGallery = () => {
     };
 
 
+    const getCategory = () => {
+        axios.post('https://pslink.world/api/category/read')
+            .then((res) => {
+                setCategory(res.data.data);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to fetch category.");
+            });
+    };
+
     useEffect(() => {
         getData();
+        getCategory();
     }, []);
 
+    const handleCategoryChange = (galleryId, categoryId) => {
+        setSelectedCategories(prev => ({
+            ...prev,
+            [galleryId]: categoryId
+        }));
+    };
+
+
     const handlePlusClick = (gallery) => {
+        const selectedCategory = selectedCategories[gallery._id];
+
+        if (!selectedCategory) {
+            toast.error("Please select a category first");
+            return;
+        }
+
         const formData = new FormData();
         formData.append('GalleryName', gallery.GalleryName);
         formData.append('GalleryImage', gallery.GalleryImage);
         formData.append('GalleryPremium', false);
         formData.append('Hide', false);
         formData.append('role', gallery._id);
+        formData.append('CategoryId', selectedCategory);
 
 
         if (window.confirm("Are you sure you want to move this Gallery Image?")) {
@@ -51,6 +81,12 @@ const UserGallery = () => {
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
+                    // Clear the selected category after successful submission
+                    setSelectedCategories(prev => {
+                        const newState = { ...prev };
+                        delete newState[gallery._id];
+                        return newState;
+                    });
                 })
                 .catch((err) => {
                     console.error(err);
@@ -141,6 +177,7 @@ const UserGallery = () => {
                         <th>Id</th>
                         <th>Gallery Name</th>
                         <th>Gallery Image</th>
+                        <th>Category</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -152,6 +189,27 @@ const UserGallery = () => {
                                 <td>{gallery.GalleryName}</td>
                                 <td>
                                     <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
+                                </td>
+                                <td>
+                                    <Form.Control
+                                    as="select"
+                                        value={selectedCategories[gallery._id] || ""}
+                                        onChange={(e) => handleCategoryChange(gallery._id, e.target.value)}
+                                        className='mx-auto'
+                                        style={{width:"210px"}}
+                                    >
+                                        <option value="">Select a category</option>
+                                        {category.map((cat) => {
+                                            if (cat.Type === 'gallery') {
+                                                return (
+                                                    <option key={cat._id} value={cat.CategoryId}>
+                                                        {cat.CategoryName}
+                                                    </option>
+                                                );
+                                            }
+                                            return null;
+                                        })}
+                                    </Form.Control>
                                 </td>
                                 <td>
                                     <Button
@@ -169,7 +227,7 @@ const UserGallery = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={4} className="text-center">No Data Found</td>
+                            <td colSpan={5} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination } from 'react-bootstrap';
+import { Button, Table, Pagination, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -12,6 +12,8 @@ import logo from "../../assets/images/logo.svg";
 const UserCover = () => {
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
+    const [category, setCategory] = useState([]);
+    const [selectedCategories, setSelectedCategories] = useState({});
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -33,24 +35,59 @@ const UserCover = () => {
     };
 
 
+    const getCategory = () => {
+        axios.post('https://pslink.world/api/cover/subcategory/read')
+            .then((res) => {
+                setCategory(res.data.data);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to fetch category.");
+            });
+    };
+
     useEffect(() => {
         getData();
+        getCategory();
     }, []);
 
+    const handleCategoryChange = (coverId, categoryId) => {
+        setSelectedCategories(prev => ({
+            ...prev,
+            [coverId]: categoryId
+        }));
+    };
+
     const handlePlusClick = (cover) => {
+        const selectedCategory = selectedCategories[cover._id];
+
+        if (!selectedCategory) {
+            toast.error("Please select a category first");
+            return;
+        }
+
         const formData = new FormData();
         formData.append('Category', 'realistic');
         formData.append('CoverURL', cover.CoverURL);
+        formData.append('CoverName', cover.CoverName);
         formData.append('CoverPremium', false);
         formData.append('Hide', false);
         formData.append('role', cover._id);
+        formData.append('SubCategory', selectedCategory);
+
 
 
         if (window.confirm("Are you sure you want to move this Cover Image?")) {
-            axios.post('https://pslink.world/api/cover/create', formData)
+            axios.post('http://localhost:5000/api/cover/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
+                    // Clear the selected category after successful submission
+                    setSelectedCategories(prev => {
+                        const newState = { ...prev };
+                        delete newState[cover._id];
+                        return newState;
+                    });
                 })
                 .catch((err) => {
                     console.error(err);
@@ -140,6 +177,8 @@ const UserCover = () => {
                     <tr>
                         <th>Id</th>
                         <th>Cover Image</th>
+                        <th>Cover Name</th>
+                        <th>SubCategory</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -150,6 +189,25 @@ const UserCover = () => {
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>
                                     <img src={cover.CoverURL} alt="cover thumbnail" style={{ width: '100px', height: '100px' }} />
+                                </td>
+                                <td>{cover.CoverName}</td>
+                                <td>
+                                    <Form.Control
+                                    as="select"
+                                        value={selectedCategories[cover._id] || ""}
+                                        onChange={(e) => handleCategoryChange(cover._id, e.target.value)}
+                                        className='mx-auto'
+                                        style={{width:"210px"}}
+                                    >
+                                        <option value="">Select a subcategory</option>
+                                        {category.map((cat) => {
+                                                return (
+                                                    <option key={cat._id} value={cat.SubCategory}>
+                                                        {cat.SubCategory}
+                                                    </option>
+                                                );
+                                        })}
+                                    </Form.Control>
                                 </td>
                                 <td>
                                     <Button
@@ -167,7 +225,7 @@ const UserCover = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={4} className="text-center">No Data Found</td>
+                            <td colSpan={5} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>

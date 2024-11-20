@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination } from 'react-bootstrap';
+import { Button, Table, Pagination, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -12,6 +12,8 @@ import logo from "../../assets/images/logo.svg";
 const UserAudio = () => {
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
+    const [category, setCategory] = useState([]);
+    const [selectedCategories, setSelectedCategories] = useState({});
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -22,7 +24,7 @@ const UserAudio = () => {
         axios.post('https://pslink.world/api/users/read', { TypeId: "1" })
             .then((res) => {
                 const newData = res.data.data.reverse();
-                setFilteredData(newData); // Set filtered data initially to all data
+                setFilteredData(newData);
                 setLoading(false);
             })
             .catch((err) => {
@@ -32,25 +34,56 @@ const UserAudio = () => {
             });
     };
 
+    const getCategory = () => {
+        axios.post('https://pslink.world/api/category/read')
+            .then((res) => {
+                setCategory(res.data.data);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to fetch category.");
+            });
+    };
 
     useEffect(() => {
         getData();
+        getCategory();
     }, []);
 
+    const handleCategoryChange = (audioId, categoryId) => {
+        setSelectedCategories(prev => ({
+            ...prev,
+            [audioId]: categoryId
+        }));
+    };
+
     const handlePlusClick = (audio) => {
+        const selectedCategory = selectedCategories[audio._id];
+
+        if (!selectedCategory) {
+            toast.error("Please select a category first");
+            return;
+        }
+
         const formData = new FormData();
         formData.append('AudioName', audio.AudioName);
         formData.append('Audio', audio.Audio);
         formData.append('AudioPremium', false);
         formData.append('Hide', false);
         formData.append('role', audio._id);
-
+        formData.append('CategoryId', selectedCategory);
 
         if (window.confirm("Are you sure you want to move this Audio?")) {
             axios.post('https://pslink.world/api/audio/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
+                    // Clear the selected category after successful submission
+                    setSelectedCategories(prev => {
+                        const newState = { ...prev };
+                        delete newState[audio._id];
+                        return newState;
+                    });
                 })
                 .catch((err) => {
                     console.error(err);
@@ -139,6 +172,7 @@ const UserAudio = () => {
                     <tr>
                         <th>Id</th>
                         <th>Audio Name</th>
+                        <th>Category</th>
                         <th>Audio</th>
                         <th>Actions</th>
                     </tr>
@@ -149,6 +183,27 @@ const UserAudio = () => {
                             <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{audio.AudioName}</td>
+                                <td>
+                                    <Form.Control
+                                    as="select"
+                                        value={selectedCategories[audio._id] || ""}
+                                        onChange={(e) => handleCategoryChange(audio._id, e.target.value)}
+                                        className='mx-auto'
+                                        style={{width:"210px"}}
+                                    >
+                                        <option value="">Select a category</option>
+                                        {category.map((cat) => {
+                                            if (cat.Type === 'audio') {
+                                                return (
+                                                    <option key={cat._id} value={cat.CategoryId}>
+                                                        {cat.CategoryName}
+                                                    </option>
+                                                );
+                                            }
+                                            return null;
+                                        })}
+                                    </Form.Control>
+                                </td>
                                 <td>
                                     <audio controls>
                                         <source src={audio.Audio} type="audio/mpeg" />
@@ -170,7 +225,10 @@ const UserAudio = () => {
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(audio._id)}>
+                                    <Button
+                                        className='bg-transparent border-0 text-danger fs-5'
+                                        onClick={() => handleDelete(audio._id)}
+                                    >
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
@@ -178,7 +236,7 @@ const UserAudio = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={4} className="text-center">No Data Found</td>
+                            <td colSpan={5} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>

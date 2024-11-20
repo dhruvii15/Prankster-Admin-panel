@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination } from 'react-bootstrap';
+import { Button, Table, Pagination, Form } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -12,6 +12,8 @@ import logo from "../../assets/images/logo.svg";
 const UserVideo = () => {
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
+    const [category, setCategory] = useState([]);
+    const [selectedCategories, setSelectedCategories] = useState({});
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -32,12 +34,39 @@ const UserVideo = () => {
             });
     };
 
+    const getCategory = () => {
+        axios.post('https://pslink.world/api/category/read')
+            .then((res) => {
+                setCategory(res.data.data);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to fetch category.");
+            });
+    };
 
     useEffect(() => {
         getData();
+        getCategory();
     }, []);
 
+    const handleCategoryChange = (videoId, categoryId) => {
+        setSelectedCategories(prev => ({
+            ...prev,
+            [videoId]: categoryId
+        }));
+    };
+
+
     const handlePlusClick = (video) => {
+
+        const selectedCategory = selectedCategories[video._id];
+
+        if (!selectedCategory) {
+            toast.error("Please select a category first");
+            return;
+        }
+
         const formData = new FormData();
         formData.append('VideoName', video.VideoName);
         formData.append('Video', video.Video);
@@ -45,6 +74,7 @@ const UserVideo = () => {
         formData.append('VideoImage', 'https://pslink.world/api/public/images/video.jpg');
         formData.append('Hide', false);
         formData.append('role', video._id);
+        formData.append('CategoryId', selectedCategory);
 
 
         if (window.confirm("Are you sure you want to move this Video?")) {
@@ -52,6 +82,12 @@ const UserVideo = () => {
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
+                    // Clear the selected category after successful submission
+                    setSelectedCategories(prev => {
+                        const newState = { ...prev };
+                        delete newState[video._id];
+                        return newState;
+                    });
                 })
                 .catch((err) => {
                     console.error(err);
@@ -140,6 +176,7 @@ const UserVideo = () => {
                     <tr>
                         <th>Id</th>
                         <th>Video Name</th>
+                        <th>Category</th>
                         <th>Video</th>
                         <th>Actions</th>
                     </tr>
@@ -150,6 +187,27 @@ const UserVideo = () => {
                             <tr key={video._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{video.VideoName}</td>
+                                <td>
+                                    <Form.Control
+                                    as="select"
+                                        value={selectedCategories[video._id] || ""}
+                                        onChange={(e) => handleCategoryChange(video._id, e.target.value)}
+                                        className='mx-auto'
+                                        style={{width:"210px"}}
+                                    >
+                                        <option value="">Select a category</option>
+                                        {category.map((cat) => {
+                                            if (cat.Type === 'video') {
+                                                return (
+                                                    <option key={cat._id} value={cat.CategoryId}>
+                                                        {cat.CategoryName}
+                                                    </option>
+                                                );
+                                            }
+                                            return null;
+                                        })}
+                                    </Form.Control>
+                                </td>
                                 <td>
                                     <video controls width="240">
                                         <source src={video.Video} type="video/mp4" />
@@ -179,7 +237,7 @@ const UserVideo = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={4} className="text-center">No Data Found</td>
+                            <td colSpan={5} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>
