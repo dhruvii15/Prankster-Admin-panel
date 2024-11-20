@@ -116,6 +116,8 @@ const CoverURL = () => {
 
     const coverSchema = Yup.object().shape({
         Category: Yup.string().required('Category is required'),
+        SubCategory: Yup.string().required('SubCategory is required'),
+        CoverName: Yup.string().required('CoverName is required'),
         CoverPremium: Yup.boolean(),
         Hide: Yup.boolean(),
     });
@@ -123,6 +125,8 @@ const CoverURL = () => {
     const formik = useFormik({
         initialValues: {
             Category: '',
+            SubCategory: '',
+            CoverName: '',
             CoverPremium: false,
             Hide: false,
         },
@@ -144,6 +148,8 @@ const CoverURL = () => {
                 }
 
                 formData.append('Category', values.Category);
+                formData.append('SubCategory', values.SubCategory);
+                formData.append('CoverName', values.CoverName);
                 formData.append('CoverPremium', values.CoverPremium);
                 formData.append('Hide', values.Hide);
 
@@ -243,6 +249,8 @@ const CoverURL = () => {
 
         formik.setValues({
             Category: cover.Category || '',
+            SubCategory: cover.SubCategory || '',
+            CoverName: cover.CoverName || '',
             CoverPremium: cover.CoverPremium || false,
             Hide: cover.Hide || false,
         });
@@ -335,6 +343,8 @@ const CoverURL = () => {
                     <tr>
                         <th>Id</th>
                         <th>Cover</th>
+                        <th>SubCategory</th>
+                        <th>CoverName</th>
                         <th>Premium</th>
                         <th>Hidden</th>
                         <th>Actions</th>
@@ -351,6 +361,8 @@ const CoverURL = () => {
                                     style={{ width: '150px', height: '120px', objectFit: 'cover' }}
                                 />
                             </td>
+                            <td>{cover.SubCategory}</td>
+                            <td>{cover.CoverName}</td>
                             <td>
                                 <Button
                                     className='bg-transparent border-0 fs-4'
@@ -415,6 +427,44 @@ const CoverURL = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
+                    <Form.Group className="mb-3">
+                            <Form.Label>Category</Form.Label>
+                            <Form.Select
+                                id="Category"
+                                name="Category"
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                value={formik.values.Category}
+                            >
+                                <option value="">Select Category</option>
+                                <option value="emoji">Emoji</option>
+                                <option value="realistic">Realistic</option>
+                            </Form.Select>
+                            {formik.errors.Category && formik.touched.Category && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Category}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label>SubCategory</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="SubCategory"
+                                name="SubCategory"
+                                value={formik.values.SubCategory}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.SubCategory && !!formik.errors.SubCategory}
+                            />
+                            {formik.errors.SubCategory && formik.touched.SubCategory && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.SubCategory}
+                                </div>
+                            )}
+                        </Form.Group>
+
                         <Form.Group className="mb-3">
                             <Form.Label>{fileLabel}</Form.Label>
                             <div className="d-flex flex-column">
@@ -456,21 +506,19 @@ const CoverURL = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Category</Form.Label>
-                            <Form.Select
-                                id="Category"
-                                name="Category"
+                            <Form.Label>Cover Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="CoverName"
+                                name="CoverName"
+                                value={formik.values.CoverName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
-                                value={formik.values.Category}
-                            >
-                                <option value="">Select Category</option>
-                                <option value="emoji">Emoji</option>
-                                <option value="realistic">Realistic</option>
-                            </Form.Select>
-                            {formik.errors.Category && formik.touched.Category && (
+                                isInvalid={formik.touched.CoverName && !!formik.errors.CoverName}
+                            />
+                            {formik.errors.CoverName && formik.touched.CoverName && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.Category}
+                                    {formik.errors.CoverName}
                                 </div>
                             )}
                         </Form.Group>

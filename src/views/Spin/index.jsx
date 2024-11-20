@@ -273,7 +273,7 @@ const Spin = () => {
                     className="rounded-3 border-0 my-2"
                     style={{ backgroundColor: "#FFD800", color: "black" }}
                 >
-                    Add New Spin
+                    Add New Prank
                 </Button>
             </div>
 
