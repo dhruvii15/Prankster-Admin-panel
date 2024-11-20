@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpFromBracket, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -271,7 +271,7 @@ const Spin = () => {
                 <Button
                     onClick={() => toggleModal('add')}
                     className="rounded-3 border-0 my-2"
-                    style={{ backgroundColor: "#FFD800", color: "black" }}
+                    style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
                     Add New Prank
                 </Button>
@@ -290,8 +290,80 @@ const Spin = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
+
                         <Form.Group className="mb-3">
-                            <Form.Label>Name</Form.Label>
+                            <Form.Label className='fw-bold'>Prank Type</Form.Label>
+                            <Form.Control
+                                as="select"
+                                id="Type"
+                                name="Type"
+                                value={formik.values.Type}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.Type && !!formik.errors.Type}
+                            >
+                                <option value="">Select Type</option>
+                                <option value="audio">Audio</option>
+                                <option value="video">Video</option>
+                                <option value="gallery">Gallery</option>
+                            </Form.Control>
+                            {formik.errors.Type && formik.touched.Type && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Type}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{fileLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="File"
+                                    name="File"
+                                    onChange={(event) => {
+                                        const file = event.currentTarget.files[0];
+                                        formik.setFieldValue("File", file);
+                                        setFileLabel(file ? "File uploaded" : "File Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    className="d-none"
+                                />
+                                <label htmlFor="File" className="btn p-3 mb-0" style={{ border: "1px dotted #c1c1c1" }}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' />Select File</label>
+                            </div>
+                            {formik.errors.File && formik.touched.File && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.File}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-2' style={{ fontSize: "17px" }} />{coverImageLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="CoverImage"
+                                    name="CoverImage"
+                                    onChange={(event) => {
+                                        const file = event.currentTarget.files[0];
+                                        formik.setFieldValue("CoverImage", file);
+                                        setCoverImageLabel(file ? "Cover Image uploaded" : "Cover Image Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    className="d-none"
+                                />
+                                <label htmlFor="CoverImage" className="btn mb-0 p-3" style={{ border: "1px dotted #c1c1c1" }}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' />Select Cover Image</label>
+                            </div>
+                            {formik.errors.CoverImage && formik.touched.CoverImage && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.CoverImage}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="Name"
@@ -308,77 +380,7 @@ const Spin = () => {
                             )}
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label>{coverImageLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="CoverImage"
-                                    name="CoverImage"
-                                    onChange={(event) => {
-                                        const file = event.currentTarget.files[0];
-                                        formik.setFieldValue("CoverImage", file);
-                                        setCoverImageLabel(file ? "Cover Image uploaded" : "Cover Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    className="d-none"
-                                />
-                                <label htmlFor="CoverImage" className="btn border bg-white mb-0">Select Cover Image</label>
-                            </div>
-                            {formik.errors.CoverImage && formik.touched.CoverImage && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.CoverImage}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Prank Type</Form.Label>
-                            <Form.Select
-                                id="Type"
-                                name="Type"
-                                value={formik.values.Type}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.Type && !!formik.errors.Type}
-                            >
-                                <option value="">Select Type</option>
-                                <option value="audio">Audio</option>
-                                <option value="video">Video</option>
-                                <option value="gallery">Gallery</option>
-                            </Form.Select>
-                            {formik.errors.Type && formik.touched.Type && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Type}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>{fileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="File"
-                                    name="File"
-                                    onChange={(event) => {
-                                        const file = event.currentTarget.files[0];
-                                        formik.setFieldValue("File", file);
-                                        setFileLabel(file ? "File uploaded" : "File Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    className="d-none"
-                                />
-                                <label htmlFor="File" className="btn border bg-white mb-0">Select File</label>
-                            </div>
-                            {formik.errors.File && formik.touched.File && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.File}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Button type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                        <Button type="submit" className='border-0 submit' disabled={isSubmitting}>
                             {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>

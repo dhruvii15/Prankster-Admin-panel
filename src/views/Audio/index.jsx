@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -269,7 +269,7 @@ const Audio = () => {
                 <Button
                     onClick={() => toggleModal('add')}
                     className='my-4 rounded-3 border-0'
-                    style={{ backgroundColor: "#FFD800", color: "black" }}
+                    style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
                     Add New Audio
                 </Button>
@@ -285,9 +285,9 @@ const Audio = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
-            <Modal 
-                show={visible} 
-                onHide={() => !isSubmitting && toggleModal('add')} 
+            <Modal
+                show={visible}
+                onHide={() => !isSubmitting && toggleModal('add')}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
@@ -298,91 +298,7 @@ const Audio = () => {
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Audio Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="AudioName"
-                                name="AudioName"
-                                value={formik.values.AudioName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.AudioName && !!formik.errors.AudioName}
-                            />
-                            {formik.errors.AudioName && formik.touched.AudioName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.AudioName}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Artist Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="ArtistName"
-                                name="ArtistName"
-                                value={formik.values.ArtistName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
-                            />
-                            {formik.errors.ArtistName && formik.touched.ArtistName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.ArtistName}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>{audioFileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="Audio"
-                                    name="Audio"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("Audio", file);
-                                        setAudioFileLabel(file ? "Audio File uploaded" : "Audio File Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="Audio" className="btn border bg-white mb-0">Select Audio File</label>
-                            </div>
-                            {formik.errors.Audio && formik.touched.Audio && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Audio}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="AudioPremium"
-                                name="AudioPremium"
-                                label="Premium Audio"
-                                checked={formik.values.AudioPremium}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="Hide"
-                                name="Hide"
-                                label="Hide Audio"
-                                checked={formik.values.Hide}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Category Name</Form.Label>
+                            <Form.Label className='fw-bold'>Category Name</Form.Label>
                             <Form.Control
                                 as="select"
                                 id="CategoryId"
@@ -411,7 +327,91 @@ const Audio = () => {
                             )}
                         </Form.Group>
 
-                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{audioFileLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="Audio"
+                                    name="Audio"
+                                    onChange={(event) => {
+                                        let file = event.currentTarget.files[0];
+                                        formik.setFieldValue("Audio", file);
+                                        setAudioFileLabel(file ? "Audio File uploaded" : "Audio File Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    label="Choose File"
+                                    className="d-none"
+                                    custom
+                                />
+                                <label htmlFor="Audio" className="btn p-3 mb-0" style={{border:"1px dotted #c1c1c1"}}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{fontSize:"15px"}}/>Select Audio File</label>
+                            </div>
+                            {formik.errors.Audio && formik.touched.Audio && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Audio}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Audio Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="AudioName"
+                                name="AudioName"
+                                value={formik.values.AudioName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.AudioName && !!formik.errors.AudioName}
+                            />
+                            {formik.errors.AudioName && formik.touched.AudioName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.AudioName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="ArtistName"
+                                name="ArtistName"
+                                value={formik.values.ArtistName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
+                            />
+                            {formik.errors.ArtistName && formik.touched.ArtistName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.ArtistName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="AudioPremium"
+                                name="AudioPremium"
+                                label="Premium Audio"
+                                checked={formik.values.AudioPremium}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="Hide"
+                                name="Hide"
+                                label="Hide Audio"
+                                checked={formik.values.Hide}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Button type="submit" className='submit border-0' disabled={isSubmitting}>
                             {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>

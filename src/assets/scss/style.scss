@@ -63,8 +63,8 @@ File: style.css
     height: 35px;
     border-radius: 50%;
     color: black;
-    background: #FFD800;
-    // background: linear-gradient(to bottom, #FFD800 , #FFD800);
+    background: #F9E238;
+    // background: linear-gradient(to bottom, #F9E238 , #F9E238);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -191,7 +191,7 @@ File: style.css
 // ================= Paginatio =========================
 /* For the active/selected page button */
 .pagination .page-item.active .page-link {
-    background-color: #FFD800;  
+    background-color: #F9E238;  
     border-color:  #ababac;     
     color:  black;
     margin: 10px 3px;
@@ -211,7 +211,7 @@ File: style.css
 
 .active-tab {
     color: black !important;
-    background-color: #FFD800 !important; 
+    background-color: #F9E238 !important; 
     border-radius: 4px;
 }
 
@@ -224,4 +224,23 @@ File: style.css
 
 .nav-tabs .nav-link {
     border: 1px solid #E3EAEF !important; 
+}
+
+.submit{
+    background-color: #F9E238 !important;
+}
+
+.form-check-input:checked {
+    background-color: #F9E238;  
+    border-color: #F9E238;    
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
+}
+
+.form-check-input{
+    border-color: black;
+    box-shadow: none !important;
+}
+
+.form-check-input:focus{
+    border-color: black;
 }

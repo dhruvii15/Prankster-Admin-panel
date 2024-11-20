@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -15,7 +15,7 @@ import logo from "../../assets/images/logo.svg";
 const Gallery = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [category , setCategory] = useState([]);
+    const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Gallery Image Upload');
@@ -120,19 +120,19 @@ const Gallery = () => {
         },
         validationSchema: gallerySchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
-            try{
-            setIsSubmitting(true);
-            const formData = new FormData();
-            formData.append('GalleryName', values.GalleryName);
-            formData.append('ArtistName', values.ArtistName);
-            formData.append('GalleryImage', values.GalleryImage);
-            formData.append('GalleryPremium', values.GalleryPremium);
-            formData.append('CategoryId', values.CategoryId);
-            formData.append('Hide', values.Hide);
+            try {
+                setIsSubmitting(true);
+                const formData = new FormData();
+                formData.append('GalleryName', values.GalleryName);
+                formData.append('ArtistName', values.ArtistName);
+                formData.append('GalleryImage', values.GalleryImage);
+                formData.append('GalleryPremium', values.GalleryPremium);
+                formData.append('CategoryId', values.CategoryId);
+                formData.append('Hide', values.Hide);
 
-            const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/gallery/create', formData);
+                const request = id !== undefined
+                    ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/gallery/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -270,7 +270,7 @@ const Gallery = () => {
                 <Button
                     onClick={() => toggleModal('add')}
                     className='my-4 rounded-3 border-0'
-                    style={{ backgroundColor: "#FFD800", color: "black" }}
+                    style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
                     Add New Gallery
                 </Button>
@@ -286,9 +286,9 @@ const Gallery = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
-            <Modal 
-                show={visible} 
-                onHide={() => !isSubmitting && toggleModal('add')} 
+            <Modal
+                show={visible}
+                onHide={() => !isSubmitting && toggleModal('add')}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
@@ -298,92 +298,9 @@ const Gallery = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Gallery Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="GalleryName"
-                                name="GalleryName"
-                                value={formik.values.GalleryName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.GalleryName && !!formik.errors.GalleryName}
-                            />
-                            {formik.errors.GalleryName && formik.touched.GalleryName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.GalleryName}
-                                </div>
-                            )}
-                        </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Artist Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="ArtistName"
-                                name="ArtistName"
-                                value={formik.values.ArtistName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
-                            />
-                            {formik.errors.ArtistName && formik.touched.ArtistName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.ArtistName}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>{imageFileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="GalleryImage"
-                                    name="GalleryImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("GalleryImage", file);
-                                        setImageFileLabel(file ? "Gallery Image uploaded" : "Gallery Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="GalleryImage" className="btn border bg-white mb-0">Select Gallery Image</label>
-                            </div>
-                            {formik.errors.GalleryImage && formik.touched.GalleryImage && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.GalleryImage}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="GalleryPremium"
-                                name="GalleryPremium"
-                                label="Premium Gallery"
-                                checked={formik.values.GalleryPremium}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="Hide"
-                                name="Hide"
-                                label="Hide gallery"
-                                checked={formik.values.Hide}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Category Name</Form.Label>
+                            <Form.Label className='fw-bold'>Category Name</Form.Label>
                             <Form.Control
                                 as="select"
                                 id="CategoryId"
@@ -412,7 +329,91 @@ const Gallery = () => {
                             )}
                         </Form.Group>
 
-                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{imageFileLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="GalleryImage"
+                                    name="GalleryImage"
+                                    onChange={(event) => {
+                                        let file = event.currentTarget.files[0];
+                                        formik.setFieldValue("GalleryImage", file);
+                                        setImageFileLabel(file ? "Gallery Image uploaded" : "Gallery Image Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    label="Choose File"
+                                    className="d-none"
+                                    custom
+                                />
+                                <label htmlFor="GalleryImage" className="btn p-3 mb-0" style={{border:"1px dotted #c1c1c1"}}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{fontSize:"15px"}}/>Select Gallery Image</label>
+                            </div>
+                            {formik.errors.GalleryImage && formik.touched.GalleryImage && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.GalleryImage}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Gallery Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="GalleryName"
+                                name="GalleryName"
+                                value={formik.values.GalleryName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.GalleryName && !!formik.errors.GalleryName}
+                            />
+                            {formik.errors.GalleryName && formik.touched.GalleryName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.GalleryName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="ArtistName"
+                                name="ArtistName"
+                                value={formik.values.ArtistName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
+                            />
+                            {formik.errors.ArtistName && formik.touched.ArtistName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.ArtistName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="GalleryPremium"
+                                name="GalleryPremium"
+                                label="Premium Gallery"
+                                checked={formik.values.GalleryPremium}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="Hide"
+                                name="Hide"
+                                label="Hide gallery"
+                                checked={formik.values.Hide}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Button type="submit" className='submit border-0' disabled={isSubmitting}>
                             {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -125,20 +125,20 @@ const Video = () => {
         },
         validationSchema: videoSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
-            try{
-            setIsSubmitting(true);
-            const formData = new FormData();
-            formData.append('VideoName', values.VideoName);
-            formData.append('ArtistName', values.ArtistName);
-            formData.append('VideoImage', values.VideoImage);
-            formData.append('Video', values.Video);
-            formData.append('VideoPremium', values.VideoPremium);
-            formData.append('CategoryId', values.CategoryId);
-            formData.append('Hide', values.Hide);
+            try {
+                setIsSubmitting(true);
+                const formData = new FormData();
+                formData.append('VideoName', values.VideoName);
+                formData.append('ArtistName', values.ArtistName);
+                formData.append('VideoImage', values.VideoImage);
+                formData.append('Video', values.Video);
+                formData.append('VideoPremium', values.VideoPremium);
+                formData.append('CategoryId', values.CategoryId);
+                formData.append('Hide', values.Hide);
 
-            const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
-                : axios.post('https://pslink.world/api/video/create', formData);
+                const request = id !== undefined
+                    ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/video/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -250,7 +250,7 @@ const Video = () => {
         return items;
     };
 
-   if (loading) return (
+    if (loading) return (
         <div
             style={{
                 height: '100vh',
@@ -278,7 +278,7 @@ const Video = () => {
                 <Button
                     onClick={() => toggleModal('add')}
                     className='my-4 rounded-3 border-0'
-                    style={{ backgroundColor: "#FFD800", color: "black" }}
+                    style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
                     Add New Video
                 </Button>
@@ -294,9 +294,9 @@ const Video = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
-            <Modal 
-                show={visible} 
-                onHide={() => !isSubmitting && toggleModal('add')} 
+            <Modal
+                show={visible}
+                onHide={() => !isSubmitting && toggleModal('add')}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
@@ -306,118 +306,9 @@ const Video = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Video Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="VideoName"
-                                name="VideoName"
-                                value={formik.values.VideoName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.VideoName && !!formik.errors.VideoName}
-                            />
-                            {formik.errors.VideoName && formik.touched.VideoName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.VideoName}
-                                </div>
-                            )}
-                        </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Artist Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="ArtistName"
-                                name="ArtistName"
-                                value={formik.values.ArtistName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
-                            />
-                            {formik.errors.ArtistName && formik.touched.ArtistName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.ArtistName}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>{imageFileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="VideoImage"
-                                    name="VideoImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("VideoImage", file);
-                                        setImageFileLabel(file ? "Video Image uploaded" : "Video Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="VideoImage" className="btn border bg-white mb-0">Select Video Image</label>
-                            </div>
-                            {formik.errors.VideoImage && formik.touched.VideoImage && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.VideoImage}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>{videoFileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="Video"
-                                    name="Video"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("Video", file);
-                                        setVideoFileLabel(file ? "Video File uploaded" : "Video File Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="Video" className="btn border bg-white mb-0">Select Video File</label>
-                            </div>
-                            {formik.errors.Video && formik.touched.Video && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Video}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="VideoPremium"
-                                name="VideoPremium"
-                                label="Premium Video"
-                                checked={formik.values.VideoPremium}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="Hide"
-                                name="Hide"
-                                label="Hide video"
-                                checked={formik.values.Hide}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>Category Name</Form.Label>
+                            <Form.Label className='fw-bold'>Category Name</Form.Label>
                             <Form.Control
                                 as="select"
                                 id="CategoryId"
@@ -446,7 +337,117 @@ const Video = () => {
                             )}
                         </Form.Group>
 
-                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{videoFileLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="Video"
+                                    name="Video"
+                                    onChange={(event) => {
+                                        let file = event.currentTarget.files[0];
+                                        formik.setFieldValue("Video", file);
+                                        setVideoFileLabel(file ? "Video File uploaded" : "Video File Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    label="Choose File"
+                                    className="d-none"
+                                    custom
+                                />
+                                <label htmlFor="Video" className="btn mb-0 p-3" style={{border:"1px dotted #c1c1c1"}}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{fontSize:"15px"}}/>Select Video File</label>
+                            </div>
+                            {formik.errors.Video && formik.touched.Video && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Video}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{imageFileLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="VideoImage"
+                                    name="VideoImage"
+                                    onChange={(event) => {
+                                        let file = event.currentTarget.files[0];
+                                        formik.setFieldValue("VideoImage", file);
+                                        setImageFileLabel(file ? "Video Image uploaded" : "Video Image Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    label="Choose File"
+                                    className="d-none"
+                                    custom
+                                />
+                                <label htmlFor="VideoImage" className="btn p-3 mb-0" style={{border:"1px dotted #c1c1c1"}}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{fontSize:"15px"}}/>Select Video Image</label>
+                            </div>
+                            {formik.errors.VideoImage && formik.touched.VideoImage && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.VideoImage}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Video Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="VideoName"
+                                name="VideoName"
+                                value={formik.values.VideoName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.VideoName && !!formik.errors.VideoName}
+                            />
+                            {formik.errors.VideoName && formik.touched.VideoName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.VideoName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="ArtistName"
+                                name="ArtistName"
+                                value={formik.values.ArtistName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
+                            />
+                            {formik.errors.ArtistName && formik.touched.ArtistName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.ArtistName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="VideoPremium"
+                                name="VideoPremium"
+                                label="Premium Video"
+                                checked={formik.values.VideoPremium}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="Hide"
+                                name="Hide"
+                                label="Hide video"
+                                checked={formik.values.Hide}
+                                onChange={formik.handleChange}
+                            />
+                        </Form.Group>
+
+                        <Button type="submit" className='submit border-0' disabled={isSubmitting}>
                             {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>

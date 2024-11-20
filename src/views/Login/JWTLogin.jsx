@@ -100,7 +100,7 @@ const JWTLogin = () => {
                                     disabled={isSubmitting}
                                     size="large"
                                     type="submit"
-                                    style={{background : "#FFD800"}}
+                                    style={{background : "#F9E238"}}
                                 >
                                     {isSubmitting ? (
                                         <Spinner animation="border" size="sm" role="status" aria-hidden="true" className="mr-2" />

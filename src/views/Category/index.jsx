@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpFromBracket, faCloudArrowUp, faEdit, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -166,7 +166,7 @@ const Category = () => {
         return items;
     };
 
-   if (loading) return (
+    if (loading) return (
         <div
             style={{
                 height: '100vh',
@@ -230,12 +230,12 @@ const Category = () => {
                     </Nav.Item>
                 </Nav>
 
-                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-2' style={{ backgroundColor: "#FFD800", color: "black" }}>Add New Category Image</Button>
-                
+                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-2' style={{ backgroundColor: "#F9E238", color: "black" }}>Add New Category Image</Button>
+
             </div>
-            <Modal 
-                show={visible} 
-                onHide={() => !isSubmitting && toggleModal('add')} 
+            <Modal
+                show={visible}
+                onHide={() => !isSubmitting && toggleModal('add')}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
@@ -245,53 +245,9 @@ const Category = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Category Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="CategoryName"
-                                name="CategoryName"
-                                value={formik.values.CategoryName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CategoryName && !!formik.errors.CategoryName}
-                            />
-                            {formik.errors.CategoryName && formik.touched.CategoryName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.CategoryName}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label>{fileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="CategoryImage"
-                                    name="CategoryImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("CategoryImage", file);
-                                        setFileLabel(file ? "Category Image uploaded" : "Category Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="CategoryImage" className="btn border bg-white mb-0">Select Image</label>
-                            </div>
-                            {formik.errors.CategoryImage && formik.touched.CategoryImage && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.CategoryImage}
-                                </div>
-                            )}
-                        </Form.Group>
-
                         {/* Type Dropdown */}
                         <Form.Group className="mb-3">
-                            <Form.Label>Type</Form.Label>
+                            <Form.Label className='fw-bold'>Type</Form.Label>
                             <Form.Control
                                 as="select"
                                 id="Type"
@@ -313,7 +269,52 @@ const Category = () => {
                             )}
                         </Form.Group>
 
-                        <Button  type="submit" className='bg-white border-0' disabled={isSubmitting}>
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{fileLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="CategoryImage"
+                                    name="CategoryImage"
+                                    onChange={(event) => {
+                                        let file = event.currentTarget.files[0];
+                                        formik.setFieldValue("CategoryImage", file);
+                                        setFileLabel(file ? "Category Image uploaded" : "Category Image Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    label="Choose File"
+                                    className="d-none"
+                                    custom
+                                />
+                                <label htmlFor="CategoryImage" className="btn mb-0 p-3" style={{border:"1px dotted #c1c1c1"}}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{fontSize:"15px"}}/>Select Image</label>
+                            </div>
+                            {formik.errors.CategoryImage && formik.touched.CategoryImage && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.CategoryImage}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Category Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="CategoryName"
+                                name="CategoryName"
+                                value={formik.values.CategoryName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.CategoryName && !!formik.errors.CategoryName}
+                            />
+                            {formik.errors.CategoryName && formik.touched.CategoryName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.CategoryName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+
+                        <Button type="submit" className='submit border-0' disabled={isSubmitting}>
                             {isSubmitting ? 'Submitting...' : 'Submit'}
                         </Button>
                     </Form>

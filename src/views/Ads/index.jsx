@@ -190,7 +190,7 @@ const Ads = () => {
             <Button 
                 onClick={() => toggleModal('add')} 
                 className='my-4 rounded-3 border-0' 
-                style={{ backgroundColor: "#FFD800" }}
+                style={{ backgroundColor: "#F9E238" }}
                 disabled={isSubmitting}
             >
                 Add New Ad
@@ -209,7 +209,7 @@ const Ads = () => {
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label>Ads Name</Form.Label>
+                            <Form.Label className='fw-bold'>Ads Name</Form.Label>
                             <Form.Control
                                 as="select"
                                 id="adsName"
@@ -233,7 +233,7 @@ const Ads = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Ads Id</Form.Label>
+                            <Form.Label className='fw-bold'>Ads Id</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="adsId"
@@ -247,10 +247,11 @@ const Ads = () => {
                                 {errors.adsId}
                             </Form.Control.Feedback>
                         </Form.Group>
+                        
 
                         <Button 
                             type="submit" 
-                            className='bg-white border-0' 
+                            className='submit border-0' 
                             disabled={isSubmitting}
                         >
                             {isSubmitting ? 'Processing...' : (id ? 'Update' : 'Submit')}

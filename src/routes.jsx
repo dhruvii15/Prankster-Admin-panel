@@ -20,6 +20,7 @@ import UserAudio from 'views/UserAudio';
 import UserVideo from 'views/UserVideo';
 import UserCover from 'views/UserCover';
 import Spin from 'views/Spin';
+import SubCategory from 'views/SubCategory';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -74,6 +75,11 @@ export const routes = [
         exact: true,
         path: '/cover',
         element: () => <AdminProtect><Cover /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/subcategory',
+        element: () => <AdminProtect><SubCategory /></AdminProtect>
       },
       {
         exact: true,

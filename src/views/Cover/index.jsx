@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
@@ -24,6 +24,7 @@ const CoverURL = () => {
     const itemsPerPage = 15;
     const [selectedFilter, setSelectedFilter] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [subcategory, setsubCategory] = useState([]);
 
     const renderPaginationItems = () => {
         const totalPages = Math.ceil(filterData(data).length / itemsPerPage);
@@ -88,8 +89,20 @@ const CoverURL = () => {
             });
     };
 
+    const getsubCategory = () => {
+        axios.post('https://pslink.world/api/cover/subcategory/read')
+            .then((res) => {
+                setsubCategory(res.data.data);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to fetch subcategory.");
+            });
+    };
+
     useEffect(() => {
         getData();
+        getsubCategory();
     }, []);
 
     const filterData = (covers) => {
@@ -135,11 +148,6 @@ const CoverURL = () => {
             try {
                 setIsSubmitting(true);
                 const formData = new FormData();
-
-                if (!isEditing && selectedFiles.length === 0) {
-                    toast.error("Please select at least one image");
-                    return;
-                }
 
                 if (selectedFiles.length > 0) {
                     selectedFiles.forEach((file) => {
@@ -299,14 +307,14 @@ const CoverURL = () => {
                 <Button
                     onClick={() => toggleModal('add')}
                     className='my-4 rounded-3 border-0'
-                    style={{ backgroundColor: "#FFD800" }}
+                    style={{ backgroundColor: "#F9E238" }}
                 >
                     Add New CoverImage
                 </Button>
                 <Form.Select
                     value={selectedFilter}
                     onChange={(e) => setSelectedFilter(e.target.value)}
-                    style={{ width: 'auto' }}
+                    style={{ width: 'auto'}}
                     className='my-4'
                 >
                     <option value="">All</option>
@@ -427,19 +435,21 @@ const CoverURL = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
-                    <Form.Group className="mb-3">
-                            <Form.Label>Category</Form.Label>
-                            <Form.Select
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Category</Form.Label>
+                            <Form.Control
+                                as="select"
                                 id="Category"
                                 name="Category"
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
                                 value={formik.values.Category}
+                                isInvalid={formik.touched.Category && !!formik.errors.Category}
                             >
                                 <option value="">Select Category</option>
                                 <option value="emoji">Emoji</option>
                                 <option value="realistic">Realistic</option>
-                            </Form.Select>
+                            </Form.Control>
                             {formik.errors.Category && formik.touched.Category && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.Category}
@@ -448,25 +458,34 @@ const CoverURL = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>SubCategory</Form.Label>
+                            <Form.Label className='fw-bold'>SubCategory Name</Form.Label>
                             <Form.Control
-                                type="text"
+                                as="select"
                                 id="SubCategory"
                                 name="SubCategory"
                                 value={formik.values.SubCategory}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
                                 isInvalid={formik.touched.SubCategory && !!formik.errors.SubCategory}
-                            />
-                            {formik.errors.SubCategory && formik.touched.SubCategory && (
+                            >
+                                <option value="">Select a subcategory</option>
+                                {subcategory.map((subcategory) => {
+                                    return (
+                                        <option key={subcategory._id} value={subcategory.SubCategory}>
+                                            {subcategory.SubCategory}
+                                        </option>
+                                    );
+                                })}
+                            </Form.Control>
+                            {formik.errors.CategoryId && formik.touched.CategoryId && (
                                 <div className="invalid-feedback d-block">
-                                    {formik.errors.SubCategory}
+                                    {formik.errors.CategoryId}
                                 </div>
                             )}
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>{fileLabel}</Form.Label>
+                            <Form.Label className='fw-bold'>{fileLabel}</Form.Label>
                             <div className="d-flex flex-column">
                                 <div className="d-flex align-items-center">
                                     <Form.Control
@@ -478,8 +497,8 @@ const CoverURL = () => {
                                         onChange={handleFileChange}
                                         className="d-none"
                                     />
-                                    <label htmlFor="CoverURL" className="btn border bg-white mb-0">
-                                        {isEditing ? "Select New Image" : "Select Images (Max 5)"}
+                                    <label htmlFor="CoverURL" className="btn mb-0 p-3" style={{ border: "1px dotted #c1c1c1" }}>
+                                        <FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{ fontSize: "15px" }} />{isEditing ? "Select New Image" : "Select Images (Max 5)"}
                                     </label>
                                 </div>
 
@@ -506,7 +525,7 @@ const CoverURL = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label>Cover Name</Form.Label>
+                            <Form.Label className='fw-bold'>Cover Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="CoverName"
@@ -547,8 +566,8 @@ const CoverURL = () => {
 
                         <Button
                             type="submit"
-                            className='bg-white border-0'
-                            disabled={isSubmitting || (!isEditing && selectedFiles.length === 0)}
+                            className='submit border-0'
+                            disabled={isSubmitting}
                         >
                             {isSubmitting ? 'Submitting...' : (isEditing ? 'Update' : 'Submit')}
                         </Button>
