@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Nav, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
@@ -131,6 +131,14 @@ const CoverURL = () => {
         Category: Yup.string().required('Category is required'),
         SubCategory: Yup.string().required('SubCategory is required'),
         CoverName: Yup.string().required('CoverName is required'),
+        CoverURL: Yup.mixed()
+            .required('Cover Image is required')
+            .test('fileExists', 'Cover Image is required', function (value) {
+                // For editing existing items, allow no new file upload
+                if (this.parent.isEditing && !value) return true;
+                // For new items, require a file
+                return value instanceof File;
+            }),
         CoverPremium: Yup.boolean(),
         Hide: Yup.boolean(),
     });
@@ -140,8 +148,10 @@ const CoverURL = () => {
             Category: '',
             SubCategory: '',
             CoverName: '',
+            CoverURL: null, // Add this line
             CoverPremium: false,
             Hide: false,
+            isEditing: false, // Add this to help with conditional validation
         },
         validationSchema: coverSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -402,17 +412,18 @@ const CoverURL = () => {
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header closeButton={!isSubmitting}>
+                <Modal.Header>
                     <Modal.Title>{isEditing ? "Edit Cover Image" : "Add New Cover Image"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Category</Form.Label>
+                            <Form.Label className='fw-bold'>Category<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="Category"
                                 name="Category"
+                                className='py-2'
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
                                 value={formik.values.Category}
@@ -430,17 +441,18 @@ const CoverURL = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>SubCategory Name</Form.Label>
+                            <Form.Label className='fw-bold'>SubCategory Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="SubCategory"
                                 name="SubCategory"
+                                className='py-2'
                                 value={formik.values.SubCategory}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
                                 isInvalid={formik.touched.SubCategory && !!formik.errors.SubCategory}
                             >
-                                <option value="">Select a subcategory</option>
+                                <option value="">Select a subcategory<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></option>
                                 {subcategory.map((subcategory) => {
                                     return (
                                         <option key={subcategory._id} value={subcategory.SubCategory}>
@@ -457,7 +469,7 @@ const CoverURL = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel}</Form.Label>
+                            <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex flex-column">
                                 <div className="d-flex align-items-center">
                                     <Form.Control
@@ -465,39 +477,34 @@ const CoverURL = () => {
                                         id="CoverURL"
                                         name="CoverURL"
                                         accept="image/*"
-                                        onChange={handleFileChange}
+                                        onChange={(event) => {
+                                            handleFileChange(event);
+                                            formik.setFieldValue('CoverURL', event.currentTarget.files[0]);
+                                        }}
                                         className="d-none"
+                                        isInvalid={formik.touched.CoverURL && !!formik.errors.CoverURL}
                                     />
-                                    <label htmlFor="CoverURL" className="btn mb-0 p-3" style={{ border: "1px dotted #c1c1c1" }}>
-                                        <FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{ fontSize: "15px" }} />
-                                        {isEditing ? "Select New Image" : "Select Image"}
+                                    <label htmlFor="CoverURL" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                        <div style={{ color: "#c1c1c1" }}>{isEditing ? "Select New Image" : "Select Image"}</div>
                                     </label>
                                 </div>
 
-                                {/* Preview section */}
-                                {previewUrl && (
-                                    <div className="mt-3">
-                                        <img
-                                            src={previewUrl}
-                                            alt="Preview"
-                                            style={{
-                                                width: '200px',
-                                                height: '200px',
-                                                objectFit: 'cover',
-                                                borderRadius: '4px'
-                                            }}
-                                        />
+                                {formik.touched.CoverURL && formik.errors.CoverURL && (
+                                    <div className="text-danger mt-1">
+                                        {formik.errors.CoverURL}
                                     </div>
                                 )}
                             </div>
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Cover Name</Form.Label>
+                            <Form.Label className='fw-bold'>Cover Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="CoverName"
                                 name="CoverName"
+                                className='py-2'
                                 placeholder="Enter CoverName"
                                 value={formik.values.CoverName}
                                 onChange={formik.handleChange}
@@ -511,35 +518,54 @@ const CoverURL = () => {
                             )}
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="CoverPremium"
-                                name="CoverPremium"
-                                label="Premium Cover"
-                                checked={formik.values.CoverPremium}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
+                        <div className='d-flex flex-wrap gap-sm-4'>
 
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="Hide"
-                                name="Hide"
-                                label="Hide Cover"
-                                checked={formik.values.Hide}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="CoverPremium"
+                                    name="CoverPremium"
+                                    label="Premium Cover"
+                                    checked={formik.values.CoverPremium}
+                                    onChange={formik.handleChange}
+                                />
+                            </Form.Group>
 
-                        <Button
-                            type="submit"
-                            className='submit border-0'
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? 'Submitting...' : (isEditing ? 'Update' : 'Submit')}
-                        </Button>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="Hide"
+                                    name="Hide"
+                                    label="Hide Cover"
+                                    checked={formik.values.Hide}
+                                    onChange={formik.handleChange}
+                                />
+                            </Form.Group>
+
+                        </div>
+
+                        <Row className="mt-2">
+                            <Col xs={6}>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => toggleModal()}
+                                    disabled={isSubmitting}
+                                    className='w-100 rounded-3 text-black'
+                                    style={{background:"#F6F7FB"}}
+                                >
+                                    Cancel
+                                </Button>
+                            </Col>
+                            <Col xs={6}>
+                                <Button
+                                    type="submit"
+                                    className='submit border-0 rounded-3 w-100'
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? <Spinner size='sm' /> : (isEditing ? 'Update' : 'Submit')}
+                                </Button>
+                            </Col>
+                        </Row>
                     </Form>
                 </Modal.Body>
             </Modal>

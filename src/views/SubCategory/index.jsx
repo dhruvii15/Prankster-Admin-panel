@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -177,24 +177,25 @@ const SubCategory = () => {
                     Add New SubCategory
                 </Button>
             </div>
-            <Modal 
-                show={visible} 
-                onHide={() => !isSubmitting && toggleModal('add')} 
+            <Modal
+                show={visible}
+                onHide={() => !isSubmitting && toggleModal('add')}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header closeButton={!isSubmitting}>
+                <Modal.Header>
                     <Modal.Title>{id ? "Edit SubCategory" : "Add New SubCategory"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>SubCategory Name</Form.Label>
+                            <Form.Label className='fw-bold'>SubCategory Name <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="SubCategory"
                                 name="SubCategory"
+                                className='py-2'
                                 placeholder="Enter SubCategory"
                                 value={formik.values.SubCategory}
                                 onChange={formik.handleChange}
@@ -208,9 +209,24 @@ const SubCategory = () => {
                             )}
                         </Form.Group>
 
-                        <Button type="submit" className='submit border-0' disabled={isSubmitting}>
-                            {isSubmitting ? 'Submitting...' : 'Submit'}
-                        </Button>
+                        <Row className="mt-4">
+                            <Col xs={6}>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => toggleModal()}
+                                    disabled={isSubmitting}
+                                    className='w-100 rounded-3 text-black'
+                                    style={{ background: "#F6F7FB" }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Col>
+                            <Col xs={6}>
+                                <Button type="submit" className='submit border-0 rounded-3 w-100' disabled={isSubmitting}>
+                                    {isSubmitting ? <Spinner size='sm' /> : 'Submit'}
+                                </Button>
+                            </Col>
+                        </Row>
                     </Form>
                 </Modal.Body>
             </Modal>

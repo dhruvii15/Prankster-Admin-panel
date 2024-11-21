@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -301,18 +301,19 @@ const Video = () => {
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header closeButton={!isSubmitting}>
+                <Modal.Header>
                     <Modal.Title>{id ? "Edit Video" : "Add New Video"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Category Name</Form.Label>
+                            <Form.Label className='fw-bold'>Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="CategoryId"
                                 name="CategoryId"
+                                className='py-2'
                                 value={formik.values.CategoryId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -338,7 +339,7 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{videoFileLabel}</Form.Label>
+                            <Form.Label className='fw-bold'>{videoFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
@@ -354,7 +355,10 @@ const Video = () => {
                                     className="d-none"
                                     custom
                                 />
-                                <label htmlFor="Video" className="btn mb-0 p-3" style={{border:"1px dotted #c1c1c1"}}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{fontSize:"15px"}}/>Select Video File</label>
+                                <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                    <div style={{ color: "#c1c1c1" }}>Select Video File</div>
+                                </label>
                             </div>
                             {formik.errors.Video && formik.touched.Video && (
                                 <div className="invalid-feedback d-block">
@@ -364,7 +368,7 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}</Form.Label>
+                            <Form.Label className='fw-bold'>{imageFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
@@ -377,10 +381,13 @@ const Video = () => {
                                     }}
                                     onBlur={formik.handleBlur}
                                     label="Choose File"
-                                    className="d-none"
+                                    className="d-none py-2"
                                     custom
                                 />
-                                <label htmlFor="VideoImage" className="btn p-3 mb-0" style={{border:"1px dotted #c1c1c1"}}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{fontSize:"15px"}}/>Select Video Image</label>
+                                <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                    <div style={{ color: "#c1c1c1" }}>Select Video Image</div>
+                                </label>
                             </div>
                             {formik.errors.VideoImage && formik.touched.VideoImage && (
                                 <div className="invalid-feedback d-block">
@@ -390,11 +397,12 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Video Name</Form.Label>
+                            <Form.Label className='fw-bold'>Video Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="VideoName"
                                 name="VideoName"
+                                className='py-2'
                                 placeholder="Enter VideoName"
                                 value={formik.values.VideoName}
                                 onChange={formik.handleChange}
@@ -409,11 +417,12 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="ArtistName"
                                 name="ArtistName"
+                                className='py-2'
                                 placeholder="Enter ArtistName"
                                 value={formik.values.ArtistName}
                                 onChange={formik.handleChange}
@@ -426,32 +435,53 @@ const Video = () => {
                                 </div>
                             )}
                         </Form.Group>
+                        <div className='d-flex flex-wrap gap-sm-4'>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="VideoPremium"
+                                    name="VideoPremium"
+                                    label="Premium Video"
+                                    checked={formik.values.VideoPremium}
+                                    onChange={formik.handleChange}
+                                />
+                            </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="VideoPremium"
-                                name="VideoPremium"
-                                label="Premium Video"
-                                checked={formik.values.VideoPremium}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="Hide"
+                                    name="Hide"
+                                    label="Hide video"
+                                    checked={formik.values.Hide}
+                                    onChange={formik.handleChange}
+                                />
+                            </Form.Group>
+                        </div>
 
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="Hide"
-                                name="Hide"
-                                label="Hide video"
-                                checked={formik.values.Hide}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
+                        <Row className="mt-2">
+                            <Col xs={6}>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => toggleModal()}
+                                    disabled={isSubmitting}
+                                    className='w-100 rounded-3 text-black'
+                                    style={{ background: "#F6F7FB" }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Col>
+                            <Col xs={6}>
+                                <Button
+                                    type="submit"
+                                    className='submit border-0 rounded-3 w-100'
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? <Spinner size='sm' /> : 'Submit'}
+                                </Button>
+                            </Col>
+                        </Row>
 
-                        <Button type="submit" className='submit border-0' disabled={isSubmitting}>
-                            {isSubmitting ? 'Submitting...' : 'Submit'}
-                        </Button>
                     </Form>
                 </Modal.Body>
             </Modal>

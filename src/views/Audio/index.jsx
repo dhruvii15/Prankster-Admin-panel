@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Col, Row, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -292,17 +292,18 @@ const Audio = () => {
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header closeButton={!isSubmitting}>
+                <Modal.Header >
                     <Modal.Title>{id ? "Edit Audio" : "Add New Audio"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Category Name</Form.Label>
+                            <Form.Label className='fw-bold'>Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="CategoryId"
                                 name="CategoryId"
+                                className='py-2'
                                 value={formik.values.CategoryId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -328,7 +329,7 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{audioFileLabel}</Form.Label>
+                            <Form.Label className='fw-bold'>{audioFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
@@ -344,7 +345,10 @@ const Audio = () => {
                                     className="d-none"
                                     custom
                                 />
-                                <label htmlFor="Audio" className="btn p-3 mb-0" style={{border:"1px dotted #c1c1c1"}}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{fontSize:"15px"}}/>Select Audio File</label>
+                                <label htmlFor="Audio" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                <div style={{ color: "#c1c1c1" }}>Select Audio File</div>
+                            </label>
                             </div>
                             {formik.errors.Audio && formik.touched.Audio && (
                                 <div className="invalid-feedback d-block">
@@ -354,11 +358,12 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Audio Name</Form.Label>
+                            <Form.Label className='fw-bold'>Audio Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="AudioName"
                                 name="AudioName"
+                                className='py-2'
                                 placeholder="Enter AudioName"
                                 value={formik.values.AudioName}
                                 onChange={formik.handleChange}
@@ -373,11 +378,12 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="ArtistName"
                                 name="ArtistName"
+                                className='py-2'
                                 placeholder="Enter ArtistName"
                                 value={formik.values.ArtistName}
                                 onChange={formik.handleChange}
@@ -391,31 +397,52 @@ const Audio = () => {
                             )}
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="AudioPremium"
-                                name="AudioPremium"
-                                label="Premium Audio"
-                                checked={formik.values.AudioPremium}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
+                        <div className='d-flex flex-wrap gap-sm-4'>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="AudioPremium"
+                                    name="AudioPremium"
+                                    label="Premium Audio"
+                                    checked={formik.values.AudioPremium}
+                                    onChange={formik.handleChange}
+                                />
+                            </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Check
-                                type="checkbox"
-                                id="Hide"
-                                name="Hide"
-                                label="Hide Audio"
-                                checked={formik.values.Hide}
-                                onChange={formik.handleChange}
-                            />
-                        </Form.Group>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="Hide"
+                                    name="Hide"
+                                    label="Hide Audio"
+                                    checked={formik.values.Hide}
+                                    onChange={formik.handleChange}
+                                />
+                            </Form.Group>
+                        </div>
 
-                        <Button type="submit" className='submit border-0' disabled={isSubmitting}>
-                            {isSubmitting ? 'Submitting...' : 'Submit'}
-                        </Button>
+                        <Row className="mt-2">
+                            <Col xs={6}>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => toggleModal()}
+                                    disabled={isSubmitting}
+                                    className='w-100 rounded-3 text-black'
+                                    style={{ background: "#F6F7FB" }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Col>
+                            <Col xs={6}>
+                                <Button
+                                    type="submit"
+                                    className='submit border-0 rounded-3 w-100'
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? <Spinner size='sm' /> : 'Submit'}
+                                </Button>
+                            </Col>
+                        </Row>
                     </Form>
                 </Modal.Body>
             </Modal>

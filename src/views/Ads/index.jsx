@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Row, Col, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -75,7 +75,7 @@ const Ads = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!validate()) return;
-        
+
         try {
             setIsSubmitting(true);
             const request = id !== undefined
@@ -128,7 +128,7 @@ const Ads = () => {
             try {
                 setIsSubmitting(true);
                 setIsOn(newState);
-                
+
                 if (adminId) {
                     const response = await axios.patch(`https://pslink.world/api/admin/update/${adminId}`, {
                         AdsStatus: newState
@@ -187,29 +187,29 @@ const Ads = () => {
                 </Form>
             </div>
 
-            <Button 
-                onClick={() => toggleModal('add')} 
-                className='my-4 rounded-3 border-0' 
+            <Button
+                onClick={() => toggleModal('add')}
+                className='my-4 rounded-3 border-0'
                 style={{ backgroundColor: "#F9E238" }}
                 disabled={isSubmitting}
             >
                 Add New Ad
             </Button>
 
-            <Modal 
-                show={visible} 
-                onHide={() => !isSubmitting && toggleModal('add')} 
+            <Modal
+                show={visible}
+                onHide={() => !isSubmitting && toggleModal('add')}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header closeButton={!isSubmitting}>
+                <Modal.Header >
                     <Modal.Title>{id ? "Edit Ads" : "Add New Ads"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Ads Name</Form.Label>
+                            <Form.Label className='fw-bold'>Ads Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="adsName"
@@ -233,10 +233,11 @@ const Ads = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Ads Id</Form.Label>
+                            <Form.Label className='fw-bold'>Ads Id<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="adsId"
+                                className='py-2'
                                 placeholder='Enter AdsId'
                                 value={adsId}
                                 onChange={(e) => setAdsId(e.target.value)}
@@ -247,15 +248,29 @@ const Ads = () => {
                                 {errors.adsId}
                             </Form.Control.Feedback>
                         </Form.Group>
-                        
 
-                        <Button 
-                            type="submit" 
-                            className='submit border-0' 
-                            disabled={isSubmitting}
-                        >
-                            {isSubmitting ? 'Processing...' : (id ? 'Update' : 'Submit')}
-                        </Button>
+                        <Row className="mt-4">
+                            <Col xs={6}>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => toggleModal()}
+                                    disabled={isSubmitting}
+                                    className='w-100 rounded-3 text-black'
+                                    style={{ background: "#F6F7FB" }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Col>
+                            <Col xs={6}>
+                                <Button
+                                    type="submit"
+                                    className='submit border-0 rounded-3 w-100'
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? <Spinner size='sm' /> : (id ? 'Update' : 'Submit')}
+                                </Button>
+                            </Col>
+                        </Row>
                     </Form>
                 </Modal.Body>
             </Modal>
@@ -276,16 +291,16 @@ const Ads = () => {
                             <td>{ads.AdsName}</td>
                             <td>{ads.AdsId}</td>
                             <td>
-                                <Button 
-                                    className='bg-transparent border-0 fs-5' 
-                                    style={{ color: "#0385C3" }} 
+                                <Button
+                                    className='bg-transparent border-0 fs-5'
+                                    style={{ color: "#0385C3" }}
                                     onClick={() => handleEdit(ads)}
                                     disabled={isSubmitting}
                                 >
                                     <FontAwesomeIcon icon={faEdit} />
                                 </Button>
-                                <Button 
-                                    className='bg-transparent border-0 text-danger fs-5' 
+                                <Button
+                                    className='bg-transparent border-0 text-danger fs-5'
                                     onClick={() => handleDelete(ads._id)}
                                     disabled={isSubmitting}
                                 >

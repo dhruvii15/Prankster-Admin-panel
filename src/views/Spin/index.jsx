@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Nav, Row, Col, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowUpFromBracket, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -285,18 +285,19 @@ const Spin = () => {
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header closeButton={!isSubmitting}>
+                <Modal.Header >
                     <Modal.Title>{id ? "Edit Spin" : "Add New Spin"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Prank Type</Form.Label>
+                            <Form.Label className='fw-bold'>Prank Type<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="Type"
                                 name="Type"
+                                className='py-2'
                                 value={formik.values.Type}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -315,7 +316,7 @@ const Spin = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel}</Form.Label>
+                            <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
@@ -329,7 +330,11 @@ const Spin = () => {
                                     onBlur={formik.handleBlur}
                                     className="d-none"
                                 />
-                                <label htmlFor="File" className="btn p-3 mb-0" style={{ border: "1px dotted #c1c1c1" }}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' />Select File</label>
+                                <label htmlFor="File" className="btn mb-0 pt-3 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select File </div>
+                                    <p style={{fontSize:"12px" , color:"#5E95FE"}}>Audio , Video & Gallery File</p>
+                                </label>
                             </div>
                             {formik.errors.File && formik.touched.File && (
                                 <div className="invalid-feedback d-block">
@@ -339,7 +344,7 @@ const Spin = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-2' style={{ fontSize: "17px" }} />{coverImageLabel}</Form.Label>
+                            <Form.Label className='fw-bold'>{coverImageLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
@@ -353,7 +358,10 @@ const Spin = () => {
                                     onBlur={formik.handleBlur}
                                     className="d-none"
                                 />
-                                <label htmlFor="CoverImage" className="btn mb-0 p-3" style={{ border: "1px dotted #c1c1c1" }}><FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' />Select Cover Image</label>
+                                <label htmlFor="File" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Cover Image </div>
+                                </label>
                             </div>
                             {formik.errors.CoverImage && formik.touched.CoverImage && (
                                 <div className="invalid-feedback d-block">
@@ -363,11 +371,12 @@ const Spin = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Name</Form.Label>
+                            <Form.Label className='fw-bold'>Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="Name"
                                 name="Name"
+                                className='py-2'
                                 placeholder="Enter Name"
                                 value={formik.values.Name}
                                 onChange={formik.handleChange}
@@ -381,9 +390,29 @@ const Spin = () => {
                             )}
                         </Form.Group>
 
-                        <Button type="submit" className='border-0 submit' disabled={isSubmitting}>
-                            {isSubmitting ? 'Submitting...' : 'Submit'}
-                        </Button>
+                        <Row className="mt-4">
+                            <Col xs={6}>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => toggleModal()}
+                                    disabled={isSubmitting}
+                                    className='w-100 rounded-3 text-black'
+                                    style={{ background: "#F6F7FB" }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Col>
+                            <Col xs={6}>
+                                <Button
+                                    type="submit"
+                                    className='submit border-0 rounded-3 w-100'
+                                    disabled={isSubmitting}
+                                >
+                                    {isSubmitting ? <Spinner size='sm' /> : 'Submit'}
+                                </Button>
+                            </Col>
+                        </Row>
+
                     </Form>
                 </Modal.Body>
             </Modal>
