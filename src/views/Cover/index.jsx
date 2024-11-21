@@ -16,8 +16,8 @@ const CoverURL = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [fileLabel, setFileLabel] = useState('Cover Image Upload');
-    const [selectedFiles, setSelectedFiles] = useState([]);
-    const [previewUrls, setPreviewUrls] = useState([]);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
     const [activeTab, setActiveTab] = useState('emoji');
     const [currentPage, setCurrentPage] = useState(1);
@@ -58,8 +58,8 @@ const CoverURL = () => {
                 setId(undefined);
                 setIsEditing(false);
                 setFileLabel('Cover Image Upload');
-                setSelectedFiles([]);
-                setPreviewUrls([]);
+                setSelectedFile(null);
+                setPreviewUrl(null);
             }
             setVisible(!visible);
         }
@@ -68,8 +68,8 @@ const CoverURL = () => {
     useEffect(() => {
         if (!visible) {
             formik.resetForm();
-            setSelectedFiles([]);
-            setPreviewUrls([]);
+            setSelectedFile(null);
+            setPreviewUrl(null);
             setFileLabel('Cover Image Upload');
             setIsEditing(false);
         }
@@ -149,10 +149,8 @@ const CoverURL = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
 
-                if (selectedFiles.length > 0) {
-                    selectedFiles.forEach((file) => {
-                        formData.append('CoverURL', file);
-                    });
+                if (selectedFile) {
+                    formData.append('CoverURL', selectedFile);
                 }
 
                 formData.append('Category', values.Category);
@@ -186,8 +184,8 @@ const CoverURL = () => {
 
                 toast.success(response.data.message);
                 resetForm();
-                setSelectedFiles([]);
-                setPreviewUrls([]);
+                setSelectedFile(null);
+                setPreviewUrl(null);
                 setId(undefined);
                 setIsEditing(false);
                 setFileLabel('Cover Image Upload');
@@ -203,56 +201,30 @@ const CoverURL = () => {
         },
     });
 
-    const handleHideToggle = (coverId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
-            .then((res) => {
-                getData();
-                toast.success(res.data.message);
-            })
-            .catch((err) => {
-                console.error(err);
-                toast.error("An error occurred. Please try again.");
-            });
-    };
-
-    const handlePremiumToggle = (coverId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
-            .then((res) => {
-                getData();
-                toast.success(res.data.message);
-            })
-            .catch((err) => {
-                console.error(err);
-                toast.error("An error occurred. Please try again.");
-            });
-    };
-
     const handleFileChange = (event) => {
-        const files = Array.from(event.currentTarget.files);
+        const file = event.currentTarget.files[0];
 
-        if (files.length > 5) {
-            toast.error("Maximum 5 images allowed");
-            return;
+        if (file) {
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+            setFileLabel(file.name);
         }
-
-        const newPreviewUrls = files.map(file => URL.createObjectURL(file));
-        setPreviewUrls(newPreviewUrls);
-        setSelectedFiles(files);
-        setFileLabel(`${files.length} file(s) selected`);
     };
 
     useEffect(() => {
         return () => {
-            previewUrls.forEach(url => URL.revokeObjectURL(url));
+            if (previewUrl) {
+                URL.revokeObjectURL(previewUrl);
+            }
         };
-    }, [previewUrls]);
+    }, [previewUrl]);
 
     const handleEdit = (cover) => {
         setIsEditing(true);
         setId(cover._id);
 
         if (cover.CoverURL) {
-            setPreviewUrls([cover.CoverURL]);
+            setPreviewUrl(cover.CoverURL);
         }
 
         formik.setValues({
@@ -314,7 +286,7 @@ const CoverURL = () => {
                 <Form.Select
                     value={selectedFilter}
                     onChange={(e) => setSelectedFilter(e.target.value)}
-                    style={{ width: 'auto'}}
+                    style={{ width: 'auto' }}
                     className='my-4'
                 >
                     <option value="">All</option>
@@ -492,33 +464,29 @@ const CoverURL = () => {
                                         type="file"
                                         id="CoverURL"
                                         name="CoverURL"
-                                        multiple={!isEditing}
                                         accept="image/*"
                                         onChange={handleFileChange}
                                         className="d-none"
                                     />
                                     <label htmlFor="CoverURL" className="btn mb-0 p-3" style={{ border: "1px dotted #c1c1c1" }}>
-                                        <FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{ fontSize: "15px" }} />{isEditing ? "Select New Image" : "Select Images (Max 5)"}
+                                        <FontAwesomeIcon icon={faArrowUpFromBracket} className='pe-3' style={{ fontSize: "15px" }} />
+                                        {isEditing ? "Select New Image" : "Select Image"}
                                     </label>
                                 </div>
 
                                 {/* Preview section */}
-                                {previewUrls.length > 0 && (
-                                    <div className="mt-3 d-flex flex-wrap gap-2">
-                                        {previewUrls.map((url, index) => (
-                                            <div key={index} className="position-relative">
-                                                <img
-                                                    src={url}
-                                                    alt={`Preview ${index + 1}`}
-                                                    style={{
-                                                        width: '100px',
-                                                        height: '100px',
-                                                        objectFit: 'cover',
-                                                        borderRadius: '4px'
-                                                    }}
-                                                />
-                                            </div>
-                                        ))}
+                                {previewUrl && (
+                                    <div className="mt-3">
+                                        <img
+                                            src={previewUrl}
+                                            alt="Preview"
+                                            style={{
+                                                width: '200px',
+                                                height: '200px',
+                                                objectFit: 'cover',
+                                                borderRadius: '4px'
+                                            }}
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -530,6 +498,7 @@ const CoverURL = () => {
                                 type="text"
                                 id="CoverName"
                                 name="CoverName"
+                                placeholder="Enter CoverName"
                                 value={formik.values.CoverName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}

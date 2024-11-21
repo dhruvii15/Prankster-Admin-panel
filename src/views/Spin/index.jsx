@@ -368,6 +368,7 @@ const Spin = () => {
                                 type="text"
                                 id="Name"
                                 name="Name"
+                                placeholder="Enter Name"
                                 value={formik.values.Name}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}

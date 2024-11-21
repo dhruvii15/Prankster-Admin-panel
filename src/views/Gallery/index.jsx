@@ -361,6 +361,7 @@ const Gallery = () => {
                                 type="text"
                                 id="GalleryName"
                                 name="GalleryName"
+                                placeholder="Enter GalleryName"
                                 value={formik.values.GalleryName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -379,6 +380,7 @@ const Gallery = () => {
                                 type="text"
                                 id="ArtistName"
                                 name="ArtistName"
+                                placeholder="Enter ArtistName"
                                 value={formik.values.ArtistName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -471,7 +473,7 @@ const Gallery = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={6} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
+                            <td colSpan={7} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
                         </tr>
                     )}
 

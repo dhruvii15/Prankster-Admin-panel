@@ -359,6 +359,7 @@ const Audio = () => {
                                 type="text"
                                 id="AudioName"
                                 name="AudioName"
+                                placeholder="Enter AudioName"
                                 value={formik.values.AudioName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -377,6 +378,7 @@ const Audio = () => {
                                 type="text"
                                 id="ArtistName"
                                 name="ArtistName"
+                                placeholder="Enter ArtistName"
                                 value={formik.values.ArtistName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -482,7 +484,7 @@ const Audio = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={7} className="text-center">No Data Found</td>
+                            <td colSpan={8} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>

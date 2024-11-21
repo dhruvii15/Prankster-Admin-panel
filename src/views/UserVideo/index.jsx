@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form } from 'react-bootstrap';
+import { Button, Table, Pagination, Form, Modal, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -13,7 +13,14 @@ const UserVideo = () => {
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
     const [category, setCategory] = useState([]);
-    const [selectedCategories, setSelectedCategories] = useState({});
+    const [showModal, setShowModal] = useState(false);
+    const [selectedVideo, setSelectedVideo] = useState(null);
+    const [formErrors, setFormErrors] = useState({});
+    const [formLoading, setFormLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        categoryId: '',
+        artistName: ''
+    });
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -24,7 +31,7 @@ const UserVideo = () => {
         axios.post('https://pslink.world/api/users/read', { TypeId: "2" })
             .then((res) => {
                 const newData = res.data.data.reverse();
-                setFilteredData(newData); // Set filtered data initially to all data
+                setFilteredData(newData);
                 setLoading(false);
             })
             .catch((err) => {
@@ -50,49 +57,68 @@ const UserVideo = () => {
         getCategory();
     }, []);
 
-    const handleCategoryChange = (videoId, categoryId) => {
-        setSelectedCategories(prev => ({
-            ...prev,
-            [videoId]: categoryId
-        }));
+    const handleModalClose = () => {
+        setShowModal(false);
+        setSelectedVideo(null);
+        setFormData({ categoryId: '', artistName: '' });
+        setFormErrors({});
     };
 
+    const handleModalShow = (video) => {
+        setSelectedVideo(video);
+        setShowModal(true);
+    };
 
-    const handlePlusClick = (video) => {
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+        const errors = {};
 
-        const selectedCategory = selectedCategories[video._id];
+        // Validate categoryId
+        if (!formData.categoryId) {
+            errors.categoryId = "Please select a category.";
+        }
 
-        if (!selectedCategory) {
-            toast.error("Please select a category first");
+        // Validate artistName
+        if (!formData.artistName.trim()) {
+            errors.artistName = "Artist name is required.";
+        }
+
+        setFormErrors(errors);
+
+        // If validation fails, stop the submission
+        if (Object.keys(errors).length > 0) {
+            
             return;
         }
 
-        const formData = new FormData();
-        formData.append('VideoName', video.VideoName);
-        formData.append('Video', video.Video);
-        formData.append('VideoPremium', false);
-        formData.append('VideoImage', 'https://pslink.world/api/public/images/video.jpg');
-        formData.append('Hide', false);
-        formData.append('role', video._id);
-        formData.append('CategoryId', selectedCategory);
+        setFormLoading(true);
 
+        const submitFormData = new FormData();
+        submitFormData.append('VideoName', selectedVideo.VideoName);
+        submitFormData.append('Video', selectedVideo.Video);
+        submitFormData.append('VideoPremium', false);
+        submitFormData.append('VideoImage', 'https://pslink.world/api/public/images/video.jpg');
+        submitFormData.append('Hide', false);
+        submitFormData.append('role', selectedVideo._id);
+        submitFormData.append('CategoryId', formData.categoryId);
+        submitFormData.append('ArtistName', formData.artistName);
 
         if (window.confirm("Are you sure you want to move this Video?")) {
-            axios.post('https://pslink.world/api/video/create', formData)
-                .then((res) => {
+            axios.post('https://pslink.world/api/video/create', submitFormData)
+                .then(() => {
                     getData();
-                    toast.success(res.data.message);
-                    // Clear the selected category after successful submission
-                    setSelectedCategories(prev => {
-                        const newState = { ...prev };
-                        delete newState[video._id];
-                        return newState;
-                    });
+                    toast.success('Video Move Successfully');
+                    handleModalClose();
                 })
                 .catch((err) => {
                     console.error(err);
                     toast.error("An error occurred. Please try again.");
+                })
+                .finally(() => {
+                    setFormLoading(false);
                 });
+        } else {
+            setFormLoading(false);
         }
     };
 
@@ -115,7 +141,6 @@ const UserVideo = () => {
             startPage = Math.max(1, endPage - totalPagesToShow + 1);
         }
 
-        // Add pagination items
         for (let i = startPage; i <= endPage; i++) {
             items.push(
                 <Pagination.Item
@@ -176,7 +201,6 @@ const UserVideo = () => {
                     <tr>
                         <th>Id</th>
                         <th>Video Name</th>
-                        <th>Category</th>
                         <th>Video</th>
                         <th>Actions</th>
                     </tr>
@@ -187,27 +211,6 @@ const UserVideo = () => {
                             <tr key={video._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{video.VideoName}</td>
-                                <td>
-                                    <Form.Control
-                                    as="select"
-                                        value={selectedCategories[video._id] || ""}
-                                        onChange={(e) => handleCategoryChange(video._id, e.target.value)}
-                                        className='mx-auto'
-                                        style={{width:"210px"}}
-                                    >
-                                        <option value="">Select a category</option>
-                                        {category.map((cat) => {
-                                            if (cat.Type === 'video') {
-                                                return (
-                                                    <option key={cat._id} value={cat.CategoryId}>
-                                                        {cat.CategoryName}
-                                                    </option>
-                                                );
-                                            }
-                                            return null;
-                                        })}
-                                    </Form.Control>
-                                </td>
                                 <td>
                                     <video controls width="240">
                                         <source src={video.Video} type="video/mp4" />
@@ -225,11 +228,14 @@ const UserVideo = () => {
                                     <Button
                                         className='bg-transparent border-0 fs-4'
                                         style={{ color: "#0385C3" }}
-                                        onClick={() => handlePlusClick(video)}
+                                        onClick={() => handleModalShow(video)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(video._id)}>
+                                    <Button
+                                        className='bg-transparent border-0 text-danger fs-5'
+                                        onClick={() => handleDelete(video._id)}
+                                    >
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
@@ -237,11 +243,87 @@ const UserVideo = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={5} className="text-center">No Data Found</td>
+                            <td colSpan={4} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>
             </Table>
+
+            {/* Modal for category selection and artist name */}
+            <Modal show={showModal} onHide={handleModalClose} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Move Video</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleFormSubmit}>
+                        {/* Category Dropdown */}
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Select Category</Form.Label>
+                            <Form.Control
+                                as="select"
+                                value={formData.categoryId}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, categoryId: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        categoryId: value ? '' : prevErrors.categoryId,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.categoryId}
+                            >
+                                <option value="">Select a category</option>
+                                {category.map((cat) => {
+                                    if (cat.Type === 'video') {
+                                        return (
+                                            <option key={cat._id} value={cat.CategoryId}>
+                                                {cat.CategoryName}
+                                            </option>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                            </Form.Control>
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.categoryId}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        {/* Artist Name Input */}
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter artist name"
+                                value={formData.artistName}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, artistName: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        artistName: value.trim() ? '' : prevErrors.artistName,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.artistName}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.artistName}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        {/* Submit Button */}
+                        <Button type="submit" className='submit border-0' disabled={formLoading}>
+                            {formLoading ? (
+                                <>
+                                    <Spinner animation="border" size="sm" /> Submitting...
+                                </>
+                            ) : (
+                                "Submit"
+                            )}
+                        </Button>
+                    </Form>
+                </Modal.Body>
+            </Modal>
 
             {totalPages > 1 && (
                 <div className='d-flex justify-content-center'>

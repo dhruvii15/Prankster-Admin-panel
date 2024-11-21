@@ -195,6 +195,7 @@ const SubCategory = () => {
                                 type="text"
                                 id="SubCategory"
                                 name="SubCategory"
+                                placeholder="Enter SubCategory"
                                 value={formik.values.SubCategory}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}

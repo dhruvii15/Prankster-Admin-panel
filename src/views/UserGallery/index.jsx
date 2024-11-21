@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form } from 'react-bootstrap';
+import { Button, Table, Pagination, Form, Modal, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -13,7 +13,14 @@ const UserGallery = () => {
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
     const [category, setCategory] = useState([]);
-    const [selectedCategories, setSelectedCategories] = useState({});
+    const [showModal, setShowModal] = useState(false);
+    const [selectedGallery, setSelectedGallery] = useState(null);
+    const [formErrors, setFormErrors] = useState({});
+    const [formLoading, setFormLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        categoryId: '',
+        artistName: ''
+    });
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -24,7 +31,7 @@ const UserGallery = () => {
         axios.post('https://pslink.world/api/users/read', { TypeId: "3" })
             .then((res) => {
                 const newData = res.data.data.reverse();
-                setFilteredData(newData); // Set filtered data initially to all data
+                setFilteredData(newData);
                 setLoading(false);
             })
             .catch((err) => {
@@ -33,7 +40,6 @@ const UserGallery = () => {
                 toast.error("Failed to fetch data.");
             });
     };
-
 
     const getCategory = () => {
         axios.post('https://pslink.world/api/category/read')
@@ -51,47 +57,66 @@ const UserGallery = () => {
         getCategory();
     }, []);
 
-    const handleCategoryChange = (galleryId, categoryId) => {
-        setSelectedCategories(prev => ({
-            ...prev,
-            [galleryId]: categoryId
-        }));
+    const handleModalClose = () => {
+        setShowModal(false);
+        setSelectedGallery(null);
+        setFormData({ categoryId: '', artistName: '' });
+        setFormErrors({});
     };
 
+    const handleModalShow = (gallery) => {
+        setSelectedGallery(gallery);
+        setShowModal(true);
+    };
 
-    const handlePlusClick = (gallery) => {
-        const selectedCategory = selectedCategories[gallery._id];
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+        const errors = {};
 
-        if (!selectedCategory) {
-            toast.error("Please select a category first");
+        // Validate categoryId
+        if (!formData.categoryId) {
+            errors.categoryId = "Please select a category.";
+        }
+
+        // Validate artistName
+        if (!formData.artistName.trim()) {
+            errors.artistName = "Artist name is required.";
+        }
+
+        setFormErrors(errors);
+
+        // If validation fails, stop the submission
+        if (Object.keys(errors).length > 0) {
             return;
         }
 
-        const formData = new FormData();
-        formData.append('GalleryName', gallery.GalleryName);
-        formData.append('GalleryImage', gallery.GalleryImage);
-        formData.append('GalleryPremium', false);
-        formData.append('Hide', false);
-        formData.append('role', gallery._id);
-        formData.append('CategoryId', selectedCategory);
+        setFormLoading(true);
 
+        const submitFormData = new FormData();
+        submitFormData.append('GalleryName', selectedGallery.GalleryName);
+        submitFormData.append('GalleryImage', selectedGallery.GalleryImage);
+        submitFormData.append('GalleryPremium', false);
+        submitFormData.append('Hide', false);
+        submitFormData.append('role', selectedGallery._id);
+        submitFormData.append('CategoryId', formData.categoryId);
+        submitFormData.append('ArtistName', formData.artistName);
 
         if (window.confirm("Are you sure you want to move this Gallery Image?")) {
-            axios.post('https://pslink.world/api/gallery/create', formData)
-                .then((res) => {
+            axios.post('https://pslink.world/api/gallery/create', submitFormData)
+                .then(() => {
                     getData();
-                    toast.success(res.data.message);
-                    // Clear the selected category after successful submission
-                    setSelectedCategories(prev => {
-                        const newState = { ...prev };
-                        delete newState[gallery._id];
-                        return newState;
-                    });
+                    toast.success('Gallery Image Moved Successfully');
+                    handleModalClose();
                 })
                 .catch((err) => {
                     console.error(err);
                     toast.error("An error occurred. Please try again.");
+                })
+                .finally(() => {
+                    setFormLoading(false);
                 });
+        } else {
+            setFormLoading(false);
         }
     };
 
@@ -114,7 +139,6 @@ const UserGallery = () => {
             startPage = Math.max(1, endPage - totalPagesToShow + 1);
         }
 
-        // Add pagination items
         for (let i = startPage; i <= endPage; i++) {
             items.push(
                 <Pagination.Item
@@ -143,7 +167,6 @@ const UserGallery = () => {
                 });
         }
     };
-    
 
     if (loading) return (
         <div
@@ -177,7 +200,6 @@ const UserGallery = () => {
                         <th>Id</th>
                         <th>Gallery Name</th>
                         <th>Gallery Image</th>
-                        <th>Category</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -191,35 +213,17 @@ const UserGallery = () => {
                                     <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
                                 <td>
-                                    <Form.Control
-                                    as="select"
-                                        value={selectedCategories[gallery._id] || ""}
-                                        onChange={(e) => handleCategoryChange(gallery._id, e.target.value)}
-                                        className='mx-auto'
-                                        style={{width:"210px"}}
-                                    >
-                                        <option value="">Select a category</option>
-                                        {category.map((cat) => {
-                                            if (cat.Type === 'gallery') {
-                                                return (
-                                                    <option key={cat._id} value={cat.CategoryId}>
-                                                        {cat.CategoryName}
-                                                    </option>
-                                                );
-                                            }
-                                            return null;
-                                        })}
-                                    </Form.Control>
-                                </td>
-                                <td>
                                     <Button
                                         className='bg-transparent border-0 fs-4'
                                         style={{ color: "#0385C3" }}
-                                        onClick={() => handlePlusClick(gallery)}
+                                        onClick={() => handleModalShow(gallery)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(gallery._id)}>
+                                    <Button 
+                                        className='bg-transparent border-0 text-danger fs-5'
+                                        onClick={() => handleDelete(gallery._id)}
+                                    >
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>
@@ -227,11 +231,87 @@ const UserGallery = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={5} className="text-center">No Data Found</td>
+                            <td colSpan={4} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>
             </Table>
+
+            {/* Modal for category selection and artist name */}
+            <Modal show={showModal} onHide={handleModalClose} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Move Gallery Image</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleFormSubmit}>
+                        {/* Category Dropdown */}
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Select Category</Form.Label>
+                            <Form.Control
+                                as="select"
+                                value={formData.categoryId}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, categoryId: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        categoryId: value ? '' : prevErrors.categoryId,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.categoryId}
+                            >
+                                <option value="">Select a category</option>
+                                {category.map((cat) => {
+                                    if (cat.Type === 'gallery') {
+                                        return (
+                                            <option key={cat._id} value={cat.CategoryId}>
+                                                {cat.CategoryName}
+                                            </option>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                            </Form.Control>
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.categoryId}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        {/* Artist Name Input */}
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter artist name"
+                                value={formData.artistName}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, artistName: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        artistName: value.trim() ? '' : prevErrors.artistName,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.artistName}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.artistName}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        {/* Submit Button */}
+                        <Button type="submit" className='submit border-0' disabled={formLoading}>
+                            {formLoading ? (
+                                <>
+                                    <Spinner animation="border" size="sm" /> Submitting...
+                                </>
+                            ) : (
+                                "Submit"
+                            )}
+                        </Button>
+                    </Form>
+                </Modal.Body>
+            </Modal>
 
             {totalPages > 1 && (
                 <div className='d-flex justify-content-center'>

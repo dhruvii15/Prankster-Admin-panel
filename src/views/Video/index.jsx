@@ -395,6 +395,7 @@ const Video = () => {
                                 type="text"
                                 id="VideoName"
                                 name="VideoName"
+                                placeholder="Enter VideoName"
                                 value={formik.values.VideoName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -413,6 +414,7 @@ const Video = () => {
                                 type="text"
                                 id="ArtistName"
                                 name="ArtistName"
+                                placeholder="Enter ArtistName"
                                 value={formik.values.ArtistName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -520,7 +522,7 @@ const Video = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={7} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
+                            <td colSpan={8} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
                         </tr>
                     )}
 

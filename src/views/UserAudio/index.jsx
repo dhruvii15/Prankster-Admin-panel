@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form } from 'react-bootstrap';
+import { Button, Table, Pagination, Form, Modal, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -13,7 +13,14 @@ const UserAudio = () => {
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
     const [category, setCategory] = useState([]);
-    const [selectedCategories, setSelectedCategories] = useState({});
+    const [showModal, setShowModal] = useState(false);
+    const [selectedAudio, setSelectedAudio] = useState(null);
+    const [formErrors, setFormErrors] = useState({});
+    const [formLoading, setFormLoading] = useState(false);
+    const [formData, setFormData] = useState({
+        categoryId: '',
+        artistName: ''
+    });
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -50,45 +57,66 @@ const UserAudio = () => {
         getCategory();
     }, []);
 
-    const handleCategoryChange = (audioId, categoryId) => {
-        setSelectedCategories(prev => ({
-            ...prev,
-            [audioId]: categoryId
-        }));
+    const handleModalClose = () => {
+        setShowModal(false);
+        setSelectedAudio(null);
+        setFormData({ categoryId: '', artistName: '' });
     };
 
-    const handlePlusClick = (audio) => {
-        const selectedCategory = selectedCategories[audio._id];
+    const handleModalShow = (audio) => {
+        setSelectedAudio(audio);
+        setShowModal(true);
+    };
 
-        if (!selectedCategory) {
-            toast.error("Please select a category first");
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+        const errors = {};
+
+        // Validate categoryId
+        if (!formData.categoryId) {
+            errors.categoryId = "Please select a category.";
+        }
+
+        // Validate artistName
+        if (!formData.artistName.trim()) {
+            errors.artistName = "Artist name is required.";
+        }
+
+        setFormErrors(errors);
+
+        // If validation fails, stop the submission
+        if (Object.keys(errors).length > 0) {
+           
             return;
         }
 
-        const formData = new FormData();
-        formData.append('AudioName', audio.AudioName);
-        formData.append('Audio', audio.Audio);
-        formData.append('AudioPremium', false);
-        formData.append('Hide', false);
-        formData.append('role', audio._id);
-        formData.append('CategoryId', selectedCategory);
+        setFormLoading(true); // Start the loader
+
+        const submitFormData = new FormData();
+        submitFormData.append('AudioName', selectedAudio.AudioName);
+        submitFormData.append('Audio', selectedAudio.Audio);
+        submitFormData.append('AudioPremium', false);
+        submitFormData.append('Hide', false);
+        submitFormData.append('role', selectedAudio._id);
+        submitFormData.append('CategoryId', formData.categoryId);
+        submitFormData.append('ArtistName', formData.artistName);
 
         if (window.confirm("Are you sure you want to move this Audio?")) {
-            axios.post('https://pslink.world/api/audio/create', formData)
-                .then((res) => {
+            axios.post('https://pslink.world/api/audio/create', submitFormData)
+                .then(() => {
                     getData();
-                    toast.success(res.data.message);
-                    // Clear the selected category after successful submission
-                    setSelectedCategories(prev => {
-                        const newState = { ...prev };
-                        delete newState[audio._id];
-                        return newState;
-                    });
+                    toast.success('Audio Move Successfully');
+                    handleModalClose();
                 })
                 .catch((err) => {
                     console.error(err);
                     toast.error("An error occurred. Please try again.");
+                })
+                .finally(() => {
+                    setFormLoading(false); // Stop the loader
                 });
+        } else {
+            setFormLoading(false); // Stop the loader if canceled
         }
     };
 
@@ -111,7 +139,6 @@ const UserAudio = () => {
             startPage = Math.max(1, endPage - totalPagesToShow + 1);
         }
 
-        // Add pagination items
         for (let i = startPage; i <= endPage; i++) {
             items.push(
                 <Pagination.Item
@@ -172,7 +199,6 @@ const UserAudio = () => {
                     <tr>
                         <th>Id</th>
                         <th>Audio Name</th>
-                        <th>Category</th>
                         <th>Audio</th>
                         <th>Actions</th>
                     </tr>
@@ -183,27 +209,6 @@ const UserAudio = () => {
                             <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{audio.AudioName}</td>
-                                <td>
-                                    <Form.Control
-                                    as="select"
-                                        value={selectedCategories[audio._id] || ""}
-                                        onChange={(e) => handleCategoryChange(audio._id, e.target.value)}
-                                        className='mx-auto'
-                                        style={{width:"210px"}}
-                                    >
-                                        <option value="">Select a category</option>
-                                        {category.map((cat) => {
-                                            if (cat.Type === 'audio') {
-                                                return (
-                                                    <option key={cat._id} value={cat.CategoryId}>
-                                                        {cat.CategoryName}
-                                                    </option>
-                                                );
-                                            }
-                                            return null;
-                                        })}
-                                    </Form.Control>
-                                </td>
                                 <td>
                                     <audio controls>
                                         <source src={audio.Audio} type="audio/mpeg" />
@@ -221,7 +226,7 @@ const UserAudio = () => {
                                     <Button
                                         className='bg-transparent border-0 fs-4'
                                         style={{ color: "#0385C3" }}
-                                        onClick={() => handlePlusClick(audio)}
+                                        onClick={() => handleModalShow(audio)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
@@ -236,11 +241,88 @@ const UserAudio = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={5} className="text-center">No Data Found</td>
+                            <td colSpan={4} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>
             </Table>
+
+            {/* Modal for category selection and artist name */}
+            <Modal show={showModal} onHide={handleModalClose} centered>
+                <Modal.Header closeButton>
+                    <Modal.Title>Move Audio</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    <Form onSubmit={handleFormSubmit}>
+                        {/* Category Dropdown */}
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Select Category</Form.Label>
+                            <Form.Control
+                                as="select"
+                                value={formData.categoryId}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, categoryId: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        categoryId: value ? '' : prevErrors.categoryId, // Clear error if value exists
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.categoryId}
+                            >
+                                <option value="">Select a category</option>
+                                {category.map((cat) => {
+                                    if (cat.Type === 'audio') {
+                                        return (
+                                            <option key={cat._id} value={cat.CategoryId}>
+                                                {cat.CategoryName}
+                                            </option>
+                                        );
+                                    }
+                                    return null;
+                                })}
+                            </Form.Control>
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.categoryId}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        {/* Artist Name Input */}
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter artist name"
+                                value={formData.artistName}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, artistName: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        artistName: value.trim() ? '' : prevErrors.artistName, // Clear error if value exists
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.artistName}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.artistName}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        {/* Submit Button */}
+                        <Button type="submit" className='submit border-0' disabled={formLoading}>
+                            {formLoading ? (
+                                <>
+                                    <Spinner animation="border" size="sm" /> Submitting...
+                                </>
+                            ) : (
+                                "Submit"
+                            )}
+                        </Button>
+                    </Form>
+                </Modal.Body>
+            </Modal>
+
 
             {totalPages > 1 && (
                 <div className='d-flex justify-content-center'>

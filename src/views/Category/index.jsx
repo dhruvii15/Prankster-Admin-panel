@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowUpFromBracket, faCloudArrowUp, faEdit, faTrash, faUpload } from '@fortawesome/free-solid-svg-icons';
+import { faArrowUpFromBracket, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -301,6 +301,7 @@ const Category = () => {
                                 type="text"
                                 id="CategoryName"
                                 name="CategoryName"
+                                placeholder="Enter CategoryName"
                                 value={formik.values.CategoryName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
