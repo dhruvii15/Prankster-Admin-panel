@@ -18,6 +18,7 @@ const Audio = () => {
     const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
+    const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
     const [selectedAudio, setSelectedAudio] = useState("");
     const [filteredData, setFilteredData] = useState([]);
@@ -27,11 +28,13 @@ const Audio = () => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
+                setImageFileLabel('Audio Image Upload');
                 setAudioFileLabel('Audio File Upload');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
+            setImageFileLabel('Audio Image Upload');
             setAudioFileLabel('Audio File Upload');
         }
         setVisible(!visible);
@@ -113,6 +116,7 @@ const Audio = () => {
             AudioName: '',
             ArtistName: '',
             Audio: '',
+            AudioImage: '',
             AudioPremium: false,
             CategoryId: '',
             Hide: false,  // Add Hide field to initial values
@@ -126,6 +130,7 @@ const Audio = () => {
                 formData.append('AudioName', values.AudioName);
                 formData.append('ArtistName', values.ArtistName);
                 formData.append('Audio', values.Audio);
+                formData.append('AudioImage', values.AudioImage);
                 formData.append('AudioPremium', values.AudioPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('Hide', values.Hide);  // Add Hide field to formData
@@ -138,6 +143,7 @@ const Audio = () => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
+                setImageFileLabel('Audio Image Upload');
                 setAudioFileLabel('Audio File Upload');
                 getData();
                 toast.success(res.data.message);
@@ -157,11 +163,13 @@ const Audio = () => {
             AudioName: audio.AudioName,
             ArtistName: audio.ArtistName,
             Audio: audio.Audio,
+            AudioImage: audio.AudioImage,
             AudioPremium: audio.AudioPremium,
             CategoryId: audio.CategoryId,
             Hide: audio.Hide,  // Set Hide value when editing
         });
         setId(audio._id);
+        setImageFileLabel('Audio Image Upload');
         setAudioFileLabel('Audio File Upload');
         toggleModal('edit');
     };
@@ -355,6 +363,30 @@ const Audio = () => {
                                     {formik.errors.Audio}
                                 </div>
                             )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{imageFileLabel}</Form.Label>
+                            <div className="d-flex align-items-center">
+                                <Form.Control
+                                    type="file"
+                                    id="AudioImage"
+                                    name="AudioImage"
+                                    onChange={(event) => {
+                                        let file = event.currentTarget.files[0];
+                                        formik.setFieldValue("AudioImage", file);
+                                        setImageFileLabel(file ? "Audio Image uploaded" : "Audio Image Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    label="Choose File"
+                                    className="d-none"
+                                    custom
+                                />
+                                <label htmlFor="AudioImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                <div style={{ color: "#c1c1c1" }}>Select Audio Image</div>
+                            </label>
+                            </div>
                         </Form.Group>
 
                         <Form.Group className="mb-3">
