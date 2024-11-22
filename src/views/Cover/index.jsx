@@ -9,6 +9,7 @@ import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import logo from "../../assets/images/logo.svg";
+import TagSelector from 'views/TagSelector';
 
 const CoverURL = () => {
     const [visible, setVisible] = useState(false);
@@ -477,7 +478,7 @@ const CoverURL = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={7} className="text-center">No Data Found</td> 
+                            <td colSpan={7} className="text-center">No Data Found</td>
                         </tr>
                     )}
 
@@ -529,95 +530,19 @@ const CoverURL = () => {
 
                         <hr className='bg-black' />
                         <Form.Group className="mb-4">
-                            <Form.Label className='fw-bold'>Searching Tags<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-
-                            {/* Selected TagName Tags */}
-                            <div className="mb-2 d-flex flex-wrap gap-2">
-                                {formik.values.TagName.map((subcat, index) => (
-                                    <div key={index} className="p-2 rounded d-flex align-items-center" style={{ border: "1px solid #c1c1c1" }}>
-                                        <span>{subcat}</span>
-                                        <Button
-                                            variant="link"
-                                            className="p-0 ms-2"
-                                            onClick={() => removeTagName(subcat)}
-                                        >
-                                            <FontAwesomeIcon icon={faTimes} className="text-danger" />
-                                        </Button>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Dropdown for existing TagName */}
-                            {!showCustomInput && (
-                                <div className="mb-2">
-                                    <Form.Control
-                                        as="select"
-                                        className='py-2'
-                                        onChange={(e) => handleTagNameSelect(e.target.value)}
-                                        value=""
-                                        disabled={formik.values.TagName.length >= 5}
-                                    >
-                                        <option value="">Select a TagName</option>
-                                        {TagName.map((subcat, index) => (
-                                            <option
-                                                key={index}
-                                                value={subcat}  // No need for subcat[index], just use subcat directly
-                                                disabled={formik.values.TagName.includes(subcat)} // Check if it's already selected
-                                            >
-                                                {subcat} {/* Display the TagName */}
-                                            </option>
-                                        ))}
-                                    </Form.Control>
-                                </div>
-                            )}
-
-
-                            {/* Custom TagName input */}
-                            {showCustomInput ? (
-                                <div className="d-flex gap-2 mb-2">
-                                    <Form.Control
-                                        type="text"
-                                        value={customTagName}
-                                        onChange={(e) => setCustomTagName(e.target.value)}
-                                        placeholder="Enter custom TagName"
-                                        className='py-2'
-                                    />
-                                    <Button
-                                        onClick={handleCustomTagNameAdd}
-                                        disabled={!customTagName.trim() || formik.values.TagName.length >= 5}
-                                        style={{ backgroundColor: "#F9E238", color: "black" }}
-                                        className='border-0 rounded-2'
-                                    >
-                                        Add
-                                    </Button>
-                                    <Button
-                                        variant="secondary"
-                                        onClick={() => {
-                                            setShowCustomInput(false);
-                                            setCustomTagName('');
-                                        }}
-                                        className='border-0 rounded-2'
-                                    >
-                                        Cancel
-                                    </Button>
-                                </div>
-                            ) : (
-                                <Button
-                                    variant="link"
-                                    onClick={() => setShowCustomInput(true)}
-                                    disabled={formik.values.TagName.length >= 5}
-                                    className="p-0"
-                                >
-                                    <FontAwesomeIcon icon={faPlus} className="me-1" />
-                                    Add Custom TagName
-                                </Button>
-                            )}
-
-                            {formik.touched.TagName && formik.errors.TagName && (
-                                <div className="text-danger mt-1">
-                                    {formik.errors.TagName}
-                                </div>
-                            )}
+                            <TagSelector
+                                availableTags={TagName}
+                                selectedTags={formik.values.TagName}
+                                onTagSelect={handleTagNameSelect}
+                                onTagRemove={removeTagName}
+                                showCustomInput={showCustomInput}
+                                setShowCustomInput={setShowCustomInput}
+                                customTagName={customTagName}
+                                setCustomTagName={setCustomTagName}
+                                handleCustomTagAdd={handleCustomTagNameAdd}
+                                touched={formik.touched.TagName}
+                                errors={formik.errors.TagName}
+                            />
                         </Form.Group>
                         <hr className='bg-black' />
 
