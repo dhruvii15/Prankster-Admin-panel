@@ -25,13 +25,6 @@ const menuItems = {
       icon: 'icon-ui',
       children: [
         {
-          id: 'subcategory',
-          title: 'Cover-SubCategory',
-          type: 'item',
-          url: '/subcategory',
-          icon: faLayerGroup
-        },
-        {
           id: 'coverImage',
           title: 'Cover-Image',
           type: 'item',

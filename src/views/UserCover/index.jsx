@@ -36,13 +36,13 @@ const UserCover = () => {
 
 
     const getCategory = () => {
-        axios.post('https://pslink.world/api/cover/subcategory/read')
+        axios.post('https://pslink.world/api/cover/TagName/read')
             .then((res) => {
                 setCategory(res.data.data);
             })
             .catch((err) => {
                 console.error(err);
-                toast.error("Failed to fetch category.");
+                toast.error("Failed to fetch Tag Name.");
             });
     };
 
@@ -73,12 +73,12 @@ const UserCover = () => {
         formData.append('CoverPremium', false);
         formData.append('Hide', false);
         formData.append('role', cover._id);
-        formData.append('SubCategory', selectedCategory);
+        formData.append('TagName', selectedCategory);
 
 
 
         if (window.confirm("Are you sure you want to move this Cover Image?")) {
-            axios.post('http://localhost:5000/api/cover/create', formData)
+            axios.post('https://pslink.world/api/cover/create', formData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -178,7 +178,7 @@ const UserCover = () => {
                         <th>Id</th>
                         <th>Cover Image</th>
                         <th>Cover Name</th>
-                        <th>SubCategory</th>
+                        <th>TagName</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -199,11 +199,11 @@ const UserCover = () => {
                                         className='mx-auto'
                                         style={{width:"210px"}}
                                     >
-                                        <option value="">Select a subcategory</option>
-                                        {category.map((cat) => {
+                                        <option value="">Select a TagName</option>
+                                        {category.map((cat,index) => {
                                                 return (
-                                                    <option key={cat._id} value={cat.SubCategory}>
-                                                        {cat.SubCategory}
+                                                    <option key={index} value={cat}>
+                                                        {cat}
                                                     </option>
                                                 );
                                         })}

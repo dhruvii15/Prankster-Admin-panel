@@ -24,10 +24,12 @@ const CoverURL = () => {
     const itemsPerPage = 15;
     const [selectedFilter, setSelectedFilter] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [subcategory, setsubCategory] = useState([]);
-    const [selectedSubCategory, setSelectedSubCategory] = useState([]);
-    const [customSubcategory, setCustomSubcategory] = useState('');
+    const [TagName, setTagName] = useState([]);
+    const [customTagName, setCustomTagName] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
+    const [currentImage, setCurrentImage] = useState(null);
+console.log(previewUrl);
+
 
     const renderPaginationItems = () => {
         const totalPages = Math.ceil(filterData(data).length / itemsPerPage);
@@ -67,7 +69,7 @@ const CoverURL = () => {
             setVisible(!visible);
             // Fetch subcategories when modal opens
             if (!visible) {
-                getsubCategory();
+                getTagName();
             }
         }
     };
@@ -77,14 +79,31 @@ const CoverURL = () => {
             formik.resetForm();
             setSelectedFile(null);
             setPreviewUrl(null);
+            setCurrentImage(null);
             setFileLabel('Cover Image Upload');
             setIsEditing(false);
         }
     }, [visible]);
 
+    const handleFileChange = (event) => {
+        const file = event.currentTarget.files[0];
+        if (file) {
+            formik.setFieldValue("CoverURL", file);
+            setSelectedFile(file);
+            setFileLabel("Cover Image uploaded");
+
+            // Create preview URL for the new file
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setCurrentImage(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/cover/read')
+        axios.post('https://pslink.world/api/cover/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -96,20 +115,20 @@ const CoverURL = () => {
             });
     };
 
-    const getsubCategory = () => {
-        axios.post('http://localhost:5000/api/cover/subcategory/read')
+    const getTagName = () => {
+        axios.post('https://pslink.world/api/cover/TagName/read')
             .then((res) => {
-                setsubCategory(res.data.data);
+                setTagName(res.data.data);
             })
             .catch((err) => {
                 console.error(err);
-                toast.error("Failed to fetch subcategory.");
+                toast.error("Failed to fetch TagName.");
             });
     };
 
     useEffect(() => {
         getData();
-        getsubCategory();
+        getTagName();
     }, []);
 
     const filterData = (covers) => {
@@ -136,27 +155,27 @@ const CoverURL = () => {
 
     const coverSchema = Yup.object().shape({
         Category: Yup.string().required('Category is required'),
-        SubCategory: Yup.array()
-            .min(1, 'At least one subcategory is required')
+        TagName: Yup.array()
+            .min(1, 'At least one TagName is required')
             .max(5, 'Maximum 5 SubCategories allowed')
-            .required('At least one subcategory is required'),
+            .required('At least one TagName is required'),
         CoverName: Yup.string().required('CoverName is required'),
         CoverURL: Yup.mixed()
-            .required('Cover Image is required')
-            .test('fileExists', 'Cover Image is required', function (value) {
-                if (this.parent.isEditing && !value) return true;
+            .test('fileRequired', 'Cover Image is required', function (value) {
+                if (isEditing && !value && currentImage) return true;
                 return value instanceof File;
             }),
         CoverPremium: Yup.boolean(),
         Hide: Yup.boolean(),
     });
 
+
     const formik = useFormik({
         initialValues: {
             Category: '',
-            SubCategory: [],
+            TagName: [],
             CoverName: '',
-            CoverURL: null,
+            CoverURL: '',
             CoverPremium: false,
             Hide: false,
             isEditing: false,
@@ -173,7 +192,7 @@ const CoverURL = () => {
                 }
 
                 formData.append('Category', values.Category);
-                formData.append('SubCategory', JSON.stringify(values.SubCategory));
+                formData.append('TagName', JSON.stringify(values.TagName));
                 formData.append('CoverName', values.CoverName);
                 formData.append('CoverPremium', values.CoverPremium);
                 formData.append('Hide', values.Hide);
@@ -181,7 +200,7 @@ const CoverURL = () => {
                 let response;
                 if (isEditing) {
                     response = await axios.patch(
-                        `http://localhost:5000/api/cover/update/${id}`,
+                        `https://pslink.world/api/cover/update/${id}`,
                         formData,
                         {
                             headers: {
@@ -191,7 +210,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'http://localhost:5000/api/cover/create',
+                        'https://pslink.world/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -203,8 +222,7 @@ const CoverURL = () => {
 
                 toast.success(response.data.message);
                 resetForm();
-                setSelectedSubCategory([]);
-                setCustomSubcategory('');
+                setCustomTagName('');
                 setShowCustomInput(false);
                 setSelectedFile(null);
                 setPreviewUrl(null);
@@ -223,25 +241,6 @@ const CoverURL = () => {
         },
     });
 
-    const handleFileChange = (event) => {
-        const file = event.currentTarget.files[0];
-
-        if (file) {
-            setSelectedFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
-            setFileLabel(file.name);
-        }
-    };
-
-    useEffect(() => {
-        return () => {
-            if (previewUrl) {
-                URL.revokeObjectURL(previewUrl);
-            }
-        };
-    }, [previewUrl]);
-
-
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
             axios.delete(`https://pslink.world/api/cover/delete/${coverId}`)
@@ -256,75 +255,70 @@ const CoverURL = () => {
         }
     };
 
-    const handleSubcategorySelect = (subcategory) => {
-        if (formik.values.SubCategory.length < 5) {
-            const updatedSubCategory = [...formik.values.SubCategory];
-            if (!updatedSubCategory.includes(subcategory)) {
-                updatedSubCategory.push(subcategory);
-                formik.setFieldValue('SubCategory', updatedSubCategory);
+    const handleTagNameSelect = (TagName) => {
+        if (formik.values.TagName.length < 5) {
+            const updatedTagName = [...formik.values.TagName];
+            if (!updatedTagName.includes(TagName)) {
+                updatedTagName.push(TagName);
+                formik.setFieldValue('TagName', updatedTagName);
             }
         } else {
-            toast.error('Maximum 5 SubCategory allowed');
+            toast.error('Maximum 5 TagName allowed');
         }
     };
 
-    const handleCustomSubcategoryAdd = () => {
-        if (customSubcategory.trim() === '') {
+    const handleCustomTagNameAdd = () => {
+        if (customTagName.trim() === '') {
             return;
         }
 
-        if (formik.values.SubCategory.length < 5) {
-            const updatedSubCategory = [...formik.values.SubCategory];
-            if (!updatedSubCategory.includes(customSubcategory.trim())) {
-                updatedSubCategory.push(customSubcategory.trim());
-                formik.setFieldValue('SubCategory', updatedSubCategory);
-                setCustomSubcategory('');
+        if (formik.values.TagName.length < 5) {
+            const updatedTagName = [...formik.values.TagName];
+            if (!updatedTagName.includes(customTagName.trim())) {
+                updatedTagName.push(customTagName.trim());
+                formik.setFieldValue('TagName', updatedTagName);
+                setCustomTagName('');
                 setShowCustomInput(false);
             } else {
-                toast.error('Subcategory already exists');
+                toast.error('TagName already exists');
             }
         } else {
-            toast.error('Maximum 5 SubCategory allowed');
+            toast.error('Maximum 5 TagName allowed');
         }
     };
 
 
-    const removeSubcategory = (subcategory) => {
-        const updatedSubCategory = formik.values.SubCategory.filter(
-            (item) => item !== subcategory
+    const removeTagName = (TagName) => {
+        const updatedTagName = formik.values.TagName.filter(
+            (item) => item !== TagName
         );
-        formik.setFieldValue('SubCategory', updatedSubCategory);
+        formik.setFieldValue('TagName', updatedTagName);
     };
 
     const handleEdit = (cover) => {
-        setIsEditing(true);
-        setId(cover._id);
-
-        if (cover.CoverURL) {
-            setPreviewUrl(cover.CoverURL);
-            setFileLabel('Update Cover Image (Optional)');
-        }
-
-        // Ensure SubCategory is always an array
-        const subCategories = Array.isArray(cover.SubCategory) 
-            ? cover.SubCategory 
-            : cover.SubCategory ? [cover.SubCategory] : [];
+        const subCategories = Array.isArray(cover.TagName)
+            ? cover.TagName
+            : cover.TagName ? [cover.TagName] : [];
 
         formik.setValues({
             Category: cover.Category || '',
-            SubCategory: subCategories,
+            TagName: subCategories,
             CoverName: cover.CoverName || '',
-            CoverURL: cover.CoverURL, 
+            CoverURL: '', // Clear the file input
             CoverPremium: cover.CoverPremium || false,
             Hide: cover.Hide || false,
             isEditing: true,
         });
 
+        setIsEditing(true);
+        setId(cover._id);
+        setFileLabel('Current Cover Image');
+        setCurrentImage(cover.CoverURL); // Set the current image URL
         toggleModal('edit');
     };
 
     const handlePremiumToggle = (coverId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -336,7 +330,7 @@ const CoverURL = () => {
     };
 
     const handleHideToggle = (coverId, currentHideStatus) => {
-        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -417,7 +411,7 @@ const CoverURL = () => {
                     <tr>
                         <th>Id</th>
                         <th>Cover</th>
-                        <th>SubCategory</th>
+                        <th>TagName</th>
                         <th>CoverName</th>
                         <th>Premium</th>
                         <th>Hidden</th>
@@ -435,7 +429,10 @@ const CoverURL = () => {
                                     style={{ width: '150px', height: '120px', objectFit: 'cover' }}
                                 />
                             </td>
-                            <td>{cover.SubCategory?.[0]} , {cover.SubCategory?.[1]} , {cover.SubCategory?.[2]} , {cover.SubCategory?.[3]} , {cover.SubCategory?.[4]}</td>
+                            <td>
+                                {cover.TagName?.filter(Boolean).slice(0, 5).join(', ')}
+                            </td>
+
                             <td>{cover.CoverName}</td>
                             <td>
                                 <Button
@@ -501,7 +498,7 @@ const CoverURL = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
-                        <Form.Group className="mb-3">
+                        <Form.Group className="mb-4">
                             <Form.Label className='fw-bold'>Category<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
@@ -524,18 +521,19 @@ const CoverURL = () => {
                             )}
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>SubCategory<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                        <hr className='bg-black' />
+                        <Form.Group className="mb-4">
+                            <Form.Label className='fw-bold'>Searching Tags<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
 
-                            {/* Selected SubCategory Tags */}
+                            {/* Selected TagName Tags */}
                             <div className="mb-2 d-flex flex-wrap gap-2">
-                                {formik.values.SubCategory.map((subcat, index) => (
+                                {formik.values.TagName.map((subcat, index) => (
                                     <div key={index} className="p-2 rounded d-flex align-items-center" style={{ border: "1px solid #c1c1c1" }}>
                                         <span>{subcat}</span>
                                         <Button
                                             variant="link"
                                             className="p-0 ms-2"
-                                            onClick={() => removeSubcategory(subcat)}
+                                            onClick={() => removeTagName(subcat)}
                                         >
                                             <FontAwesomeIcon icon={faTimes} className="text-danger" />
                                         </Button>
@@ -543,24 +541,24 @@ const CoverURL = () => {
                                 ))}
                             </div>
 
-                            {/* Dropdown for existing SubCategory */}
+                            {/* Dropdown for existing TagName */}
                             {!showCustomInput && (
                                 <div className="mb-2">
                                     <Form.Control
                                         as="select"
                                         className='py-2'
-                                        onChange={(e) => handleSubcategorySelect(e.target.value)}
+                                        onChange={(e) => handleTagNameSelect(e.target.value)}
                                         value=""
-                                        disabled={formik.values.SubCategory.length >= 5}
+                                        disabled={formik.values.TagName.length >= 5}
                                     >
-                                        <option value="">Select a subcategory</option>
-                                        {subcategory.map((subcat, index) => (
+                                        <option value="">Select a TagName</option>
+                                        {TagName.map((subcat, index) => (
                                             <option
                                                 key={index}
                                                 value={subcat}  // No need for subcat[index], just use subcat directly
-                                                disabled={formik.values.SubCategory.includes(subcat)} // Check if it's already selected
+                                                disabled={formik.values.TagName.includes(subcat)} // Check if it's already selected
                                             >
-                                                {subcat} {/* Display the subcategory */}
+                                                {subcat} {/* Display the TagName */}
                                             </option>
                                         ))}
                                     </Form.Control>
@@ -568,19 +566,19 @@ const CoverURL = () => {
                             )}
 
 
-                            {/* Custom subcategory input */}
+                            {/* Custom TagName input */}
                             {showCustomInput ? (
                                 <div className="d-flex gap-2 mb-2">
                                     <Form.Control
                                         type="text"
-                                        value={customSubcategory}
-                                        onChange={(e) => setCustomSubcategory(e.target.value)}
-                                        placeholder="Enter custom subcategory"
+                                        value={customTagName}
+                                        onChange={(e) => setCustomTagName(e.target.value)}
+                                        placeholder="Enter custom TagName"
                                         className='py-2'
                                     />
                                     <Button
-                                        onClick={handleCustomSubcategoryAdd}
-                                        disabled={!customSubcategory.trim() || formik.values.SubCategory.length >= 5}
+                                        onClick={handleCustomTagNameAdd}
+                                        disabled={!customTagName.trim() || formik.values.TagName.length >= 5}
                                         style={{ backgroundColor: "#F9E238", color: "black" }}
                                         className='border-0 rounded-2'
                                     >
@@ -590,7 +588,7 @@ const CoverURL = () => {
                                         variant="secondary"
                                         onClick={() => {
                                             setShowCustomInput(false);
-                                            setCustomSubcategory('');
+                                            setCustomTagName('');
                                         }}
                                         className='border-0 rounded-2'
                                     >
@@ -601,20 +599,21 @@ const CoverURL = () => {
                                 <Button
                                     variant="link"
                                     onClick={() => setShowCustomInput(true)}
-                                    disabled={formik.values.SubCategory.length >= 5}
+                                    disabled={formik.values.TagName.length >= 5}
                                     className="p-0"
                                 >
                                     <FontAwesomeIcon icon={faPlus} className="me-1" />
-                                    Add Custom Subcategory
+                                    Add Custom TagName
                                 </Button>
                             )}
 
-                            {formik.touched.SubCategory && formik.errors.SubCategory && (
+                            {formik.touched.TagName && formik.errors.TagName && (
                                 <div className="text-danger mt-1">
-                                    {formik.errors.SubCategory}
+                                    {formik.errors.TagName}
                                 </div>
                             )}
                         </Form.Group>
+                        <hr className='bg-black'/>
 
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
@@ -624,19 +623,26 @@ const CoverURL = () => {
                                         type="file"
                                         id="CoverURL"
                                         name="CoverURL"
-                                        accept="image/*"
-                                        onChange={(event) => {
-                                            handleFileChange(event);
-                                            formik.setFieldValue('CoverURL', event.currentTarget.files[0]);
-                                        }}
+                                        onChange={handleFileChange}
+                                        onBlur={formik.handleBlur}
                                         className="d-none"
-                                        isInvalid={formik.touched.CoverURL && !!formik.errors.CoverURL}
                                     />
                                     <label htmlFor="CoverURL" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                         <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
                                         <div style={{ color: "#c1c1c1" }}>{isEditing ? "Select New Image" : "Select Image"}</div>
                                     </label>
                                 </div>
+
+                                {/* Image Preview */}
+                                {/* {(currentImage || selectedFile) && (
+                                    <div className="mt-3 text-center">
+                                        <img
+                                            src={selectedFile ? URL.createObjectURL(selectedFile) : currentImage}
+                                            alt="Cover Preview"
+                                            style={{ maxWidth: '200px', maxHeight: '150px', objectFit: 'contain' }}
+                                        />
+                                    </div>
+                                )} */}
 
                                 {formik.touched.CoverURL && formik.errors.CoverURL && (
                                     <div className="text-danger mt-1">
