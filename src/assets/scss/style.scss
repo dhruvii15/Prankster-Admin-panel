@@ -244,3 +244,18 @@ File: style.css
 .form-check-input:focus{
     border-color: black;
 }
+
+::-webkit-scrollbar {
+    width: 5px; 
+    height: 5px; 
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: white; /* Background of the scrollbar track */
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background-color: #C1C1C1; /* Color of the scrollbar thumb */
+    border-radius: 10px; /* Round corners for the scrollbar thumb */
+    border: 2px solid #C1C1C1; /* Space around the thumb */
+  }
