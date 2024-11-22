@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Nav, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
@@ -25,6 +25,9 @@ const CoverURL = () => {
     const [selectedFilter, setSelectedFilter] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [subcategory, setsubCategory] = useState([]);
+    const [selectedSubCategory, setSelectedSubCategory] = useState([]);
+    const [customSubcategory, setCustomSubcategory] = useState('');
+    const [showCustomInput, setShowCustomInput] = useState(false);
 
     const renderPaginationItems = () => {
         const totalPages = Math.ceil(filterData(data).length / itemsPerPage);
@@ -62,6 +65,10 @@ const CoverURL = () => {
                 setPreviewUrl(null);
             }
             setVisible(!visible);
+            // Fetch subcategories when modal opens
+            if (!visible) {
+                getsubCategory();
+            }
         }
     };
 
@@ -77,7 +84,7 @@ const CoverURL = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/cover/read')
+        axios.post('http://localhost:5000/api/cover/read')
             .then((res) => {
                 setData(res.data.data.reverse());
                 setLoading(false);
@@ -90,7 +97,7 @@ const CoverURL = () => {
     };
 
     const getsubCategory = () => {
-        axios.post('https://pslink.world/api/cover/subcategory/read')
+        axios.post('http://localhost:5000/api/cover/subcategory/read')
             .then((res) => {
                 setsubCategory(res.data.data);
             })
@@ -129,14 +136,15 @@ const CoverURL = () => {
 
     const coverSchema = Yup.object().shape({
         Category: Yup.string().required('Category is required'),
-        SubCategory: Yup.string().required('SubCategory is required'),
+        SubCategory: Yup.array()
+            .min(1, 'At least one subcategory is required')
+            .max(5, 'Maximum 5 SubCategories allowed')
+            .required('At least one subcategory is required'),
         CoverName: Yup.string().required('CoverName is required'),
         CoverURL: Yup.mixed()
             .required('Cover Image is required')
             .test('fileExists', 'Cover Image is required', function (value) {
-                // For editing existing items, allow no new file upload
                 if (this.parent.isEditing && !value) return true;
-                // For new items, require a file
                 return value instanceof File;
             }),
         CoverPremium: Yup.boolean(),
@@ -146,12 +154,12 @@ const CoverURL = () => {
     const formik = useFormik({
         initialValues: {
             Category: '',
-            SubCategory: '',
+            SubCategory: [],
             CoverName: '',
-            CoverURL: null, // Add this line
+            CoverURL: null,
             CoverPremium: false,
             Hide: false,
-            isEditing: false, // Add this to help with conditional validation
+            isEditing: false,
         },
         validationSchema: coverSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -159,12 +167,13 @@ const CoverURL = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
 
+                // Only append file if it exists (new upload or update with new file)
                 if (selectedFile) {
                     formData.append('CoverURL', selectedFile);
                 }
 
                 formData.append('Category', values.Category);
-                formData.append('SubCategory', values.SubCategory);
+                formData.append('SubCategory', JSON.stringify(values.SubCategory));
                 formData.append('CoverName', values.CoverName);
                 formData.append('CoverPremium', values.CoverPremium);
                 formData.append('Hide', values.Hide);
@@ -172,7 +181,7 @@ const CoverURL = () => {
                 let response;
                 if (isEditing) {
                     response = await axios.patch(
-                        `https://pslink.world/api/cover/update/${id}`,
+                        `http://localhost:5000/api/cover/update/${id}`,
                         formData,
                         {
                             headers: {
@@ -182,7 +191,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'https://pslink.world/api/cover/create',
+                        'http://localhost:5000/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -194,6 +203,9 @@ const CoverURL = () => {
 
                 toast.success(response.data.message);
                 resetForm();
+                setSelectedSubCategory([]);
+                setCustomSubcategory('');
+                setShowCustomInput(false);
                 setSelectedFile(null);
                 setPreviewUrl(null);
                 setId(undefined);
@@ -229,25 +241,6 @@ const CoverURL = () => {
         };
     }, [previewUrl]);
 
-    const handleEdit = (cover) => {
-        setIsEditing(true);
-        setId(cover._id);
-
-        if (cover.CoverURL) {
-            setPreviewUrl(cover.CoverURL);
-        }
-
-        formik.setValues({
-            Category: cover.Category || '',
-            SubCategory: cover.SubCategory || '',
-            CoverName: cover.CoverName || '',
-            CoverPremium: cover.CoverPremium || false,
-            Hide: cover.Hide || false,
-        });
-
-        setFileLabel('Update Cover Image (Optional)');
-        toggleModal('edit');
-    };
 
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
@@ -261,6 +254,97 @@ const CoverURL = () => {
                     toast.error("An error occurred. Please try again.");
                 });
         }
+    };
+
+    const handleSubcategorySelect = (subcategory) => {
+        if (formik.values.SubCategory.length < 5) {
+            const updatedSubCategory = [...formik.values.SubCategory];
+            if (!updatedSubCategory.includes(subcategory)) {
+                updatedSubCategory.push(subcategory);
+                formik.setFieldValue('SubCategory', updatedSubCategory);
+            }
+        } else {
+            toast.error('Maximum 5 SubCategory allowed');
+        }
+    };
+
+    const handleCustomSubcategoryAdd = () => {
+        if (customSubcategory.trim() === '') {
+            return;
+        }
+
+        if (formik.values.SubCategory.length < 5) {
+            const updatedSubCategory = [...formik.values.SubCategory];
+            if (!updatedSubCategory.includes(customSubcategory.trim())) {
+                updatedSubCategory.push(customSubcategory.trim());
+                formik.setFieldValue('SubCategory', updatedSubCategory);
+                setCustomSubcategory('');
+                setShowCustomInput(false);
+            } else {
+                toast.error('Subcategory already exists');
+            }
+        } else {
+            toast.error('Maximum 5 SubCategory allowed');
+        }
+    };
+
+
+    const removeSubcategory = (subcategory) => {
+        const updatedSubCategory = formik.values.SubCategory.filter(
+            (item) => item !== subcategory
+        );
+        formik.setFieldValue('SubCategory', updatedSubCategory);
+    };
+
+    const handleEdit = (cover) => {
+        setIsEditing(true);
+        setId(cover._id);
+
+        if (cover.CoverURL) {
+            setPreviewUrl(cover.CoverURL);
+            setFileLabel('Update Cover Image (Optional)');
+        }
+
+        // Ensure SubCategory is always an array
+        const subCategories = Array.isArray(cover.SubCategory) 
+            ? cover.SubCategory 
+            : cover.SubCategory ? [cover.SubCategory] : [];
+
+        formik.setValues({
+            Category: cover.Category || '',
+            SubCategory: subCategories,
+            CoverName: cover.CoverName || '',
+            CoverURL: cover.CoverURL, 
+            CoverPremium: cover.CoverPremium || false,
+            Hide: cover.Hide || false,
+            isEditing: true,
+        });
+
+        toggleModal('edit');
+    };
+
+    const handlePremiumToggle = (coverId, currentPremiumStatus) => {
+        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
+    };
+
+    const handleHideToggle = (coverId, currentHideStatus) => {
+        axios.patch(`http://localhost:5000/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+            .then((res) => {
+                getData();
+                toast.success(res.data.message);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("An error occurred. Please try again.");
+            });
     };
 
     if (loading) {
@@ -351,7 +435,7 @@ const CoverURL = () => {
                                     style={{ width: '150px', height: '120px', objectFit: 'cover' }}
                                 />
                             </td>
-                            <td>{cover.SubCategory}</td>
+                            <td>{cover.SubCategory?.[0]} , {cover.SubCategory?.[1]} , {cover.SubCategory?.[2]} , {cover.SubCategory?.[3]} , {cover.SubCategory?.[4]}</td>
                             <td>{cover.CoverName}</td>
                             <td>
                                 <Button
@@ -441,29 +525,93 @@ const CoverURL = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>SubCategory Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                as="select"
-                                id="SubCategory"
-                                name="SubCategory"
-                                className='py-2'
-                                value={formik.values.SubCategory}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.SubCategory && !!formik.errors.SubCategory}
-                            >
-                                <option value="">Select a subcategory<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></option>
-                                {subcategory.map((subcategory) => {
-                                    return (
-                                        <option key={subcategory._id} value={subcategory.SubCategory}>
-                                            {subcategory.SubCategory}
-                                        </option>
-                                    );
-                                })}
-                            </Form.Control>
-                            {formik.errors.CategoryId && formik.touched.CategoryId && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.CategoryId}
+                            <Form.Label className='fw-bold'>SubCategory<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+
+                            {/* Selected SubCategory Tags */}
+                            <div className="mb-2 d-flex flex-wrap gap-2">
+                                {formik.values.SubCategory.map((subcat, index) => (
+                                    <div key={index} className="p-2 rounded d-flex align-items-center" style={{ border: "1px solid #c1c1c1" }}>
+                                        <span>{subcat}</span>
+                                        <Button
+                                            variant="link"
+                                            className="p-0 ms-2"
+                                            onClick={() => removeSubcategory(subcat)}
+                                        >
+                                            <FontAwesomeIcon icon={faTimes} className="text-danger" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Dropdown for existing SubCategory */}
+                            {!showCustomInput && (
+                                <div className="mb-2">
+                                    <Form.Control
+                                        as="select"
+                                        className='py-2'
+                                        onChange={(e) => handleSubcategorySelect(e.target.value)}
+                                        value=""
+                                        disabled={formik.values.SubCategory.length >= 5}
+                                    >
+                                        <option value="">Select a subcategory</option>
+                                        {subcategory.map((subcat, index) => (
+                                            <option
+                                                key={index}
+                                                value={subcat}  // No need for subcat[index], just use subcat directly
+                                                disabled={formik.values.SubCategory.includes(subcat)} // Check if it's already selected
+                                            >
+                                                {subcat} {/* Display the subcategory */}
+                                            </option>
+                                        ))}
+                                    </Form.Control>
+                                </div>
+                            )}
+
+
+                            {/* Custom subcategory input */}
+                            {showCustomInput ? (
+                                <div className="d-flex gap-2 mb-2">
+                                    <Form.Control
+                                        type="text"
+                                        value={customSubcategory}
+                                        onChange={(e) => setCustomSubcategory(e.target.value)}
+                                        placeholder="Enter custom subcategory"
+                                        className='py-2'
+                                    />
+                                    <Button
+                                        onClick={handleCustomSubcategoryAdd}
+                                        disabled={!customSubcategory.trim() || formik.values.SubCategory.length >= 5}
+                                        style={{ backgroundColor: "#F9E238", color: "black" }}
+                                        className='border-0 rounded-2'
+                                    >
+                                        Add
+                                    </Button>
+                                    <Button
+                                        variant="secondary"
+                                        onClick={() => {
+                                            setShowCustomInput(false);
+                                            setCustomSubcategory('');
+                                        }}
+                                        className='border-0 rounded-2'
+                                    >
+                                        Cancel
+                                    </Button>
+                                </div>
+                            ) : (
+                                <Button
+                                    variant="link"
+                                    onClick={() => setShowCustomInput(true)}
+                                    disabled={formik.values.SubCategory.length >= 5}
+                                    className="p-0"
+                                >
+                                    <FontAwesomeIcon icon={faPlus} className="me-1" />
+                                    Add Custom Subcategory
+                                </Button>
+                            )}
+
+                            {formik.touched.SubCategory && formik.errors.SubCategory && (
+                                <div className="text-danger mt-1">
+                                    {formik.errors.SubCategory}
                                 </div>
                             )}
                         </Form.Group>
@@ -551,7 +699,7 @@ const CoverURL = () => {
                                     onClick={() => toggleModal()}
                                     disabled={isSubmitting}
                                     className='w-100 rounded-3 text-black'
-                                    style={{background:"#F6F7FB"}}
+                                    style={{ background: "#F6F7FB" }}
                                 >
                                     Cancel
                                 </Button>
