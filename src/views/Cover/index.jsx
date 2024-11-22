@@ -28,7 +28,7 @@ const CoverURL = () => {
     const [customTagName, setCustomTagName] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
-console.log(previewUrl);
+    console.log(previewUrl);
 
 
     const renderPaginationItems = () => {
@@ -419,62 +419,68 @@ console.log(previewUrl);
                     </tr>
                 </thead>
                 <tbody>
-                    {currentItems.map((cover, index) => (
-                        <tr key={cover._id}>
-                            <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                            <td>
-                                <img
-                                    src={cover.CoverURL}
-                                    alt={'CoverImage'}
-                                    style={{ width: '150px', height: '120px', objectFit: 'cover' }}
-                                />
-                            </td>
-                            <td>
-                                {cover.TagName?.filter(Boolean).slice(0, 5).join(', ')}
-                            </td>
-
-                            <td>{cover.CoverName}</td>
-                            <td>
-                                <Button
-                                    className='bg-transparent border-0 fs-4'
-                                    style={{ color: cover.CoverPremium ? "#0385C3" : "#6c757d" }}
-                                    onClick={() => handlePremiumToggle(cover._id, cover.CoverPremium)}
-                                >
-                                    <FontAwesomeIcon
-                                        icon={cover.CoverPremium ? faToggleOn : faToggleOff}
-                                        title={cover.CoverPremium ? "Premium ON" : "Premium OFF"}
+                    {currentItems && currentItems.length > 0 ? (
+                        currentItems.map((cover, index) => (
+                            <tr key={cover._id}>
+                                <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                <td>
+                                    <img
+                                        src={cover.CoverURL || 'placeholder.jpg'} // Default fallback image
+                                        alt="CoverImage"
+                                        style={{ width: '150px', height: '120px', objectFit: 'cover' }}
                                     />
-                                </Button>
-                            </td>
-                            <td>
-                                <Button
-                                    className='bg-transparent border-0 fs-5'
-                                    style={{ color: "#0385C3" }}
-                                    onClick={() => handleHideToggle(cover._id, cover.Hide)}
-                                >
-                                    <FontAwesomeIcon
-                                        icon={cover.Hide ? faEyeSlash : faEye}
-                                        title={cover.Hide ? "Hidden" : "Visible"}
-                                    />
-                                </Button>
-                            </td>
-                            <td>
-                                <Button
-                                    className='bg-transparent border-0 fs-5'
-                                    style={{ color: "#0385C3" }}
-                                    onClick={() => handleEdit(cover)}
-                                >
-                                    <FontAwesomeIcon icon={faEdit} />
-                                </Button>
-                                <Button
-                                    className='bg-transparent border-0 text-danger fs-5'
-                                    onClick={() => handleDelete(cover._id)}
-                                >
-                                    <FontAwesomeIcon icon={faTrash} />
-                                </Button>
-                            </td>
+                                </td>
+                                <td>
+                                    {cover.TagName?.filter(Boolean).slice(0, 5).join(', ') || 'No Tags'} {/* Fallback text */}
+                                </td>
+                                <td>{cover.CoverName || 'No Name'}</td>
+                                <td>
+                                    <Button
+                                        className="bg-transparent border-0 fs-4"
+                                        style={{ color: cover.CoverPremium ? "#0385C3" : "#6c757d" }}
+                                        onClick={() => handlePremiumToggle(cover._id, cover.CoverPremium)}
+                                    >
+                                        <FontAwesomeIcon
+                                            icon={cover.CoverPremium ? faToggleOn : faToggleOff}
+                                            title={cover.CoverPremium ? "Premium ON" : "Premium OFF"}
+                                        />
+                                    </Button>
+                                </td>
+                                <td>
+                                    <Button
+                                        className="bg-transparent border-0 fs-5"
+                                        style={{ color: "#0385C3" }}
+                                        onClick={() => handleHideToggle(cover._id, cover.Hide)}
+                                    >
+                                        <FontAwesomeIcon
+                                            icon={cover.Hide ? faEyeSlash : faEye}
+                                            title={cover.Hide ? "Hidden" : "Visible"}
+                                        />
+                                    </Button>
+                                </td>
+                                <td>
+                                    <Button
+                                        className="bg-transparent border-0 fs-5"
+                                        style={{ color: "#0385C3" }}
+                                        onClick={() => handleEdit(cover)}
+                                    >
+                                        <FontAwesomeIcon icon={faEdit} />
+                                    </Button>
+                                    <Button
+                                        className="bg-transparent border-0 text-danger fs-5"
+                                        onClick={() => handleDelete(cover._id)}
+                                    >
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))
+                    ) : (
+                        <tr>
+                            <td colSpan={7} className="text-center">No Data Found</td> 
                         </tr>
-                    ))}
+                    )}
+
                 </tbody>
             </Table>
 
@@ -613,7 +619,7 @@ console.log(previewUrl);
                                 </div>
                             )}
                         </Form.Group>
-                        <hr className='bg-black'/>
+                        <hr className='bg-black' />
 
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>

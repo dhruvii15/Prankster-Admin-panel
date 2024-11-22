@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form, Modal, Spinner } from 'react-bootstrap';
+import { Button, Table, Pagination, Form, Modal, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -239,17 +239,18 @@ const UserGallery = () => {
 
             {/* Modal for category selection and artist name */}
             <Modal show={showModal} onHide={handleModalClose} centered>
-                <Modal.Header closeButton>
+                <Modal.Header>
                     <Modal.Title>Move Gallery Image</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleFormSubmit}>
                         {/* Category Dropdown */}
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Select Category</Form.Label>
+                            <Form.Label className='fw-bold'>Select Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
                             <Form.Control
                                 as="select"
                                 value={formData.categoryId}
+                                className='py-2'
                                 onChange={(e) => {
                                     const value = e.target.value;
                                     setFormData({ ...formData, categoryId: value });
@@ -279,10 +280,11 @@ const UserGallery = () => {
 
                         {/* Artist Name Input */}
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
                             <Form.Control
                                 type="text"
                                 placeholder="Enter artist name"
+                                className='py-2'
                                 value={formData.artistName}
                                 onChange={(e) => {
                                     const value = e.target.value;
@@ -300,15 +302,28 @@ const UserGallery = () => {
                         </Form.Group>
 
                         {/* Submit Button */}
-                        <Button type="submit" className='submit border-0' disabled={formLoading}>
-                            {formLoading ? (
-                                <>
-                                    <Spinner animation="border" size="sm" /> Submitting...
-                                </>
-                            ) : (
-                                "Submit"
-                            )}
-                        </Button>
+                        <Row className="mt-5">
+                            <Col xs={6}>
+                                <Button
+                                    variant="secondary"
+                                    onClick={() => toggleModal()}
+                                    disabled={formLoading}
+                                    className='w-100 rounded-3 text-black'
+                                    style={{ background: "#F6F7FB" }}
+                                >
+                                    Cancel
+                                </Button>
+                            </Col>
+                            <Col xs={6}>
+                                <Button
+                                    type="submit"
+                                    className='submit border-0 rounded-3 w-100'
+                                    disabled={formLoading}
+                                >
+                                    {formLoading ? <Spinner size='sm' /> : 'Submit'}
+                                </Button>
+                            </Col>
+                        </Row>
                     </Form>
                 </Modal.Body>
             </Modal>
