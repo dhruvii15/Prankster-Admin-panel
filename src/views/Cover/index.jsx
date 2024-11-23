@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Nav, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faPlus, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
@@ -543,6 +543,12 @@ const CoverURL = () => {
                                 touched={formik.touched.TagName}
                                 errors={formik.errors.TagName}
                             />
+
+                            {formik.errors.TagName && formik.touched.TagName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.TagName}
+                                </div>
+                            )}
                         </Form.Group>
                         <hr className='bg-black' />
 

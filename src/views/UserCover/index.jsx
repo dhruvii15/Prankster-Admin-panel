@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Pagination, Form, Modal, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTrash, faTimes, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrash, faTimes, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -14,10 +14,24 @@ const UserCover = () => {
     const [showModal, setShowModal] = useState(false);
     const [selectedCover, setSelectedCover] = useState(null);
     const [selectedTags, setSelectedTags] = useState([]);
-    const [showCustomInput, setShowCustomInput] = useState(false);
     const [customTagName, setCustomTagName] = useState('');
-    
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    const maxTags = 5;
+
+    // Sort and prepare available tags alphabetically
+    const availableTags = category && category.length > 0
+        ? category.map(c => c || '').filter(tag => tag.trim() !== '').sort((a, b) => a.localeCompare(b))
+        : [];
+
+    const visibleTags = isExpanded ? availableTags : availableTags.slice(0, 5);
+    const totalTags = availableTags.length;
+
     const itemsPerPage = 15;
+
+    const toggleExpand = () => {
+        setIsExpanded(!isExpanded);
+    };
 
     const getData = () => {
         setLoading(true);
@@ -36,7 +50,7 @@ const UserCover = () => {
     const getCategory = () => {
         axios.post('https://pslink.world/api/cover/TagName/read')
             .then((res) => {
-                setCategory(res.data.data);
+                setCategory(res.data.data || []);
             })
             .catch((err) => {
                 console.error(err);
@@ -56,7 +70,7 @@ const UserCover = () => {
     };
 
     const handleTagSelect = (tag) => {
-        if (selectedTags.length < 5 && !selectedTags.includes(tag)) {
+        if (selectedTags.length < maxTags && !selectedTags.includes(tag)) {
             setSelectedTags([...selectedTags, tag]);
         }
     };
@@ -66,10 +80,9 @@ const UserCover = () => {
     };
 
     const handleCustomTagAdd = () => {
-        if (customTagName.trim() && selectedTags.length < 5 && !selectedTags.includes(customTagName.trim())) {
+        if (customTagName.trim() && selectedTags.length < maxTags && !selectedTags.includes(customTagName.trim())) {
             setSelectedTags([...selectedTags, customTagName.trim()]);
             setCustomTagName('');
-            setShowCustomInput(false);
         }
     };
 
@@ -116,7 +129,6 @@ const UserCover = () => {
         }
     };
 
-    // Pagination logic
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -180,7 +192,7 @@ const UserCover = () => {
                             <tr key={cover._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>
-                                    <img src={cover.CoverURL} alt="cover thumbnail" className="w-24 h-24" />
+                                    <img src={cover.CoverURL} alt="cover thumbnail" className='w-25 h-25' />
                                 </td>
                                 <td>{cover.CoverName}</td>
                                 <td>
@@ -191,7 +203,7 @@ const UserCover = () => {
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
-                                    <Button 
+                                    <Button
                                         className="bg-transparent border-0 text-danger fs-5"
                                         onClick={() => handleDelete(cover._id)}
                                     >
@@ -225,9 +237,13 @@ const UserCover = () => {
                             <span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span>
                         </Form.Label>
 
-                        <div className="mb-2 d-flex flex-wrap gap-2">
+                        <div className="mb-3 d-flex flex-wrap gap-2">
                             {selectedTags.map((tag, index) => (
-                                <div key={index} className="p-2 rounded d-flex align-items-center" style={{ border: "1px solid #c1c1c1" }}>
+                                <div
+                                    key={index}
+                                    className="px-2 rounded d-flex align-items-center"
+                                    style={{ border: "1px solid #c1c1c1" }}
+                                >
                                     <span>{tag}</span>
                                     <Button
                                         variant="link"
@@ -240,93 +256,105 @@ const UserCover = () => {
                             ))}
                         </div>
 
-                        {!showCustomInput && (
-                            <div className="mb-2">
-                                <Form.Control
-                                    as="select"
-                                    className="py-2"
-                                    onChange={(e) => handleTagSelect(e.target.value)}
-                                    value=""
-                                    disabled={selectedTags.length >= 5}
-                                >
-                                    <option value="">Select a TagName</option>
-                                    {category.map((cat, index) => (
-                                        <option
-                                            key={index}
-                                            value={cat}
-                                            disabled={selectedTags.includes(cat)}
-                                        >
-                                            {cat}
-                                        </option>
-                                    ))}
-                                </Form.Control>
-                            </div>
-                        )}
+                        <div className="d-flex align-items-center gap-2 mb-2">
+                            <Form.Control
+                                type="text"
+                                value={customTagName}
+                                onChange={(e) => setCustomTagName(e.target.value)}
+                                placeholder="Add custom tag"
+                            />
+                            <Button style={{ backgroundColor: '#F9E238', color: 'black' }}
+                                className="border-0 rounded-2 px-5" 
+                                onClick={handleCustomTagAdd}>Add</Button>
+                        </div>
 
-                        {showCustomInput ? (
-                            <div className="d-flex gap-2 mb-2">
-                                <Form.Control
-                                    type="text"
-                                    value={customTagName}
-                                    onChange={(e) => setCustomTagName(e.target.value)}
-                                    placeholder="Enter custom TagName"
-                                    className="py-2"
-                                />
-                                <Button
-                                    onClick={handleCustomTagAdd}
-                                    disabled={!customTagName.trim() || selectedTags.length >= 5}
-                                    style={{ backgroundColor: "#F9E238", color: "black" }}
-                                    className="border-0 rounded-2"
-                                >
-                                    Add
-                                </Button>
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => {
-                                        setShowCustomInput(false);
-                                        setCustomTagName('');
-                                    }}
-                                    className="border-0 rounded-2"
-                                >
-                                    Cancel
-                                </Button>
+                        <div
+                            style={{
+                                width: "100%",
+                                maxHeight: "120px",
+                                overflowY: "auto",
+                            }}
+                        >
+                            <div className="d-flex flex-wrap gap-2 align-items-center">
+                                {visibleTags.map((tag, index) => (
+                                    <Button
+                                        key={index}
+                                        onClick={() => handleTagSelect(tag)}
+                                        disabled={selectedTags.includes(tag) || selectedTags.length >= maxTags}
+                                        className="py-1 px-2 rounded-2"
+                                        style={{
+                                            backgroundColor: selectedTags.includes(tag) ? "#e9ecef" : "#f8f9fa",
+                                            border: "1px solid #dee2e6",
+                                            color: selectedTags.includes(tag) ? "#6c757d" : "#212529",
+                                            cursor: selectedTags.includes(tag) ? "default" : "pointer",
+                                            fontSize: "13px"
+                                        }}
+                                    >
+                                        {tag}
+                                    </Button>
+                                ))}
+
+                                {totalTags > 5 && !isExpanded && (
+                                    <span
+                                        style={{ marginLeft: "8px", fontWeight: "bold", cursor: "pointer" }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                toggleExpand();
+                                            }
+                                        }}
+                                        onClick={toggleExpand}
+                                        className='border px-2 py-1 rounded-2'
+                                    >
+                                        + {totalTags - 5}
+                                    </span>
+                                )}
+
+                                {totalTags > 5 && (
+                                    <Button
+                                        onClick={toggleExpand}
+                                        className="py-1 px-2 ms-auto"
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" || e.key === " ") {
+                                                toggleExpand();
+                                            }
+                                        }}
+                                        style={{
+                                            border: "none",
+                                            backgroundColor: "transparent",
+                                            color: "#212529",
+                                        }}
+                                    >
+                                        {isExpanded ? <FontAwesomeIcon icon={faChevronUp} /> : <FontAwesomeIcon icon={faChevronDown} />}
+                                    </Button>
+                                )}
                             </div>
-                        ) : (
-                            <Button
-                                variant="link"
-                                onClick={() => setShowCustomInput(true)}
-                                disabled={selectedTags.length >= 5}
-                                className="p-0"
-                            >
-                                <FontAwesomeIcon icon={faPlus} className="me-1" />
-                                Add Custom TagName
-                            </Button>
-                        )}
+                        </div>
                     </Form.Group>
+
                     <Row className="mt-2">
-                            <Col xs={6}>
-                                <Button
-                                    variant="secondary"
-                                    onClick={() => setShowModal(false)}
-                                    className='w-100 rounded-3 text-black'
-                                    style={{ background: "#F6F7FB" }}
-                                >
-                                    Cancel
-                                </Button>
-                            </Col>
-                            <Col xs={6}>
-                                <Button
-                                    type="submit"
-                                    onClick={handleSubmit}
-                                    className='submit border-0 rounded-3 w-100'
-                                >
-                                    Submit
-                                </Button>
-                            </Col>
-                        </Row>
+                        <Col xs={6}>
+                            <Button
+                                variant="secondary"
+                                onClick={() => setShowModal(false)}
+                                className='w-100 rounded-3 text-black'
+                                style={{ background: "#F6F7FB" }}
+                            >
+                                Cancel
+                            </Button>
+                        </Col>
+                        <Col xs={6}>
+                            <Button
+                                type="submit"
+                                onClick={handleSubmit}
+                                className='submit border-0 rounded-3 w-100'
+                            >
+                                Submit
+                            </Button>
+                        </Col>
+                    </Row>
+
                 </Modal.Body>
             </Modal>
-
             <ToastContainer />
         </div>
     );
