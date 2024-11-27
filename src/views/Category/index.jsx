@@ -18,7 +18,7 @@ const Category = () => {
     const [loading, setLoading] = useState(true);
     const [fileLabel, setFileLabel] = useState('Category Image Upload');
     const [selectedFileName, setSelectedFileName] = useState('');
-    const [activeTab, setActiveTab] = useState('audio');
+    const [activeTab, setActiveTab] = useState('all');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleModal = (mode) => {
@@ -52,42 +52,48 @@ const Category = () => {
             });
     };
 
-    // Get filtered data based on active tab
+    // Get filtered data based on selected types
     const getFilteredData = () => {
-        return data.filter(item => item.Type.toLowerCase() === activeTab.toLowerCase());
+        if (activeTab === 'all') return data;
+        return data.filter(item => 
+            item.Type.split(',').includes(activeTab)
+        );
     };
 
     useEffect(() => {
         getData();
     }, []);
 
-
     const portfolioSchema = Yup.object().shape({
         CategoryName: Yup.string().required('Category Name is required'),
         CategoryImage: Yup.mixed().required('Category Image is required'),
-        Type: Yup.string().required('Type is required'),
+        Type: Yup.array()
+            .min(1, 'Select at least one type')
+            .required('Type is required'),
     });
 
     const formik = useFormik({
         initialValues: {
             CategoryName: '',
             CategoryImage: '',
-            Type: '',
+            Type: [],
         },
         validationSchema: portfolioSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
-            try {
-                setIsSubmitting(true);
-                const formData = new FormData();
-                formData.append('CategoryName', values.CategoryName);
-                formData.append('CategoryImage', values.CategoryImage);
-                formData.append('Type', values.Type);
+    try {
+        setIsSubmitting(true);
+        const formData = new FormData();
+        formData.append('CategoryName', values.CategoryName);
+        formData.append('CategoryImage', values.CategoryImage);
+        
+        // Convert Type array to JSON string
+        formData.append('Type', JSON.stringify(values.Type));
 
-                const request = id !== undefined
-                    ? axios.patch(`https://pslink.world/api/category/update/${id}`, formData)
-                    : axios.post('https://pslink.world/api/category/create', formData);
+        const request = id !== undefined
+            ? axios.patch(`https://pslink.world/api/category/update/${id}`, formData)
+            : axios.post('https://pslink.world/api/category/create', formData);
 
-                const res = await request;
+        const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
@@ -110,7 +116,7 @@ const Category = () => {
         formik.setValues({
             CategoryName: cardBg.CategoryName,
             CategoryImage: cardBg.CategoryImage,
-            Type: cardBg.Type || '',
+            Type: cardBg.Type.split(','),
         });
         setId(cardBg._id);
         setFileLabel('Category Image Upload');
@@ -185,6 +191,7 @@ const Category = () => {
             }} />
         </div>
     );
+
     return (
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
@@ -196,6 +203,18 @@ const Category = () => {
             <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
                 {/* Tabs Navigation */}
                 <Nav variant="tabs" className='my-2'>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'all'}
+                            className={activeTab === 'all' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('all');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            All
+                        </Nav.Link>
+                    </Nav.Item>
                     <Nav.Item>
                         <Nav.Link
                             active={activeTab === 'audio'}
@@ -235,7 +254,6 @@ const Category = () => {
                 </Nav>
 
                 <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-2' style={{ backgroundColor: "#F9E238", color: "black" }}>Add New Category Image</Button>
-
             </div>
             <Modal
                 show={visible}
@@ -249,24 +267,30 @@ const Category = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
-                        {/* Type Dropdown */}
+                        {/* Type Checkboxes */}
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Type<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                as="select"
-                                id="Type"
-                                name="Type"
-                                className='py-2'
-                                value={formik.values.Type}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.Type && !!formik.errors.Type}
-                            >
-                                <option value="">Select Type</option>
-                                <option value="audio">Audio</option>
-                                <option value="video">Video</option>
-                                <option value="gallery">Gallery</option>
-                            </Form.Control>
+                            <div className='d-flex flex-wrap'>
+                                {['audio', 'video', 'gallery'].map((type) => (
+                                    <Form.Check
+                                        key={type}
+                                        type={id ? "radio" : "checkbox"}
+                                        id={`type-${type}`}
+                                        label={type.charAt(0).toUpperCase() + type.slice(1)}
+                                        name="Type"
+                                        value={type}
+                                        checked={formik.values.Type.includes(type)}
+                                        onChange={(e) => {
+                                            const newTypes = e.target.checked
+                                                ? [...formik.values.Type, type]
+                                                : formik.values.Type.filter(t => t !== type);
+                                            formik.setFieldValue('Type', newTypes);
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        className="mb-2 px-4"
+                                    />
+                                ))}
+                            </div>
                             {formik.errors.Type && formik.touched.Type && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.Type}
@@ -275,7 +299,8 @@ const Category = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>{fileLabel} <span className='ps-2' style={{fontSize: "12px"}}>(350 x 350)</span>
+                            <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex flex-column">
                                 <div className="d-flex align-items-center">
                                     <Form.Control
@@ -330,7 +355,6 @@ const Category = () => {
                                 </div>
                             )}
                         </Form.Group>
-
 
                         <Row className="mt-4">
                             <Col xs={6}>
