@@ -18,34 +18,40 @@ const Video = () => {
     const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [imageFileLabel, setImageFileLabel] = useState('Video Image Upload');
     const [videoFileLabel, setVideoFileLabel] = useState('Video File Upload');
     const [selectedVideo, setSelectedVideo] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedVideoFileName, setSelectedVideoFileName] = useState("");
-    const [selectedImageFileName, setSelectedImageFileName] = useState("");
 
 
     const toggleModal = (mode) => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setImageFileLabel('Video Image Upload');
                 setVideoFileLabel('Video File Upload');
+                setSelectedVideoFileName(''); // Clear selected file name
+                const fileInput = document.getElementById('Video');
+                if (fileInput) {
+                    fileInput.value = ''; // Clear the file input
+                }
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setImageFileLabel('Video Image Upload');
             setVideoFileLabel('Video File Upload');
+            setSelectedVideoFileName(''); // Clear selected file name
+            const fileInput = document.getElementById('Video');
+            if (fileInput) {
+                fileInput.value = ''; // Clear the file input
+            }
         }
         setVisible(!visible);
     };
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/video/read')
+        axios.post('http://localhost:5000/api/video/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -90,7 +96,7 @@ const Video = () => {
     };
 
     const getCategory = () => {
-        axios.post('https://pslink.world/api/category/read')
+        axios.post('http://localhost:5000/api/category/read')
             .then((res) => {
                 setCategory(res.data.data);
             })
@@ -108,7 +114,6 @@ const Video = () => {
     const videoSchema = Yup.object().shape({
         VideoName: Yup.string().required('Video Name is required'),
         ArtistName: Yup.string().required('Artist Name is required'),
-        VideoImage: Yup.mixed().required('Video Image is required'),
         Video: Yup.mixed().required('Video File is required'),
         VideoPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Category Name is required'),
@@ -119,7 +124,6 @@ const Video = () => {
         initialValues: {
             VideoName: '',
             ArtistName: '',
-            VideoImage: '',
             Video: '',
             VideoPremium: false,
             CategoryId: '',
@@ -132,22 +136,21 @@ const Video = () => {
                 const formData = new FormData();
                 formData.append('VideoName', values.VideoName);
                 formData.append('ArtistName', values.ArtistName);
-                formData.append('VideoImage', values.VideoImage);
                 formData.append('Video', values.Video);
                 formData.append('VideoPremium', values.VideoPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('Hide', values.Hide);
-
+        
                 const request = id !== undefined
-                    ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
-                    : axios.post('https://pslink.world/api/video/create', formData);
-
+                    ? axios.patch(`http://localhost:5000/api/video/update/${id}`, formData)
+                    : axios.post('http://localhost:5000/api/video/create', formData);
+        
                 const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setImageFileLabel('Video Image Upload');
                 setVideoFileLabel('Video File Upload');
+                setSelectedVideoFileName(''); // Reset the selected video file name
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -165,20 +168,18 @@ const Video = () => {
         formik.setValues({
             VideoName: video.VideoName,
             ArtistName: video.ArtistName,
-            VideoImage: video.VideoImage,
             Video: video.Video,
             VideoPremium: video.VideoPremium,
             CategoryId: video.CategoryId,
             Hide: video.Hide,
         });
         setId(video._id);
-        setImageFileLabel('Video Image Upload');
         setVideoFileLabel('Video File Upload');
         toggleModal('edit');
     };
 
     const handleHideToggle = (videoId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -190,7 +191,7 @@ const Video = () => {
     };
 
     const handlePremiumToggle = (videoId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -203,7 +204,7 @@ const Video = () => {
 
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video?")) {
-            axios.delete(`https://pslink.world/api/video/delete/${videoId}`)
+            axios.delete(`http://localhost:5000/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -378,45 +379,6 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}
-                            <span className='ps-2' style={{fontSize: "12px"}}>(1070 x 950)</span>
-                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex flex-column">
-                                <div className="d-flex align-items-center">
-                                    <Form.Control
-                                        type="file"
-                                        id="VideoImage"
-                                        name="VideoImage"
-                                        onChange={(event) => {
-                                            let file = event.currentTarget.files[0];
-                                            formik.setFieldValue("VideoImage", file);
-                                            setImageFileLabel(file ? "Video Image uploaded" : "Video Image Upload");
-                                            setSelectedImageFileName(file ? file.name : "");
-                                        }}
-                                        onBlur={formik.handleBlur}
-                                        label="Choose File"
-                                        className="d-none py-2"
-                                        custom
-                                    />
-                                    <label htmlFor="VideoImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                        <div style={{ color: "#c1c1c1" }}>Select Video Image</div>
-                                        {selectedImageFileName && (
-                                            <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                                {selectedImageFileName}
-                                            </span>
-                                        )}
-                                    </label>
-                                </div>
-                            </div>
-                            {formik.errors.VideoImage && formik.touched.VideoImage && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.VideoImage}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Video Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
@@ -512,7 +474,6 @@ const Video = () => {
                         <th>Id</th>
                         <th>Video Name</th>
                         <th>Artist Name</th>
-                        <th>Video Image</th>
                         <th>Video File</th>
                         <th>Premium</th>
                         <th>Hidden</th>
@@ -526,9 +487,6 @@ const Video = () => {
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{video.VideoName}</td>
                                 <td>{video.ArtistName}</td>
-                                <td>
-                                    <img src={video.VideoImage} alt="video thumbnail" style={{ width: '100px', height: '100px' }} />
-                                </td>
                                 <td>
                                     <video controls width="240">
                                         <source src={video.Video} type="video/mp4" />

@@ -97,7 +97,6 @@ const UserVideo = () => {
         submitFormData.append('VideoName', selectedVideo.VideoName);
         submitFormData.append('Video', selectedVideo.Video);
         submitFormData.append('VideoPremium', false);
-        submitFormData.append('VideoImage', 'https://pslink.world/api/public/images/video.jpg');
         submitFormData.append('Hide', false);
         submitFormData.append('role', selectedVideo._id);
         submitFormData.append('CategoryId', formData.categoryId);
