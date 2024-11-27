@@ -104,7 +104,6 @@ const Audio = () => {
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Name is required'),
-        ArtistName: Yup.string().required('Artist Name is required'),
         Audio: Yup.mixed().required('Audio File is required'),
         AudioPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Category Name is required'),
@@ -420,7 +419,7 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="ArtistName"

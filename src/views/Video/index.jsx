@@ -113,7 +113,6 @@ const Video = () => {
 
     const videoSchema = Yup.object().shape({
         VideoName: Yup.string().required('Video Name is required'),
-        ArtistName: Yup.string().required('Artist Name is required'),
         Video: Yup.mixed().required('Video File is required'),
         VideoPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Category Name is required'),
@@ -399,7 +398,7 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="ArtistName"

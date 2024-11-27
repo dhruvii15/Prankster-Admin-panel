@@ -102,7 +102,6 @@ const Gallery = () => {
 
     const gallerySchema = Yup.object().shape({
         GalleryName: Yup.string().required('Gallery Name is required'),
-        ArtistName: Yup.string().required('Artist Name is required'),
         GalleryImage: Yup.mixed().required('Gallery Image is required'),
         GalleryPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Category Name is required'),
@@ -387,7 +386,7 @@ const Gallery = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="ArtistName"
