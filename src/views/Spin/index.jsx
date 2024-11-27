@@ -16,7 +16,9 @@ const Spin = () => {
     const [loading, setLoading] = useState(true);
     const [coverImageLabel, setCoverImageLabel] = useState('Cover Image Upload');
     const [fileLabel, setFileLabel] = useState('File Upload');
-    const [activeTab, setActiveTab] = useState('audio'); // Default tab is audio
+    const [selectedFileName, setSelectedFileName] = useState('');
+    const [selectedCoverImageName, setSelectedCoverImageName] = useState('');
+    const [activeTab, setActiveTab] = useState('audio');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const toggleModal = (mode) => {
@@ -25,12 +27,16 @@ const Spin = () => {
                 setId(undefined);
                 setCoverImageLabel('Cover Image Upload');
                 setFileLabel('File Upload');
+                setSelectedFileName('');
+                setSelectedCoverImageName('');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
             setCoverImageLabel('Cover Image Upload');
             setFileLabel('File Upload');
+            setSelectedFileName('');
+            setSelectedCoverImageName('');
         }
         setVisible(!visible);
     };
@@ -325,7 +331,8 @@ const Spin = () => {
                                     onChange={(event) => {
                                         const file = event.currentTarget.files[0];
                                         formik.setFieldValue("File", file);
-                                        setFileLabel(file ? "File uploaded" : "File Upload");
+                                        setFileLabel("File Upload");
+                                        setSelectedFileName(file ? file.name : '');
                                     }}
                                     onBlur={formik.handleBlur}
                                     className="d-none"
@@ -333,7 +340,12 @@ const Spin = () => {
                                 <label htmlFor="File" className="btn mb-0 pt-3 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                     <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
                                     <div style={{ color: "#c1c1c1" }} className='pt-1'>Select File </div>
-                                    <p style={{fontSize:"12px" , color:"#5E95FE"}}>Audio , Video & Gallery File</p>
+                                    {selectedFileName && (
+                                        <p style={{ fontSize: "12px", color: "#5E95FE" }}>{selectedFileName}</p>
+                                    )}
+                                    {!selectedFileName && (
+                                        <p style={{ fontSize: "12px", color: "#5E95FE" }}>Audio, Video & Gallery File</p>
+                                    )}
                                 </label>
                             </div>
                             {formik.errors.File && formik.touched.File && (
@@ -353,14 +365,18 @@ const Spin = () => {
                                     onChange={(event) => {
                                         const file = event.currentTarget.files[0];
                                         formik.setFieldValue("CoverImage", file);
-                                        setCoverImageLabel(file ? "Cover Image uploaded" : "Cover Image Upload");
+                                        setCoverImageLabel("Cover Image Upload");
+                                        setSelectedCoverImageName(file ? file.name : '');
                                     }}
                                     onBlur={formik.handleBlur}
                                     className="d-none"
                                 />
-                                <label htmlFor="File" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                <label htmlFor="CoverImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                     <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Cover Image </div>
+                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Cover Image</div>
+                                    {selectedCoverImageName && (
+                                        <p style={{ fontSize: "12px", color: "#5E95FE" }}>{selectedCoverImageName}</p>
+                                    )}
                                 </label>
                             </div>
                             {formik.errors.CoverImage && formik.touched.CoverImage && (

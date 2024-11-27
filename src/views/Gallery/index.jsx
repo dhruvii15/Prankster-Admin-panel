@@ -331,7 +331,9 @@ const Gallery = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>{imageFileLabel}
+                            <span className='ps-2' style={{fontSize: "12px"}}>(1070 x 950)</span>
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
@@ -350,6 +352,11 @@ const Gallery = () => {
                                 <label htmlFor="GalleryImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                     <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
                                     <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Gallery Image</div>
+                                    {formik.values.GalleryImage && (
+                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                            {formik.values.GalleryImage.name}
+                                        </span>
+                                    )}
                                 </label>
                             </div>
                             {formik.errors.GalleryImage && formik.touched.GalleryImage && (

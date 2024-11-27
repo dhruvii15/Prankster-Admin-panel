@@ -17,14 +17,14 @@ const UserCover = () => {
     const [customTagName, setCustomTagName] = useState('');
     const [isExpanded, setIsExpanded] = useState(false);
 
-    const maxTags = 5;
+    const maxTags = 7;
 
     // Sort and prepare available tags alphabetically
     const availableTags = category && category.length > 0
         ? category.map(c => c || '').filter(tag => tag.trim() !== '').sort((a, b) => a.localeCompare(b))
         : [];
 
-    const visibleTags = isExpanded ? availableTags : availableTags.slice(0, 5);
+    const visibleTags = isExpanded ? availableTags : availableTags.slice(0, 7);
     const totalTags = availableTags.length;
 
     const itemsPerPage = 15;
@@ -294,7 +294,7 @@ const UserCover = () => {
                                     </Button>
                                 ))}
 
-                                {totalTags > 5 && !isExpanded && (
+                                {totalTags > 7 && !isExpanded && (
                                     <span
                                         style={{ marginLeft: "8px", fontWeight: "bold", cursor: "pointer" }}
                                         onKeyDown={(e) => {
@@ -305,11 +305,11 @@ const UserCover = () => {
                                         onClick={toggleExpand}
                                         className='border px-2 py-1 rounded-2'
                                     >
-                                        + {totalTags - 5}
+                                        + {totalTags - 7}
                                     </span>
                                 )}
 
-                                {totalTags > 5 && (
+                                {totalTags > 7 && (
                                     <Button
                                         onClick={toggleExpand}
                                         className="py-1 px-2 ms-auto"

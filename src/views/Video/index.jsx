@@ -23,6 +23,8 @@ const Video = () => {
     const [selectedVideo, setSelectedVideo] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedVideoFileName, setSelectedVideoFileName] = useState("");
+    const [selectedImageFileName, setSelectedImageFileName] = useState("");
 
 
     const toggleModal = (mode) => {
@@ -340,25 +342,33 @@ const Video = () => {
 
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{videoFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="Video"
-                                    name="Video"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("Video", file);
-                                        setVideoFileLabel(file ? "Video File uploaded" : "Video File Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }}>Select Video File</div>
-                                </label>
+                            <div className="d-flex flex-column">
+                                <div className="d-flex align-items-center">
+                                    <Form.Control
+                                        type="file"
+                                        id="Video"
+                                        name="Video"
+                                        onChange={(event) => {
+                                            let file = event.currentTarget.files[0];
+                                            formik.setFieldValue("Video", file);
+                                            setVideoFileLabel(file ? "Video File uploaded" : "Video File Upload");
+                                            setSelectedVideoFileName(file ? file.name : "");
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        label="Choose File"
+                                        className="d-none"
+                                        custom
+                                    />
+                                    <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                        <div style={{ color: "#c1c1c1" }}>Select Video File</div>
+                                        {selectedVideoFileName && (
+                                            <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                                {selectedVideoFileName}
+                                            </span>
+                                        )}
+                                    </label>
+                                </div>
                             </div>
                             {formik.errors.Video && formik.touched.Video && (
                                 <div className="invalid-feedback d-block">
@@ -368,26 +378,36 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="VideoImage"
-                                    name="VideoImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("VideoImage", file);
-                                        setImageFileLabel(file ? "Video Image uploaded" : "Video Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none py-2"
-                                    custom
-                                />
-                                <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }}>Select Video Image</div>
-                                </label>
+                            <Form.Label className='fw-bold'>{imageFileLabel}
+                            <span className='ps-2' style={{fontSize: "12px"}}>(1070 x 950)</span>
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <div className="d-flex flex-column">
+                                <div className="d-flex align-items-center">
+                                    <Form.Control
+                                        type="file"
+                                        id="VideoImage"
+                                        name="VideoImage"
+                                        onChange={(event) => {
+                                            let file = event.currentTarget.files[0];
+                                            formik.setFieldValue("VideoImage", file);
+                                            setImageFileLabel(file ? "Video Image uploaded" : "Video Image Upload");
+                                            setSelectedImageFileName(file ? file.name : "");
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        label="Choose File"
+                                        className="d-none py-2"
+                                        custom
+                                    />
+                                    <label htmlFor="VideoImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                        <div style={{ color: "#c1c1c1" }}>Select Video Image</div>
+                                        {selectedImageFileName && (
+                                            <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                                {selectedImageFileName}
+                                            </span>
+                                        )}
+                                    </label>
+                                </div>
                             </div>
                             {formik.errors.VideoImage && formik.touched.VideoImage && (
                                 <div className="invalid-feedback d-block">

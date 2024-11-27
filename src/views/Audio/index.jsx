@@ -338,7 +338,7 @@ const Audio = () => {
 
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{audioFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex align-items-center">
+                            <div className="d-flex flex-column">
                                 <Form.Control
                                     type="file"
                                     id="Audio"
@@ -353,10 +353,15 @@ const Audio = () => {
                                     className="d-none"
                                     custom
                                 />
-                                <label htmlFor="Audio" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                <div style={{ color: "#c1c1c1" }}>Select Audio File</div>
-                            </label>
+                                <label htmlFor="Audio" className="btn mb-2 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                    <div style={{ color: "#c1c1c1" }}>Select Audio File</div>
+                                    {formik.values.Audio && (
+                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                            {formik.values.Audio.name}
+                                        </span>
+                                    )}
+                                </label>
                             </div>
                             {formik.errors.Audio && formik.touched.Audio && (
                                 <div className="invalid-feedback d-block">
@@ -366,8 +371,8 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}</Form.Label>
-                            <div className="d-flex align-items-center">
+                            <Form.Label className='fw-bold'>{imageFileLabel}<span className='ps-2' style={{fontSize: "12px"}}>(1070 x 950)</span></Form.Label>
+                            <div className="d-flex flex-column">
                                 <Form.Control
                                     type="file"
                                     id="AudioImage"
@@ -382,10 +387,15 @@ const Audio = () => {
                                     className="d-none"
                                     custom
                                 />
-                                <label htmlFor="AudioImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                <div style={{ color: "#c1c1c1" }}>Select Audio Image</div>
-                            </label>
+                                <label htmlFor="AudioImage" className="btn mb-2 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                    <div style={{ color: "#c1c1c1" }}>Select Audio Image</div>
+                                    {formik.values.AudioImage && (
+                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                            {formik.values.AudioImage.name}
+                                        </span>
+                                    )}
+                                </label>
                             </div>
                         </Form.Group>
 

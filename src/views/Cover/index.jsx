@@ -91,7 +91,7 @@ const CoverURL = () => {
         if (file) {
             formik.setFieldValue("CoverURL", file);
             setSelectedFile(file);
-            setFileLabel("Cover Image uploaded");
+            setFileLabel('Cover Image Uploaded'); // Update to show the file name
 
             // Create preview URL for the new file
             const reader = new FileReader();
@@ -158,13 +158,28 @@ const CoverURL = () => {
         Category: Yup.string().required('Category is required'),
         TagName: Yup.array()
             .min(1, 'At least one TagName is required')
-            .max(5, 'Maximum 5 SubCategories allowed')
+            .max(7, 'Maximum 7 SubCategories allowed')
             .required('At least one TagName is required'),
         CoverName: Yup.string().required('CoverName is required'),
         CoverURL: Yup.mixed()
             .test('fileRequired', 'Cover Image is required', function (value) {
                 if (isEditing && !value && currentImage) return true;
                 return value instanceof File;
+            // })
+            // .test('fileDimensions', 'Image dimensions must be 1070 x 950 pixels', function (value) {
+            //     return new Promise((resolve) => {
+            //         if (!value) return resolve(true); // No file provided, skip dimension check
+            //         const reader = new FileReader();
+            //         reader.onload = (e) => {
+            //             const img = new Image();
+            //             img.onload = () => {
+            //                 resolve(img.width === 1070 && img.height === 950);
+            //             };
+            //             img.onerror = () => resolve(false);
+            //             img.src = e.target.result;
+            //         };
+            //         reader.readAsDataURL(value);
+            //     });
             }),
         CoverPremium: Yup.boolean(),
         Hide: Yup.boolean(),
@@ -257,14 +272,14 @@ const CoverURL = () => {
     };
 
     const handleTagNameSelect = (TagName) => {
-        if (formik.values.TagName.length < 5) {
+        if (formik.values.TagName.length < 7) {
             const updatedTagName = [...formik.values.TagName];
             if (!updatedTagName.includes(TagName)) {
                 updatedTagName.push(TagName);
                 formik.setFieldValue('TagName', updatedTagName);
             }
         } else {
-            toast.error('Maximum 5 TagName allowed');
+            toast.error('Maximum 7 TagName allowed');
         }
     };
 
@@ -273,7 +288,7 @@ const CoverURL = () => {
             return;
         }
 
-        if (formik.values.TagName.length < 5) {
+        if (formik.values.TagName.length < 7) {
             const updatedTagName = [...formik.values.TagName];
             if (!updatedTagName.includes(customTagName.trim())) {
                 updatedTagName.push(customTagName.trim());
@@ -284,7 +299,7 @@ const CoverURL = () => {
                 toast.error('TagName already exists');
             }
         } else {
-            toast.error('Maximum 5 TagName allowed');
+            toast.error('Maximum 7 TagName allowed');
         }
     };
 
@@ -432,7 +447,7 @@ const CoverURL = () => {
                                     />
                                 </td>
                                 <td>
-                                    {cover.TagName?.filter(Boolean).slice(0, 5).join(', ') || 'No Tags'} {/* Fallback text */}
+                                    {cover.TagName?.filter(Boolean).slice(0, 7).join(', ') || 'No Tags'} {/* Fallback text */}
                                 </td>
                                 <td>{cover.CoverName || 'No Name'}</td>
                                 <td>
@@ -553,7 +568,9 @@ const CoverURL = () => {
                         <hr className='bg-black' />
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>{fileLabel} <span className='ps-2' style={{fontSize: "12px"}}>(1070 x 950)</span>
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span>
+                            </Form.Label>
                             <div className="d-flex flex-column">
                                 <div className="d-flex align-items-center">
                                     <Form.Control
@@ -563,10 +580,24 @@ const CoverURL = () => {
                                         onChange={handleFileChange}
                                         onBlur={formik.handleBlur}
                                         className="d-none"
+                                        accept="image/*"
                                     />
-                                    <label htmlFor="CoverURL" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <label
+                                        htmlFor="CoverURL"
+                                        className="btn mb-0 p-4 bg-white w-100 rounded-2 position-relative"
+                                        style={{ border: "1px dotted #c1c1c1" }}
+                                    >
                                         <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                        <div style={{ color: "#c1c1c1" }}>{isEditing ? "Select New Image" : "Select Image"}</div>
+                                        <div className="d-flex flex-column align-items-center gap-1">
+                                            <span style={{ color: "#c1c1c1" }}>
+                                                {isEditing ? "Select New Image" : "Select Image"}
+                                            </span>
+                                            {selectedFile && (
+                                                <span style={{ fontSize: "0.8rem", color:"#5E95FE" }}>
+                                                    {selectedFile.name}
+                                                </span>
+                                            )}
+                                        </div>
                                     </label>
                                 </div>
 
@@ -582,7 +613,7 @@ const CoverURL = () => {
                                 )} */}
 
                                 {formik.touched.CoverURL && formik.errors.CoverURL && (
-                                    <div className="text-danger mt-1">
+                                    <div className="invalid-feedback d-block">
                                         {formik.errors.CoverURL}
                                     </div>
                                 )}

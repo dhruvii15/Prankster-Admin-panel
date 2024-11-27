@@ -17,6 +17,7 @@ const Category = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [fileLabel, setFileLabel] = useState('Category Image Upload');
+    const [selectedFileName, setSelectedFileName] = useState('');
     const [activeTab, setActiveTab] = useState('audio');
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -25,11 +26,13 @@ const Category = () => {
             if (mode === 'add') {
                 setId(undefined);
                 setFileLabel('Category Image Upload');
+                setSelectedFileName('');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
             setFileLabel('Category Image Upload');
+            setSelectedFileName('');
         }
         setVisible(!visible);
     };
@@ -89,6 +92,7 @@ const Category = () => {
                 resetForm();
                 setId(undefined);
                 setFileLabel('Category Image Upload');
+                setSelectedFileName('');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -272,22 +276,33 @@ const Category = () => {
 
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="CategoryImage"
-                                    name="CategoryImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("CategoryImage", file);
-                                        setFileLabel(file ? "Category Image uploaded" : "Category Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="CategoryImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}><FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} /><div style={{ color: "#c1c1c1" }}>Select Image</div></label>
+                            <div className="d-flex flex-column">
+                                <div className="d-flex align-items-center">
+                                    <Form.Control
+                                        type="file"
+                                        id="CategoryImage"
+                                        name="CategoryImage"
+                                        onChange={(event) => {
+                                            let file = event.currentTarget.files[0];
+                                            formik.setFieldValue("CategoryImage", file);
+                                            setFileLabel("Category Image uploaded");
+                                            setSelectedFileName(file ? file.name : '');
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        label="Choose File"
+                                        className="d-none"
+                                        custom
+                                    />
+                                    <label htmlFor="CategoryImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                        <div style={{ color: "#c1c1c1" }}>Select Image</div>
+                                        {selectedFileName && (
+                                            <span style={{ fontSize: "0.8rem", color:"#5E95FE" }}>
+                                                {selectedFileName}
+                                            </span>
+                                        )}
+                                    </label>
+                                </div>
                             </div>
                             {formik.errors.CategoryImage && formik.touched.CategoryImage && (
                                 <div className="invalid-feedback d-block">

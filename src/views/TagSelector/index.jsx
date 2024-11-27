@@ -12,7 +12,7 @@ const TagSelector = ({
   customTagName,
   setCustomTagName,
   handleCustomTagAdd,
-  maxTags = 5,
+  maxTags = 7,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -22,7 +22,7 @@ const TagSelector = ({
 
   // Sort available tags alphabetically
   const sortedTags = [...availableTags].sort((a, b) => a.localeCompare(b));
-  const visibleTags = isExpanded ? sortedTags : sortedTags.slice(0, 5);
+  const visibleTags = isExpanded ? sortedTags : sortedTags.slice(0, 7);
   const totalTags = sortedTags.length;
 
   return (
@@ -101,7 +101,7 @@ const TagSelector = ({
               </Button>
             ))}
 
-            {totalTags > 5 && !isExpanded && (
+            {totalTags > 7 && !isExpanded && (
               <span
                 style={{
                   marginLeft: '8px',
@@ -118,11 +118,11 @@ const TagSelector = ({
                 tabIndex={0} // Make it focusable
                 className="border px-2 py-1 rounded-2"
               >
-                + {totalTags - 5}
+                + {totalTags - 7}
               </span>
             )}
 
-            {totalTags > 5 && (
+            {totalTags > 7 && (
               <Button
                 onClick={toggleExpand}
                 onKeyDown={(e) => {
