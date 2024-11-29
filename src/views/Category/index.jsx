@@ -176,6 +176,11 @@ const Category = () => {
         return items;
     };
 
+    const getCategoryCount = (type) => {
+        if (type === 'all') return data.length;
+        return data.filter(item => item.Type.split(',').includes(type)).length;
+    };
+
     if (loading) return (
         <div
             style={{
@@ -212,7 +217,7 @@ const Category = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            All
+                            All {activeTab === 'all' && `(${getCategoryCount('all')})`}
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -224,7 +229,7 @@ const Category = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Audio
+                            Audio {activeTab === 'audio' && `(${getCategoryCount('audio')})`}
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -236,7 +241,7 @@ const Category = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Video
+                            Video {activeTab === 'video' && `(${getCategoryCount('video')})`}
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -248,7 +253,7 @@ const Category = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Gallery
+                            Gallery {activeTab === 'gallery' && `(${getCategoryCount('gallery')})`}
                         </Nav.Link>
                     </Nav.Item>
                 </Nav>

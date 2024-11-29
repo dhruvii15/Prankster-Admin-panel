@@ -19,7 +19,6 @@ const Video = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [videoFileLabel, setVideoFileLabel] = useState('Video File Upload');
-    const [selectedVideo, setSelectedVideo] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedVideoFileName, setSelectedVideoFileName] = useState("");
@@ -55,7 +54,7 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/video/read')
+        axios.post('https://pslink.world/api/video/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -118,6 +117,12 @@ const Video = () => {
         setFilteredData(filtered);
         setCurrentPage(1);
     };
+
+    const activeTabCount = activeTab === 'all'
+        ? filteredData.length
+        : filteredData.filter(item =>
+            item.CategoryName.toLowerCase() === activeTab
+        ).length;
 
     // Update useEffect to handle filtering
     useEffect(() => {
@@ -299,8 +304,8 @@ const Video = () => {
                     Add New Video
                 </Button>
                 <Form.Select
-                    value={selectedVideo}
-                    onChange={(e) => setSelectedVideo(e.target.value)}
+                    value={selectedFilter}
+                    onChange={(e) => setSelectedFilter(e.target.value)}
                     style={{ width: 'auto' }}
                 >
                     <option value="">All</option>
@@ -322,7 +327,7 @@ const Video = () => {
                             setCurrentPage(1);
                         }}
                     >
-                        All
+                        All {activeTab === 'all' ? `(${activeTabCount})` : " "}
                     </Nav.Link>
                 </Nav.Item>
                 {category.map((cat) => (
@@ -335,7 +340,10 @@ const Video = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            {cat.CategoryName}
+                            <span className='pe-2'>{cat.CategoryName}</span>
+                            {activeTab === cat.CategoryName.toLowerCase()
+                                ? `(${activeTabCount})`
+                                : " " }
                         </Nav.Link>
                     </Nav.Item>
                 ))}

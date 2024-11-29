@@ -76,17 +76,11 @@ const UserAudio = () => {
         if (!formData.categoryId) {
             errors.categoryId = "Please select a category.";
         }
-
-        // Validate artistName
-        if (!formData.artistName.trim()) {
-            errors.artistName = "Artist name is required.";
-        }
-
         setFormErrors(errors);
 
         // If validation fails, stop the submission
         if (Object.keys(errors).length > 0) {
-           
+
             return;
         }
 
@@ -290,7 +284,7 @@ const UserAudio = () => {
 
                         {/* Artist Name Input */}
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
                             <Form.Control
                                 type="text"
                                 placeholder="Enter artist name"
@@ -306,16 +300,13 @@ const UserAudio = () => {
                                 }}
                                 isInvalid={!!formErrors.artistName}
                             />
-                            <Form.Control.Feedback type="invalid">
-                                {formErrors.artistName}
-                            </Form.Control.Feedback>
                         </Form.Group>
 
                         <Row className="mt-5">
                             <Col xs={6}>
                                 <Button
                                     variant="secondary"
-                                    onClick={() => toggleModal()}
+                                    onClick={handleModalClose}
                                     disabled={formLoading}
                                     className='w-100 rounded-3 text-black'
                                     style={{ background: "#F6F7FB" }}

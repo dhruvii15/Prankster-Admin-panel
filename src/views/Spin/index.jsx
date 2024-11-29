@@ -46,6 +46,8 @@ const Spin = () => {
         return data.filter(item => item.Type.toLowerCase() === activeTab.toLowerCase());
     };
 
+    const activeTabCount = getFilteredData(data).length;
+
     const getData = () => {
         setLoading(true);
         axios.post('https://pslink.world/api/admin/spin/read')
@@ -245,7 +247,7 @@ const Spin = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Audio
+                            Audio {activeTab === 'audio' && `(${activeTabCount})`}
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -257,7 +259,7 @@ const Spin = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Video
+                            Video {activeTab === 'video' && `(${activeTabCount})`}
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -269,7 +271,7 @@ const Spin = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Gallery
+                            Gallery {activeTab === 'gallery' && `(${activeTabCount})`}
                         </Nav.Link>
                     </Nav.Item>
                 </Nav>

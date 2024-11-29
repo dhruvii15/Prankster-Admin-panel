@@ -30,6 +30,7 @@ const CoverURL = () => {
     const [showCustomInput, setShowCustomInput] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
     console.log(previewUrl);
+    
 
 
     const renderPaginationItems = () => {
@@ -106,7 +107,8 @@ const CoverURL = () => {
         setLoading(true);
         axios.post('https://pslink.world/api/cover/read')
             .then((res) => {
-                setData(res.data.data.reverse());
+                const reversedData = res.data.data.reverse();
+                setData(reversedData);
                 setLoading(false);
             })
             .catch((err) => {
@@ -148,6 +150,8 @@ const CoverURL = () => {
                 return categoryData;
         }
     };
+
+    const activeTabCount = filterData(data).length;
 
     const handleTabSelect = (tab) => {
         setActiveTab(tab);
@@ -408,7 +412,7 @@ const CoverURL = () => {
                         onClick={() => handleTabSelect('emoji')}
                         className={activeTab === 'emoji' ? 'active-tab' : ''}
                     >
-                        Emoji
+                        Emoji {activeTab === 'emoji' && `(${activeTabCount})`}
                     </Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -417,7 +421,7 @@ const CoverURL = () => {
                         onClick={() => handleTabSelect('realistic')}
                         className={activeTab === 'realistic' ? 'active-tab' : ''}
                     >
-                        Realistic
+                        Realistic {activeTab === 'realistic' && `(${activeTabCount})`}
                     </Nav.Link>
                 </Nav.Item>
             </Nav>

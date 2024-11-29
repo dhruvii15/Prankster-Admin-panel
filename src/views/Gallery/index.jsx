@@ -19,7 +19,6 @@ const Gallery = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Gallery Image Upload');
-    const [selectedAudio, setSelectedAudio] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
@@ -43,7 +42,7 @@ const Gallery = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/gallery/read')
+        axios.post('https://pslink.world/api/gallery/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -106,6 +105,13 @@ const Gallery = () => {
         setFilteredData(filtered);
         setCurrentPage(1);
     };
+
+    const activeTabCount = activeTab === 'all'
+        ? filteredData.length
+        : filteredData.filter(item =>
+            item.CategoryName.toLowerCase() === activeTab
+        ).length;
+
 
     // Update useEffect to handle filtering
     useEffect(() => {
@@ -309,7 +315,7 @@ const Gallery = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            All
+                            All {activeTab === 'all' ? `(${activeTabCount})` : " "}
                         </Nav.Link>
                     </Nav.Item>
                     {category.map((cat) => (
@@ -322,7 +328,10 @@ const Gallery = () => {
                                     setCurrentPage(1);
                                 }}
                             >
-                                {cat.CategoryName}
+                                <span className='pe-2'>{cat.CategoryName}</span>
+                            {activeTab === cat.CategoryName.toLowerCase()
+                                ? `(${activeTabCount})`
+                                : " " }
                             </Nav.Link>
                         </Nav.Item>
                     ))}

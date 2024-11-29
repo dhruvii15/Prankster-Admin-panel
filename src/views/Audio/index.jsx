@@ -18,7 +18,6 @@ const Audio = () => {
     const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [selectedAudio, setSelectedAudio] = useState("");
     const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
     const [filteredData, setFilteredData] = useState([]);
@@ -46,7 +45,7 @@ const Audio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/audio/read')
+        axios.post('https://pslink.world/api/audio/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -71,7 +70,7 @@ const Audio = () => {
                 toast.error("Failed to fetch category.");
             });
     };
-    
+
 
     useEffect(() => {
         getData();
@@ -112,6 +111,12 @@ const Audio = () => {
         setCurrentPage(1);
     };
 
+    const activeTabCount = activeTab === 'all'
+        ? filteredData.length
+        : filteredData.filter(item =>
+            item.CategoryName.toLowerCase() === activeTab
+        ).length;
+
     // Update useEffect to handle filtering
     useEffect(() => {
         filterAudioData(data, activeTab, selectedFilter);
@@ -150,8 +155,8 @@ const Audio = () => {
                 formData.append('Hide', values.Hide);  // Add Hide field to formData
 
                 const request = id !== undefined
-                    ? axios.patch(`http://localhost:5000/api/audio/update/${id}`, formData)
-                    : axios.post('http://localhost:5000/api/audio/create', formData);
+                    ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/audio/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -189,7 +194,7 @@ const Audio = () => {
     };
 
     const handlePremiumToggle = (audioId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -201,7 +206,7 @@ const Audio = () => {
     };
 
     const handleHideToggle = (audioId, currentHideStatus) => {
-        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -214,7 +219,7 @@ const Audio = () => {
 
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`http://localhost:5000/api/audio/delete/${audioId}`)
+            axios.delete(`https://pslink.world/api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -296,8 +301,8 @@ const Audio = () => {
                     Add New Audio
                 </Button>
                 <Form.Select
-                    value={selectedAudio}
-                    onChange={(e) => setSelectedAudio(e.target.value)}
+                    value={selectedFilter}
+                    onChange={(e) => setSelectedFilter(e.target.value)}
                     style={{ width: 'auto' }}
                 >
                     <option value="">All</option>
@@ -310,33 +315,36 @@ const Audio = () => {
 
             {/* Category Tabs Navigation */}
             <Nav variant="tabs" className='pt-4'>
-                    <Nav.Item>
+                <Nav.Item>
+                    <Nav.Link
+                        active={activeTab === 'all'}
+                        className={activeTab === 'all' ? 'active-tab' : ''}
+                        onClick={() => {
+                            setActiveTab('all');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        All {activeTab === 'all' ? `(${activeTabCount})` : " "}
+                    </Nav.Link>
+                </Nav.Item>
+                {category.map((cat) => (
+                    <Nav.Item key={cat._id}>
                         <Nav.Link
-                            active={activeTab === 'all'}
-                            className={activeTab === 'all' ? 'active-tab' : ''}
+                            active={activeTab === cat.CategoryName.toLowerCase()}
+                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
                             onClick={() => {
-                                setActiveTab('all');
+                                setActiveTab(cat.CategoryName.toLowerCase());
                                 setCurrentPage(1);
                             }}
                         >
-                            All
+                            <span className='pe-2'>{cat.CategoryName}</span>
+                            {activeTab === cat.CategoryName.toLowerCase()
+                                ? `(${activeTabCount})`
+                                : " " }
                         </Nav.Link>
                     </Nav.Item>
-                    {category.map((cat) => (
-                        <Nav.Item key={cat._id}>
-                            <Nav.Link
-                                active={activeTab === cat.CategoryName.toLowerCase()}
-                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                                onClick={() => {
-                                    setActiveTab(cat.CategoryName.toLowerCase());
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                {cat.CategoryName}
-                            </Nav.Link>
-                        </Nav.Item>
-                    ))}
-                </Nav>
+                ))}
+            </Nav>
 
             <Modal
                 show={visible}
@@ -416,7 +424,7 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}<span className='ps-2' style={{fontSize: "12px"}}>(1070 x 950)</span></Form.Label>
+                            <Form.Label className='fw-bold'>{imageFileLabel}<span className='ps-2' style={{ fontSize: "12px" }}>(1070 x 950)</span></Form.Label>
                             <div className="d-flex flex-column">
                                 <Form.Control
                                     type="file"
