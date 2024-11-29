@@ -51,7 +51,7 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5000/api/video/read')
+        axios.post('https://pslink.world/api/video/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -96,7 +96,7 @@ const Video = () => {
     };
 
     const getCategory = () => {
-        axios.post('http://localhost:5000/api/category/read')
+        axios.post('https://pslink.world/api/category/read')
             .then((res) => {
                 setCategory(res.data.data);
             })
@@ -113,11 +113,21 @@ const Video = () => {
 
     const videoSchema = Yup.object().shape({
         VideoName: Yup.string().required('Video Name is required'),
-        Video: Yup.mixed().required('Video File is required'),
+        Video: Yup.mixed()
+            .required('Video File is required')
+            .test(
+                'fileType',
+                'Only video files are allowed',
+                (value) => {
+                    if (!value) return false; // If no file is uploaded
+                    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
+                    return allowedTypes.includes(value.type); // Check file MIME type
+                }
+            ),
         VideoPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Category Name is required'),
-        Hide: Yup.boolean()
-    });
+        Hide: Yup.boolean(),
+    });    
 
     const formik = useFormik({
         initialValues: {
@@ -141,8 +151,8 @@ const Video = () => {
                 formData.append('Hide', values.Hide);
         
                 const request = id !== undefined
-                    ? axios.patch(`http://localhost:5000/api/video/update/${id}`, formData)
-                    : axios.post('http://localhost:5000/api/video/create', formData);
+                    ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/video/create', formData);
         
                 const res = await request;
                 setSubmitting(false);
@@ -178,7 +188,7 @@ const Video = () => {
     };
 
     const handleHideToggle = (videoId, currentHideStatus) => {
-        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -190,7 +200,7 @@ const Video = () => {
     };
 
     const handlePremiumToggle = (videoId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5000/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -203,7 +213,7 @@ const Video = () => {
 
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video?")) {
-            axios.delete(`http://localhost:5000/api/video/delete/${videoId}`)
+            axios.delete(`https://pslink.world/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
