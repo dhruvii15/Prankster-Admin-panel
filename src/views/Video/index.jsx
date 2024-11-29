@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -24,6 +24,10 @@ const Video = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedVideoFileName, setSelectedVideoFileName] = useState("");
 
+
+    // New state for category and additional filters
+    const [activeTab, setActiveTab] = useState('all');
+    const [selectedFilter, setSelectedFilter] = useState('');
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -51,11 +55,11 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/video/read')
+        axios.post('http://localhost:5000/api/video/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
-                setFilteredData(newData);
+                setFilteredData(newData, activeTab, selectedFilter);
                 setLoading(false);
             })
             .catch((err) => {
@@ -65,40 +69,10 @@ const Video = () => {
             });
     };
 
-    // Add useEffect for filtering
-    useEffect(() => {
-        filterVideoData();
-    }, [selectedVideo, data]);
-
-    // Add filtering function
-    const filterVideoData = () => {
-        let filtered = [...data];
-
-        switch (selectedVideo) {
-            case "Hide":
-                filtered = data.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = data.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = data.filter(item => item.VideoPremium === true);
-                break;
-            case "Free":
-                filtered = data.filter(item => item.VideoPremium === false);
-                break;
-            default:
-                filtered = data;
-        }
-
-        setFilteredData(filtered);
-        setCurrentPage(1); // Reset to first page when filter changes
-    };
-
     const getCategory = () => {
         axios.post('https://pslink.world/api/category/read')
             .then((res) => {
-                setCategory(res.data.data);
+                setCategory(res.data.data.filter(cat => cat.Type.includes('video')));
             })
             .catch((err) => {
                 console.error(err);
@@ -111,23 +85,53 @@ const Video = () => {
         getCategory();
     }, []);
 
+    // Updated filtering function
+    const filterGalleryData = (dataToFilter, categoryTab, additionalFilter) => {
+        let filtered = [...dataToFilter];
+
+        // Filter by category
+        if (categoryTab !== 'all') {
+            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
+            if (selectedCategory) {
+                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            }
+        }
+
+        // Apply additional filters
+        switch (additionalFilter) {
+            case "Hide":
+                filtered = filtered.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = filtered.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = filtered.filter(item => item.GalleryPremium === true);
+                break;
+            case "Free":
+                filtered = filtered.filter(item => item.GalleryPremium === false);
+                break;
+            default:
+                break;
+        }
+
+        setFilteredData(filtered);
+        setCurrentPage(1);
+    };
+
+    // Update useEffect to handle filtering
+    useEffect(() => {
+        filterGalleryData(data, activeTab, selectedFilter);
+    }, [activeTab, selectedFilter, data]);
+
+
     const videoSchema = Yup.object().shape({
         VideoName: Yup.string().required('Video Name is required'),
-        Video: Yup.mixed()
-            .required('Video File is required')
-            .test(
-                'fileType',
-                'Only video files are allowed',
-                (value) => {
-                    if (!value) return false; // If no file is uploaded
-                    const allowedTypes = ['video/mp4', 'video/webm', 'video/ogg'];
-                    return allowedTypes.includes(value.type); // Check file MIME type
-                }
-            ),
+        Video: Yup.string().required('Video File is required'),
         VideoPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Category Name is required'),
         Hide: Yup.boolean(),
-    });    
+    });
 
     const formik = useFormik({
         initialValues: {
@@ -149,11 +153,11 @@ const Video = () => {
                 formData.append('VideoPremium', values.VideoPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('Hide', values.Hide);
-        
+
                 const request = id !== undefined
                     ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
                     : axios.post('https://pslink.world/api/video/create', formData);
-        
+
                 const res = await request;
                 setSubmitting(false);
                 resetForm();
@@ -306,6 +310,37 @@ const Video = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
+
+            {/* Category Tabs Navigation */}
+            <Nav variant="tabs" className='pt-4'>
+                <Nav.Item>
+                    <Nav.Link
+                        active={activeTab === 'all'}
+                        className={activeTab === 'all' ? 'active-tab' : ''}
+                        onClick={() => {
+                            setActiveTab('all');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        All
+                    </Nav.Link>
+                </Nav.Item>
+                {category.map((cat) => (
+                    <Nav.Item key={cat._id}>
+                        <Nav.Link
+                            active={activeTab === cat.CategoryName.toLowerCase()}
+                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab(cat.CategoryName.toLowerCase());
+                                setCurrentPage(1);
+                            }}
+                        >
+                            {cat.CategoryName}
+                        </Nav.Link>
+                    </Nav.Item>
+                ))}
+            </Nav>
+
             <Modal
                 show={visible}
                 onHide={() => !isSubmitting && toggleModal('add')}
@@ -484,6 +519,7 @@ const Video = () => {
                         <th>Video Name</th>
                         <th>Artist Name</th>
                         <th>Video File</th>
+                        <th>Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
                         <th>Actions</th>
@@ -508,8 +544,8 @@ const Video = () => {
                                         />
                                         Your browser does not support the video element.
                                     </video>
-
                                 </td>
+                                <td>{video.CategoryName}</td>
                                 <td>
                                     <Button
                                         className='bg-transparent border-0 fs-4'

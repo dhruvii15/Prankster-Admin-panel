@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -19,10 +19,13 @@ const Gallery = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Gallery Image Upload');
-    const [selectedGallery, setSelectedGallery] = useState("");
+    const [selectedAudio, setSelectedAudio] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-
+    
+    // New state for category and additional filters
+    const [activeTab, setActiveTab] = useState('all');
+    const [selectedFilter, setSelectedFilter] = useState('');
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -40,11 +43,11 @@ const Gallery = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/gallery/read')
+        axios.post('http://localhost:5000/api/gallery/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
-                setFilteredData(newData);
+                filterGalleryData(newData, activeTab, selectedFilter);
                 setLoading(false);
             })
             .catch((err) => {
@@ -54,40 +57,10 @@ const Gallery = () => {
             });
     };
 
-    // Add useEffect for filtering
-    useEffect(() => {
-        filterGalleryData();
-    }, [selectedGallery, data]);
-
-    // Add filtering function
-    const filterGalleryData = () => {
-        let filtered = [...data];
-
-        switch (selectedGallery) {
-            case "Hide":
-                filtered = data.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = data.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = data.filter(item => item.GalleryPremium === true);
-                break;
-            case "Free":
-                filtered = data.filter(item => item.GalleryPremium === false);
-                break;
-            default:
-                filtered = data;
-        }
-
-        setFilteredData(filtered);
-        setCurrentPage(1); // Reset to first page when filter changes
-    };
-
     const getCategory = () => {
         axios.post('https://pslink.world/api/category/read')
             .then((res) => {
-                setCategory(res.data.data);
+                setCategory(res.data.data.filter(cat => cat.Type.includes('gallery')));
             })
             .catch((err) => {
                 console.error(err);
@@ -99,6 +72,45 @@ const Gallery = () => {
         getData();
         getCategory();
     }, []);
+
+    // Updated filtering function
+    const filterGalleryData = (dataToFilter, categoryTab, additionalFilter) => {
+        let filtered = [...dataToFilter];
+
+        // Filter by category
+        if (categoryTab !== 'all') {
+            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
+            if (selectedCategory) {
+                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            }
+        }
+
+        // Apply additional filters
+        switch (additionalFilter) {
+            case "Hide":
+                filtered = filtered.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = filtered.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = filtered.filter(item => item.GalleryPremium === true);
+                break;
+            case "Free":
+                filtered = filtered.filter(item => item.GalleryPremium === false);
+                break;
+            default:
+                break;
+        }
+
+        setFilteredData(filtered);
+        setCurrentPage(1);
+    };
+
+    // Update useEffect to handle filtering
+    useEffect(() => {
+        filterGalleryData(data, activeTab, selectedFilter);
+    }, [activeTab, selectedFilter, data]);
 
     const gallerySchema = Yup.object().shape({
         GalleryName: Yup.string().required('Gallery Name is required'),
@@ -210,8 +222,7 @@ const Gallery = () => {
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage)
-
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
     const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
@@ -265,26 +276,58 @@ const Gallery = () => {
                     <p>Type / Gallery Management</p>
                 </div>
             </div>
-            <div className="d-flex justify-content-between align-items-center">
-                <Button
-                    onClick={() => toggleModal('add')}
-                    className='my-4 rounded-3 border-0'
-                    style={{ backgroundColor: "#F9E238", color: "black" }}
-                >
-                    Add New Gallery
-                </Button>
-                <Form.Select
-                    value={selectedGallery}
-                    onChange={(e) => setSelectedGallery(e.target.value)}
-                    style={{ width: 'auto' }}
-                >
-                    <option value="">All</option>
-                    <option value="Hide">Hide</option>
-                    <option value="Unhide">Unhide</option>
-                    <option value="Premium">Premium</option>
-                    <option value="Free">Free</option>
-                </Form.Select>
+            <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
+                {/* Filters Dropdown */}
+                    <Button 
+                        onClick={() => toggleModal('add')} 
+                        className='rounded-3 border-0' 
+                        style={{ backgroundColor: "#F9E238", color: "black" }}
+                    >
+                        Add New Gallery
+                    </Button>
+                    <Form.Select
+                        value={selectedFilter}
+                        onChange={(e) => setSelectedFilter(e.target.value)}
+                        style={{ width: 'auto' }}
+                    >
+                        <option value="">All</option>
+                        <option value="Hide">Hide</option>
+                        <option value="Unhide">Unhide</option>
+                        <option value="Premium">Premium</option>
+                        <option value="Free">Free</option>
+                    </Form.Select>
             </div>
+
+            {/* Category Tabs Navigation */}
+            <Nav variant="tabs" className='pt-5'>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'all'}
+                            className={activeTab === 'all' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('all');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            All
+                        </Nav.Link>
+                    </Nav.Item>
+                    {category.map((cat) => (
+                        <Nav.Item key={cat._id}>
+                            <Nav.Link
+                                active={activeTab === cat.CategoryName.toLowerCase()}
+                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
+                                onClick={() => {
+                                    setActiveTab(cat.CategoryName.toLowerCase());
+                                    setCurrentPage(1);
+                                }}
+                            >
+                                {cat.CategoryName}
+                            </Nav.Link>
+                        </Nav.Item>
+                    ))}
+                </Nav>
+
             <Modal
                 show={visible}
                 onHide={() => !isSubmitting && toggleModal('add')}
@@ -462,6 +505,7 @@ const Gallery = () => {
                         <th>Gallery Name</th>
                         <th>Artist Name</th>
                         <th>Gallery Image</th>
+                        <th>Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
                         <th>Actions</th>
@@ -477,6 +521,7 @@ const Gallery = () => {
                                 <td>
                                     <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
+                                <td>{gallery.CategoryName}</td>
                                 <td>
                                     <Button
                                         className='bg-transparent border-0 fs-4'
@@ -506,7 +551,7 @@ const Gallery = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={7} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
+                            <td colSpan={8} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
                         </tr>
                     )}
 

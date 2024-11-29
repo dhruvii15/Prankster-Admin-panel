@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination, Col, Row, Spinner } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Col, Row, Spinner, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -18,11 +18,15 @@ const Audio = () => {
     const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
+    const [selectedAudio, setSelectedAudio] = useState("");
     const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
     const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
-    const [selectedAudio, setSelectedAudio] = useState("");
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // New state for category and additional filters
+    const [activeTab, setActiveTab] = useState('all');
+    const [selectedFilter, setSelectedFilter] = useState('');
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -42,11 +46,11 @@ const Audio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/audio/read')
+        axios.post('http://localhost:5000/api/audio/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
-                setFilteredData(newData);
+                setFilteredData(newData, activeTab, selectedFilter);
                 setLoading(false);
             })
             .catch((err) => {
@@ -56,51 +60,62 @@ const Audio = () => {
             });
     };
 
-    // Add useEffect for filtering
-    useEffect(() => {
-        filterAudioData();
-    }, [selectedAudio, data]);
-
-    // Add filtering function
-    const filterAudioData = () => {
-        let filtered = [...data];
-
-        switch (selectedAudio) {
-            case "Hide":
-                filtered = data.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = data.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = data.filter(item => item.AudioPremium === true);
-                break;
-            case "Free":
-                filtered = data.filter(item => item.AudioPremium === false);
-                break;
-            default:
-                filtered = data;
-        }
-
-        setFilteredData(filtered);
-        setCurrentPage(1); // Reset to first page when filter changes
-    };
 
     const getCategory = () => {
         axios.post('https://pslink.world/api/category/read')
             .then((res) => {
-                setCategory(res.data.data);
+                setCategory(res.data.data.filter(cat => cat.Type.includes('audio')));
             })
             .catch((err) => {
                 console.error(err);
                 toast.error("Failed to fetch category.");
             });
     };
+    
 
     useEffect(() => {
         getData();
         getCategory();
     }, []);
+
+    // Updated filtering function
+    const filterAudioData = (dataToFilter, categoryTab, additionalFilter) => {
+        let filtered = [...dataToFilter];
+
+        // Filter by category
+        if (categoryTab !== 'all') {
+            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
+            if (selectedCategory) {
+                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            }
+        }
+
+        // Apply additional filters
+        switch (additionalFilter) {
+            case "Hide":
+                filtered = filtered.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = filtered.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = filtered.filter(item => item.AudioPremium === true);
+                break;
+            case "Free":
+                filtered = filtered.filter(item => item.AudioPremium === false);
+                break;
+            default:
+                break;
+        }
+
+        setFilteredData(filtered);
+        setCurrentPage(1);
+    };
+
+    // Update useEffect to handle filtering
+    useEffect(() => {
+        filterAudioData(data, activeTab, selectedFilter);
+    }, [activeTab, selectedFilter, data]);
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Name is required'),
@@ -135,8 +150,8 @@ const Audio = () => {
                 formData.append('Hide', values.Hide);  // Add Hide field to formData
 
                 const request = id !== undefined
-                    ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
-                    : axios.post('https://pslink.world/api/audio/create', formData);
+                    ? axios.patch(`http://localhost:5000/api/audio/update/${id}`, formData)
+                    : axios.post('http://localhost:5000/api/audio/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -174,7 +189,7 @@ const Audio = () => {
     };
 
     const handlePremiumToggle = (audioId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -186,7 +201,7 @@ const Audio = () => {
     };
 
     const handleHideToggle = (audioId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5000/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -199,7 +214,7 @@ const Audio = () => {
 
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio?")) {
-            axios.delete(`https://pslink.world/api/audio/delete/${audioId}`)
+            axios.delete(`http://localhost:5000/api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -292,6 +307,37 @@ const Audio = () => {
                     <option value="Free">Free</option>
                 </Form.Select>
             </div>
+
+            {/* Category Tabs Navigation */}
+            <Nav variant="tabs" className='pt-4'>
+                    <Nav.Item>
+                        <Nav.Link
+                            active={activeTab === 'all'}
+                            className={activeTab === 'all' ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab('all');
+                                setCurrentPage(1);
+                            }}
+                        >
+                            All
+                        </Nav.Link>
+                    </Nav.Item>
+                    {category.map((cat) => (
+                        <Nav.Item key={cat._id}>
+                            <Nav.Link
+                                active={activeTab === cat.CategoryName.toLowerCase()}
+                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
+                                onClick={() => {
+                                    setActiveTab(cat.CategoryName.toLowerCase());
+                                    setCurrentPage(1);
+                                }}
+                            >
+                                {cat.CategoryName}
+                            </Nav.Link>
+                        </Nav.Item>
+                    ))}
+                </Nav>
+
             <Modal
                 show={visible}
                 onHide={() => !isSubmitting && toggleModal('add')}
@@ -496,6 +542,7 @@ const Audio = () => {
                         <th>Artist Name</th>
                         <th>Audio Image</th>
                         <th>Audio File</th>
+                        <th>Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
                         <th>Actions</th>
@@ -524,6 +571,7 @@ const Audio = () => {
                                         Your browser does not support the audio element.
                                     </audio>
                                 </td>
+                                <td>{audio.CategoryName}</td>
                                 <td>
                                     <Button
                                         className='bg-transparent border-0 fs-4'
@@ -552,7 +600,7 @@ const Audio = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={8} className="text-center">No Data Found</td>
+                            <td colSpan={9} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>
