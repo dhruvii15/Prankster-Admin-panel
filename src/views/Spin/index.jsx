@@ -356,7 +356,8 @@ const Spin = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{coverImageLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>{coverImageLabel} <span className='ps-2' style={{ fontSize: "12px" }}>(1070 x 950)</span>
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
