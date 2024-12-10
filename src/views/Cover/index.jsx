@@ -151,7 +151,22 @@ const CoverURL = () => {
         }
     };
 
-    const activeTabCount = filterData(data).length;
+    const getTabCount = (category) => {
+        const categoryData = data.filter(cover => cover.Category === category);
+    
+        switch (selectedFilter) {
+            case "Hide":
+                return categoryData.filter(cover => cover.Hide === true).length;
+            case "Unhide":
+                return categoryData.filter(cover => cover.Hide === false).length;
+            case "Premium":
+                return categoryData.filter(cover => cover.CoverPremium === true).length;
+            case "Free":
+                return categoryData.filter(cover => cover.CoverPremium === false).length;
+            default:
+                return categoryData.length;
+        }
+    };
 
     const handleTabSelect = (tab) => {
         setActiveTab(tab);
@@ -406,25 +421,25 @@ const CoverURL = () => {
             </div>
 
             <Nav variant="tabs" className="mt-3">
-                <Nav.Item>
-                    <Nav.Link
-                        active={activeTab === 'emoji'}
-                        onClick={() => handleTabSelect('emoji')}
-                        className={activeTab === 'emoji' ? 'active-tab' : ''}
-                    >
-                        Emoji {activeTab === 'emoji' && `(${activeTabCount})`}
-                    </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                    <Nav.Link
-                        active={activeTab === 'realistic'}
-                        onClick={() => handleTabSelect('realistic')}
-                        className={activeTab === 'realistic' ? 'active-tab' : ''}
-                    >
-                        Realistic {activeTab === 'realistic' && `(${activeTabCount})`}
-                    </Nav.Link>
-                </Nav.Item>
-            </Nav>
+    <Nav.Item>
+        <Nav.Link
+            active={activeTab === 'emoji'}
+            onClick={() => handleTabSelect('emoji')}
+            className={activeTab === 'emoji' ? 'active-tab' : ''}
+        >
+            Emoji ({getTabCount('emoji')})
+        </Nav.Link>
+    </Nav.Item>
+    <Nav.Item>
+        <Nav.Link
+            active={activeTab === 'realistic'}
+            onClick={() => handleTabSelect('realistic')}
+            className={activeTab === 'realistic' ? 'active-tab' : ''}
+        >
+            Realistic ({getTabCount('realistic')})
+        </Nav.Link>
+    </Nav.Item>
+</Nav>;
 
             <Table striped bordered hover responsive className='text-center fs-6'>
                 <thead>

@@ -22,7 +22,7 @@ const TagSelector = ({
 
   // Sort available tags alphabetically
   const sortedTags = [...availableTags].sort((a, b) => a.localeCompare(b));
-  const visibleTags = isExpanded ? sortedTags : sortedTags.slice(0, 7);
+  const visibleTags = isExpanded ? sortedTags : sortedTags.slice(0, 5);
   const totalTags = sortedTags.length;
 
   return (
@@ -101,7 +101,7 @@ const TagSelector = ({
               </Button>
             ))}
 
-            {totalTags > 7 && !isExpanded && (
+            {totalTags > 5 && !isExpanded && (
               <span
                 style={{
                   marginLeft: '8px',
@@ -118,11 +118,11 @@ const TagSelector = ({
                 tabIndex={0} // Make it focusable
                 className="border px-2 py-1 rounded-2"
               >
-                + {totalTags - 7}
+                + {totalTags - 5}
               </span>
             )}
 
-            {totalTags > 7 && (
+            {totalTags > 5 && (
               <Button
                 onClick={toggleExpand}
                 onKeyDown={(e) => {

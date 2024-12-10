@@ -46,7 +46,9 @@ const Spin = () => {
         return data.filter(item => item.Type.toLowerCase() === activeTab.toLowerCase());
     };
 
-    const activeTabCount = getFilteredData(data).length;
+    const getTypeCount = (type) => {
+        return data.filter(item => item.Type.toLowerCase() === type.toLowerCase()).length;
+    };
 
     const getData = () => {
         setLoading(true);
@@ -247,7 +249,7 @@ const Spin = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Audio {activeTab === 'audio' && `(${activeTabCount})`}
+                            Audio ({getTypeCount('audio')})
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -259,7 +261,7 @@ const Spin = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Video {activeTab === 'video' && `(${activeTabCount})`}
+                            Video ({getTypeCount('video')})
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -271,7 +273,7 @@ const Spin = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Gallery {activeTab === 'gallery' && `(${activeTabCount})`}
+                            Gallery ({getTypeCount('gallery')})
                         </Nav.Link>
                     </Nav.Item>
                 </Nav>

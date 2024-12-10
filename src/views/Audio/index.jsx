@@ -111,11 +111,6 @@ const Audio = () => {
         setCurrentPage(1);
     };
 
-    const activeTabCount = activeTab === 'all'
-        ? filteredData.length
-        : filteredData.filter(item =>
-            item.CategoryName.toLowerCase() === activeTab
-        ).length;
 
     // Update useEffect to handle filtering
     useEffect(() => {
@@ -314,7 +309,7 @@ const Audio = () => {
             </div>
 
             {/* Category Tabs Navigation */}
-            <Nav variant="tabs" className='pt-4'>
+            <Nav variant="tabs" className="pt-4">
                 <Nav.Item>
                     <Nav.Link
                         active={activeTab === 'all'}
@@ -324,7 +319,7 @@ const Audio = () => {
                             setCurrentPage(1);
                         }}
                     >
-                        All {activeTab === 'all' ? `(${activeTabCount})` : " "}
+                        All ({data.length})
                     </Nav.Link>
                 </Nav.Item>
                 {category.map((cat) => (
@@ -337,10 +332,8 @@ const Audio = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            <span className='pe-2'>{cat.CategoryName}</span>
-                            {activeTab === cat.CategoryName.toLowerCase()
-                                ? `(${activeTabCount})`
-                                : " " }
+                            <span className="pe-2">{cat.CategoryName}</span>
+                            ({data.filter(item => item.CategoryId === cat.CategoryId).length})
                         </Nav.Link>
                     </Nav.Item>
                 ))}

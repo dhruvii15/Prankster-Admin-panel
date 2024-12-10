@@ -55,7 +55,7 @@ const Category = () => {
     // Get filtered data based on selected types
     const getFilteredData = () => {
         if (activeTab === 'all') return data;
-        return data.filter(item => 
+        return data.filter(item =>
             item.Type.split(',').includes(activeTab)
         );
     };
@@ -80,20 +80,20 @@ const Category = () => {
         },
         validationSchema: portfolioSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
-    try {
-        setIsSubmitting(true);
-        const formData = new FormData();
-        formData.append('CategoryName', values.CategoryName);
-        formData.append('CategoryImage', values.CategoryImage);
-        
-        // Convert Type array to JSON string
-        formData.append('Type', JSON.stringify(values.Type));
+            try {
+                setIsSubmitting(true);
+                const formData = new FormData();
+                formData.append('CategoryName', values.CategoryName);
+                formData.append('CategoryImage', values.CategoryImage);
 
-        const request = id !== undefined
-            ? axios.patch(`https://pslink.world/api/category/update/${id}`, formData)
-            : axios.post('https://pslink.world/api/category/create', formData);
+                // Convert Type array to JSON string
+                formData.append('Type', JSON.stringify(values.Type));
 
-        const res = await request;
+                const request = id !== undefined
+                    ? axios.patch(`https://pslink.world/api/category/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/category/create', formData);
+
+                const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
@@ -207,7 +207,7 @@ const Category = () => {
             </div>
             <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
                 {/* Tabs Navigation */}
-                <Nav variant="tabs" className='my-2'>
+                <Nav variant="tabs" className="my-2">
                     <Nav.Item>
                         <Nav.Link
                             active={activeTab === 'all'}
@@ -217,7 +217,7 @@ const Category = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            All {activeTab === 'all' && `(${getCategoryCount('all')})`}
+                            All ({getCategoryCount('all')})
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -229,7 +229,7 @@ const Category = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Audio {activeTab === 'audio' && `(${getCategoryCount('audio')})`}
+                            Audio ({getCategoryCount('audio')})
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -241,7 +241,7 @@ const Category = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Video {activeTab === 'video' && `(${getCategoryCount('video')})`}
+                            Video ({getCategoryCount('video')})
                         </Nav.Link>
                     </Nav.Item>
                     <Nav.Item>
@@ -253,7 +253,7 @@ const Category = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Gallery {activeTab === 'gallery' && `(${getCategoryCount('gallery')})`}
+                            Gallery ({getCategoryCount('gallery')})
                         </Nav.Link>
                     </Nav.Item>
                 </Nav>
@@ -304,8 +304,8 @@ const Category = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel} <span className='ps-2' style={{fontSize: "12px"}}>(350 x 350)</span>
-                            <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>{fileLabel} <span className='ps-2' style={{ fontSize: "12px" }}>(350 x 350)</span>
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex flex-column">
                                 <div className="d-flex align-items-center">
                                     <Form.Control
@@ -327,7 +327,7 @@ const Category = () => {
                                         <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
                                         <div style={{ color: "#c1c1c1" }}>Select Image</div>
                                         {selectedFileName && (
-                                            <span style={{ fontSize: "0.8rem", color:"#5E95FE" }}>
+                                            <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
                                                 {selectedFileName}
                                             </span>
                                         )}
