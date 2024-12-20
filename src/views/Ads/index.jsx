@@ -226,6 +226,7 @@ const Ads = () => {
                                 <option value="nativevideo" label="Nativevideo" />
                                 <option value="intertitial" label="Intertitial" />
                                 <option value="reward" label="Reward" />
+                                <option value="appid" label="AppId" />
                             </Form.Control>
                             <Form.Control.Feedback type="invalid">
                                 {errors.adsName}
