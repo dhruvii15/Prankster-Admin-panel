@@ -4,8 +4,8 @@ import {faDharmachakra, faFileAudio, faHome, faLayerGroup, faPhotoFilm, faRectan
 const menuItems = {
   items: [
     {
-      id: 'navigation',
-      title: 'Navigation',
+      id: 'dashboard',
+      title: 'Dashboard',
       type: 'group',
       icon: 'icon-navigation',
       children: [
@@ -19,14 +19,14 @@ const menuItems = {
       ]
     },
     {
-      id: 'cover',
-      title: 'Cover',
+      id: 'Cover Image',
+      title: 'Cover Image',
       type: 'group',
       icon: 'icon-ui',
       children: [
         {
           id: 'coverImage',
-          title: 'Cover-Image',
+          title: 'Cover Image',
           type: 'item',
           url: '/cover',
           icon: faImage
@@ -34,14 +34,14 @@ const menuItems = {
       ]
     },
     {
-      id: 'Category',
-      title: 'Category',
+      id: 'Prank Category',
+      title: 'Prank Category',
       type: 'group',
       icon: 'icon-ui',
       children: [
         {
-          id: 'category',
-          title: 'Category',
+          id: 'Prank Category',
+          title: 'Prank Category',
           type: 'item',
           url: '/category',
           icon: faLayerGroup
@@ -49,43 +49,43 @@ const menuItems = {
       ]
     },
     {
-      id: 'Type',
-      title: 'Type',
+      id: 'Prank Type',
+      title: 'Prank Type',
       type: 'group',
       icon: 'icon-ui',
       children: [
         {
           id: 'audio',
-          title: 'Audio',
+          title: 'Audio Prank',
           type: 'item',
           url: '/type/audio',
           icon: faFileAudio
         },
         {
           id: 'video',
-          title: 'Video',
+          title: 'Video Prank',
           type: 'item',
           url: '/type/video',
           icon: faVideo
         },
         {
           id: 'gallery',
-          title: 'Gallery',
+          title: 'Image Prank',
           type: 'item',
-          url: '/type/gallery',
+          url: '/type/image',
           icon: faPhotoFilm
         },
       ]
     },
     {
-      id: 'Spin',
-      title: 'Spin',
+      id: 'Spinner',
+      title: 'Spinner',
       type: 'group',
       icon: 'icon-ui',
       children: [
         {
-          id: 'prank',
-          title: 'Prank',
+          id: 'Ready Prank',
+          title: 'Ready Prank',
           type: 'item',
           url: '/spin/prank',
           icon: faDharmachakra
@@ -94,37 +94,37 @@ const menuItems = {
     },
     {
       id: 'User',
-      title: 'User-upload',
+      title: 'User Upload Prank',
       type: 'group',
       icon: 'icon-ui',
       children: [
         {
+          id: 'cover',
+          title: 'Cover Image',
+          type: 'item',
+          url: '/user/cover',
+          icon: faImage
+        },
+        {
           id: 'audio',
-          title: 'Audio',
+          title: 'Audio Prank',
           type: 'item',
           url: '/user/audio',
           icon: faFileAudio
         },
         {
           id: 'video',
-          title: 'Video',
+          title: 'Video Prank',
           type: 'item',
           url: '/user/video',
           icon: faVideo
         },
         {
           id: 'gallery',
-          title: 'Gallery',
+          title: 'Image Prank',
           type: 'item',
-          url: '/user/gallery',
+          url: '/user/image',
           icon: faPhotoFilm
-        },
-        {
-          id: 'cover',
-          title: 'Cover',
-          type: 'item',
-          url: '/user/cover',
-          icon: faImage
         },
       ]
     },

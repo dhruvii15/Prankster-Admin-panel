@@ -30,7 +30,7 @@ const CoverURL = () => {
     const [showCustomInput, setShowCustomInput] = useState(false);
     const [currentImage, setCurrentImage] = useState(null);
     console.log(previewUrl);
-    
+
 
 
     const renderPaginationItems = () => {
@@ -153,7 +153,7 @@ const CoverURL = () => {
 
     const getTabCount = (category) => {
         const categoryData = data.filter(cover => cover.Category === category);
-    
+
         switch (selectedFilter) {
             case "Hide":
                 return categoryData.filter(cover => cover.Hide === true).length;
@@ -184,21 +184,21 @@ const CoverURL = () => {
             .test('fileRequired', 'Cover Image is required', function (value) {
                 if (isEditing && !value && currentImage) return true;
                 return value instanceof File;
-            // })
-            // .test('fileDimensions', 'Image dimensions must be 1070 x 950 pixels', function (value) {
-            //     return new Promise((resolve) => {
-            //         if (!value) return resolve(true); // No file provided, skip dimension check
-            //         const reader = new FileReader();
-            //         reader.onload = (e) => {
-            //             const img = new Image();
-            //             img.onload = () => {
-            //                 resolve(img.width === 1070 && img.height === 950);
-            //             };
-            //             img.onerror = () => resolve(false);
-            //             img.src = e.target.result;
-            //         };
-            //         reader.readAsDataURL(value);
-            //     });
+                // })
+                // .test('fileDimensions', 'Image dimensions must be 1070 x 950 pixels', function (value) {
+                //     return new Promise((resolve) => {
+                //         if (!value) return resolve(true); // No file provided, skip dimension check
+                //         const reader = new FileReader();
+                //         reader.onload = (e) => {
+                //             const img = new Image();
+                //             img.onload = () => {
+                //                 resolve(img.width === 1070 && img.height === 950);
+                //             };
+                //             img.onerror = () => resolve(false);
+                //             img.src = e.target.result;
+                //         };
+                //         reader.readAsDataURL(value);
+                //     });
             }),
         CoverPremium: Yup.boolean(),
         Hide: Yup.boolean(),
@@ -394,7 +394,6 @@ const CoverURL = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Cover Image</h4>
-                    <p>Utilities / CoverImage</p>
                 </div>
             </div>
 
@@ -404,7 +403,7 @@ const CoverURL = () => {
                     className='my-4 rounded-3 border-0'
                     style={{ backgroundColor: "#F9E238" }}
                 >
-                    Add New CoverImage
+                    Add CoverImage
                 </Button>
                 <Form.Select
                     value={selectedFilter}
@@ -421,31 +420,31 @@ const CoverURL = () => {
             </div>
 
             <Nav variant="tabs" className="mt-3">
-    <Nav.Item>
-        <Nav.Link
-            active={activeTab === 'emoji'}
-            onClick={() => handleTabSelect('emoji')}
-            className={activeTab === 'emoji' ? 'active-tab' : ''}
-        >
-            Emoji ({getTabCount('emoji')})
-        </Nav.Link>
-    </Nav.Item>
-    <Nav.Item>
-        <Nav.Link
-            active={activeTab === 'realistic'}
-            onClick={() => handleTabSelect('realistic')}
-            className={activeTab === 'realistic' ? 'active-tab' : ''}
-        >
-            Realistic ({getTabCount('realistic')})
-        </Nav.Link>
-    </Nav.Item>
-</Nav>;
+                <Nav.Item>
+                    <Nav.Link
+                        active={activeTab === 'emoji'}
+                        onClick={() => handleTabSelect('emoji')}
+                        className={activeTab === 'emoji' ? 'active-tab' : ''}
+                    >
+                        Emoji & Gift Cover Image ({getTabCount('emoji')})
+                    </Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                    <Nav.Link
+                        active={activeTab === 'realistic'}
+                        onClick={() => handleTabSelect('realistic')}
+                        className={activeTab === 'realistic' ? 'active-tab' : ''}
+                    >
+                        Realistic Cover Image ({getTabCount('realistic')})
+                    </Nav.Link>
+                </Nav.Item>
+            </Nav>
 
             <Table striped bordered hover responsive className='text-center fs-6'>
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Cover</th>
+                        <th>Cover Image</th>
                         <th>TagName</th>
                         <th>CoverName</th>
                         <th>Premium</th>
@@ -495,14 +494,14 @@ const CoverURL = () => {
                                 </td>
                                 <td>
                                     <Button
-                                        className="bg-transparent border-0 fs-5"
+                                        className="edit-dlt-btn"
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handleEdit(cover)}
                                     >
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
                                     <Button
-                                        className="bg-transparent border-0 text-danger fs-5"
+                                        className="edit-dlt-btn text-danger"
                                         onClick={() => handleDelete(cover._id)}
                                     >
                                         <FontAwesomeIcon icon={faTrash} />
@@ -535,7 +534,7 @@ const CoverURL = () => {
                 keyboard={!isSubmitting}
             >
                 <Modal.Header>
-                    <Modal.Title>{isEditing ? "Edit Cover Image" : "Add New Cover Image"}</Modal.Title>
+                    <Modal.Title>{isEditing ? "Edit Cover Image" : "Add Cover Image"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
@@ -552,12 +551,32 @@ const CoverURL = () => {
                                 isInvalid={formik.touched.Category && !!formik.errors.Category}
                             >
                                 <option value="">Select Category</option>
-                                <option value="emoji">Emoji</option>
-                                <option value="realistic">Realistic</option>
+                                <option value="emoji">Emoji & Gift Cover Image</option>
+                                <option value="realistic">Realistic Cover Image</option>
                             </Form.Control>
                             {formik.errors.Category && formik.touched.Category && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.Category}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Cover Name ( use searching )<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="CoverName"
+                                name="CoverName"
+                                className='py-2'
+                                placeholder="Enter CoverName"
+                                value={formik.values.CoverName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.CoverName && !!formik.errors.CoverName}
+                            />
+                            {formik.errors.CoverName && formik.touched.CoverName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.CoverName}
                                 </div>
                             )}
                         </Form.Group>
@@ -587,7 +606,7 @@ const CoverURL = () => {
                         <hr className='bg-black' />
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel} <span className='ps-2' style={{fontSize: "12px"}}>(1070 x 950)</span>
+                            <Form.Label className='fw-bold'>{fileLabel} <span style={{ fontSize: "12px" }}></span>
                                 <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span>
                             </Form.Label>
                             <div className="d-flex flex-column">
@@ -612,7 +631,7 @@ const CoverURL = () => {
                                                 {isEditing ? "Select New Image" : "Select Image"}
                                             </span>
                                             {selectedFile && (
-                                                <span style={{ fontSize: "0.8rem", color:"#5E95FE" }}>
+                                                <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
                                                     {selectedFile.name}
                                                 </span>
                                             )}
@@ -639,25 +658,6 @@ const CoverURL = () => {
                             </div>
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Cover Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="CoverName"
-                                name="CoverName"
-                                className='py-2'
-                                placeholder="Enter CoverName"
-                                value={formik.values.CoverName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CoverName && !!formik.errors.CoverName}
-                            />
-                            {formik.errors.CoverName && formik.touched.CoverName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.CoverName}
-                                </div>
-                            )}
-                        </Form.Group>
 
                         <div className='d-flex flex-wrap gap-sm-4'>
 

@@ -170,7 +170,6 @@ const Ads = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Ads</h4>
-                    <p>Utilities / Ads</p>
                 </div>
                 <Form className='pe-5 d-flex align-items-center gap-3'>
                     <span>Ads Status : </span>
@@ -293,7 +292,7 @@ const Ads = () => {
                             <td>{ads.AdsId}</td>
                             <td>
                                 <Button
-                                    className='bg-transparent border-0 fs-5'
+                                    className='edit-dlt-btn'
                                     style={{ color: "#0385C3" }}
                                     onClick={() => handleEdit(ads)}
                                     disabled={isSubmitting}
@@ -301,7 +300,7 @@ const Ads = () => {
                                     <FontAwesomeIcon icon={faEdit} />
                                 </Button>
                                 <Button
-                                    className='bg-transparent border-0 text-danger fs-5'
+                                    className='edit-dlt-btn text-danger'
                                     onClick={() => handleDelete(ads._id)}
                                     disabled={isSubmitting}
                                 >

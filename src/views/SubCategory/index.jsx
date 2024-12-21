@@ -246,10 +246,10 @@ const SubCategory = () => {
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{subcategory.SubCategory}</td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(subcategory)}>
+                                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(subcategory)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(subcategory._id)}>
+                                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(subcategory._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>

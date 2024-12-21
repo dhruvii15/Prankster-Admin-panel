@@ -16,7 +16,7 @@ const Category = () => {
     const [data, setData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [fileLabel, setFileLabel] = useState('Category Image Upload');
+    const [fileLabel, setFileLabel] = useState('Prank Category Image Upload');
     const [selectedFileName, setSelectedFileName] = useState('');
     const [activeTab, setActiveTab] = useState('all');
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -25,13 +25,13 @@ const Category = () => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setFileLabel('Category Image Upload');
+                setFileLabel('Prank Category Image Upload');
                 setSelectedFileName('');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setFileLabel('Category Image Upload');
+            setFileLabel('Prank Category Image Upload');
             setSelectedFileName('');
         }
         setVisible(!visible);
@@ -65,8 +65,8 @@ const Category = () => {
     }, []);
 
     const portfolioSchema = Yup.object().shape({
-        CategoryName: Yup.string().required('Category Name is required'),
-        CategoryImage: Yup.mixed().required('Category Image is required'),
+        CategoryName: Yup.string().required('Prank Category Name is required'),
+        CategoryImage: Yup.mixed().required('Prank Category Image is required'),
         Type: Yup.array()
             .min(1, 'Select at least one type')
             .required('Type is required'),
@@ -97,7 +97,7 @@ const Category = () => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setFileLabel('Category Image Upload');
+                setFileLabel('Prank Category Image Upload');
                 setSelectedFileName('');
                 getData();
                 toast.success(res.data.message);
@@ -119,12 +119,12 @@ const Category = () => {
             Type: cardBg.Type.split(','),
         });
         setId(cardBg._id);
-        setFileLabel('Category Image Upload');
+        setFileLabel('Prank Category Image Upload');
         toggleModal('edit');
     };
 
     const handleDelete = (cardBgId) => {
-        if (window.confirm("Are you sure you want to delete this Category?")) {
+        if (window.confirm("Are you sure you want to delete this Prank Category?")) {
             axios.delete(`https://pslink.world/api/category/delete/${cardBgId}`)
                 .then((res) => {
                     getData();
@@ -201,8 +201,7 @@ const Category = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Category Images</h4>
-                    <p>Category / Category</p>
+                    <h4>Prank Category</h4>
                 </div>
             </div>
             <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
@@ -268,7 +267,7 @@ const Category = () => {
                 keyboard={!isSubmitting}
             >
                 <Modal.Header>
-                    <Modal.Title>{id ? "Edit Category" : "Add New Category"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Prank Category" : "Add Prank Category"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
@@ -304,7 +303,27 @@ const Category = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel} <span className='ps-2' style={{ fontSize: "12px" }}>(350 x 350)</span>
+                            <Form.Label className='fw-bold'>Prank Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="CategoryName"
+                                name="CategoryName"
+                                className="py-2"
+                                placeholder="Enter CategoryName"
+                                value={formik.values.CategoryName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.CategoryName && !!formik.errors.CategoryName}
+                            />
+                            {formik.errors.CategoryName && formik.touched.CategoryName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.CategoryName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{fileLabel} <span style={{ fontSize: "12px" }}></span>
                                 <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex flex-column">
                                 <div className="d-flex align-items-center">
@@ -325,7 +344,7 @@ const Category = () => {
                                     />
                                     <label htmlFor="CategoryImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                         <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                        <div style={{ color: "#c1c1c1" }}>Select Image</div>
+                                        <div style={{ color: "#c1c1c1" }}>Select Prank Category Image</div>
                                         {selectedFileName && (
                                             <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
                                                 {selectedFileName}
@@ -337,26 +356,6 @@ const Category = () => {
                             {formik.errors.CategoryImage && formik.touched.CategoryImage && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.CategoryImage}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="CategoryName"
-                                name="CategoryName"
-                                className="py-2"
-                                placeholder="Enter CategoryName"
-                                value={formik.values.CategoryName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.CategoryName && !!formik.errors.CategoryName}
-                            />
-                            {formik.errors.CategoryName && formik.touched.CategoryName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.CategoryName}
                                 </div>
                             )}
                         </Form.Group>
@@ -386,8 +385,8 @@ const Category = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Category Image</th>
-                        <th>Category Name</th>
+                        <th>Prank Category Image</th>
+                        <th>Prank Category Name</th>
                         <th>Type</th>
                         <th>Actions</th>
                     </tr>
@@ -401,10 +400,10 @@ const Category = () => {
                                 <td>{cardBg.CategoryName}</td>
                                 <td>{cardBg.Type}</td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(cardBg)}>
+                                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(cardBg)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(cardBg._id)}>
+                                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(cardBg._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>

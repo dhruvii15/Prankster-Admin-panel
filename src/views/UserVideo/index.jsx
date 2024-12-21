@@ -75,7 +75,7 @@ const UserVideo = () => {
 
         // Validate categoryId
         if (!formData.categoryId) {
-            errors.categoryId = "Please select a category.";
+            errors.categoryId = "Please select a Prank Category.";
         }
         setFormErrors(errors);
 
@@ -185,7 +185,6 @@ const UserVideo = () => {
             <div className='d-sm-flex justify-content-between align-items-center pb-5'>
                 <div>
                     <h4>Video </h4>
-                    <p>User / Video Management</p>
                 </div>
             </div>
 
@@ -219,14 +218,14 @@ const UserVideo = () => {
                                 </td>
                                 <td>
                                     <Button
-                                        className='bg-transparent border-0 fs-4'
+                                        className='edit-dlt-btn'
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handleModalShow(video)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
                                     <Button
-                                        className='bg-transparent border-0 text-danger fs-5'
+                                        className='edit-dlt-btn text-danger'
                                         onClick={() => handleDelete(video._id)}
                                     >
                                         <FontAwesomeIcon icon={faTrash} />
@@ -251,7 +250,7 @@ const UserVideo = () => {
                     <Form onSubmit={handleFormSubmit}>
                         {/* Category Dropdown */}
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Select Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
+                            <Form.Label className='fw-bold'>Select Prank Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
                             <Form.Control
                                 as="select"
                                 value={formData.categoryId}
@@ -266,7 +265,7 @@ const UserVideo = () => {
                                 }}
                                 isInvalid={!!formErrors.categoryId}
                             >
-                                <option value="">Select a category</option>
+                                <option value="">Select a Prank Category</option>
                                 {category.map((cat) => {
                                     if (cat.Type === 'video') {
                                         return (

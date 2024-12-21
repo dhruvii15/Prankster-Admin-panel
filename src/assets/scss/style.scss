@@ -223,7 +223,7 @@ File: style.css
 
 
 .nav-tabs .nav-link {
-    border: 1px solid #E3EAEF !important; 
+    border: 1px solid #c1c1c1 !important; 
 }
 
 .submit{
@@ -258,4 +258,21 @@ File: style.css
     background-color: #C1C1C1; /* Color of the scrollbar thumb */
     border-radius: 10px; /* Round corners for the scrollbar thumb */
     border: 2px solid #C1C1C1; /* Space around the thumb */
+  }
+
+  .edit-dlt-btn{
+    height: 38px;
+    width: 38px;
+    text-align: center;
+    border: 1px solid black;
+    background-color: #e0e0e0;
+    border-radius: 5px;
+    margin: 5px;
+    font-size: 16px !important;
+    padding-left: 10px !important;
+  }
+
+  .edit-dlt-btn:hover{
+    background-color: #e0e0e0;
+    border: 1px solid black;
   }

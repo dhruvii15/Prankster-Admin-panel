@@ -18,8 +18,8 @@ const Audio = () => {
     const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [imageFileLabel, setImageFileLabel] = useState('Audio Image Upload');
-    const [audioFileLabel, setAudioFileLabel] = useState('Audio File Upload');
+    const [imageFileLabel, setImageFileLabel] = useState('Audio Prank Image Upload');
+    const [audioFileLabel, setAudioFileLabel] = useState('Audio Prank File Upload');
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,14 +31,14 @@ const Audio = () => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setImageFileLabel('Audio Image Upload');
-                setAudioFileLabel('Audio File Upload');
+                setImageFileLabel('Audio Prank Image Upload');
+                setAudioFileLabel('Audio Prank File Upload');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setImageFileLabel('Audio Image Upload');
-            setAudioFileLabel('Audio File Upload');
+            setImageFileLabel('Audio Prank Image Upload');
+            setAudioFileLabel('Audio Prank File Upload');
         }
         setVisible(!visible);
     };
@@ -118,10 +118,10 @@ const Audio = () => {
     }, [activeTab, selectedFilter, data]);
 
     const audioSchema = Yup.object().shape({
-        AudioName: Yup.string().required('Audio Name is required'),
-        Audio: Yup.mixed().required('Audio File is required'),
+        AudioName: Yup.string().required('Audio Prank Name is required'),
+        Audio: Yup.mixed().required('Audio Prank File is required'),
         AudioPremium: Yup.boolean(),
-        CategoryId: Yup.string().required('Category Name is required'),
+        CategoryId: Yup.string().required('Prank Category Name is required'),
         Hide: Yup.boolean(),  // Add Hide field to schema
     });
 
@@ -157,8 +157,8 @@ const Audio = () => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setImageFileLabel('Audio Image Upload');
-                setAudioFileLabel('Audio File Upload');
+                setImageFileLabel('Audio Prank Image Upload');
+                setAudioFileLabel('Audio Prank File Upload');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -183,8 +183,8 @@ const Audio = () => {
             Hide: audio.Hide,  // Set Hide value when editing
         });
         setId(audio._id);
-        setImageFileLabel('Audio Image Upload');
-        setAudioFileLabel('Audio File Upload');
+        setImageFileLabel('Audio Prank Image Upload');
+        setAudioFileLabel('Audio Prank File Upload');
         toggleModal('edit');
     };
 
@@ -213,7 +213,7 @@ const Audio = () => {
     };
 
     const handleDelete = (audioId) => {
-        if (window.confirm("Are you sure you want to delete this Audio?")) {
+        if (window.confirm("Are you sure you want to delete this Audio Prank?")) {
             axios.delete(`https://pslink.world/api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
@@ -283,8 +283,7 @@ const Audio = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Audio Files</h4>
-                    <p>Type / Audio Management</p>
+                    <h4>Audio Prank</h4>
                 </div>
             </div>
             <div className="d-flex justify-content-between align-items-center">
@@ -293,7 +292,7 @@ const Audio = () => {
                     className='my-4 rounded-3 border-0'
                     style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
-                    Add New Audio
+                    Add Audio Prank
                 </Button>
                 <Form.Select
                     value={selectedFilter}
@@ -347,12 +346,12 @@ const Audio = () => {
                 keyboard={!isSubmitting}
             >
                 <Modal.Header >
-                    <Modal.Title>{id ? "Edit Audio" : "Add New Audio"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Audio Prank" : "Add Audio Prank"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Prank Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="CategoryId"
@@ -363,7 +362,7 @@ const Audio = () => {
                                 onBlur={formik.handleBlur}
                                 isInvalid={formik.touched.CategoryId && !!formik.errors.CategoryId}
                             >
-                                <option value="">Select a category</option>
+                                <option value="">Select a Prank Category</option>
                                 {category.map((category) => {
                                     if (category.Type === 'audio') {
                                         return (
@@ -383,76 +382,13 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{audioFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex flex-column">
-                                <Form.Control
-                                    type="file"
-                                    id="Audio"
-                                    name="Audio"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("Audio", file);
-                                        setAudioFileLabel(file ? "Audio File uploaded" : "Audio File Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="Audio" className="btn mb-2 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }}>Select Audio File</div>
-                                    {formik.values.Audio && (
-                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                            {formik.values.Audio.name}
-                                        </span>
-                                    )}
-                                </label>
-                            </div>
-                            {formik.errors.Audio && formik.touched.Audio && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Audio}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}<span className='ps-2' style={{ fontSize: "12px" }}>(1070 x 950)</span></Form.Label>
-                            <div className="d-flex flex-column">
-                                <Form.Control
-                                    type="file"
-                                    id="AudioImage"
-                                    name="AudioImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("AudioImage", file);
-                                        setImageFileLabel(file ? "Audio Image uploaded" : "Audio Image Upload");
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="AudioImage" className="btn mb-2 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }}>Select Audio Image</div>
-                                    {formik.values.AudioImage && (
-                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                            {formik.values.AudioImage.name}
-                                        </span>
-                                    )}
-                                </label>
-                            </div>
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Audio Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Audio Prank Name ( use searching )<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="AudioName"
                                 name="AudioName"
                                 className='py-2'
-                                placeholder="Enter AudioName"
+                                placeholder="Enter Audio Prank Name"
                                 value={formik.values.AudioName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -466,7 +402,7 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name ( use searching )</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="ArtistName"
@@ -485,13 +421,77 @@ const Audio = () => {
                             )}
                         </Form.Group>
 
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{imageFileLabel}<span style={{ fontSize: "12px" }}></span></Form.Label>
+                            <div className="d-flex flex-column">
+                                <Form.Control
+                                    type="file"
+                                    id="AudioImage"
+                                    name="AudioImage"
+                                    onChange={(event) => {
+                                        let file = event.currentTarget.files[0];
+                                        formik.setFieldValue("AudioImage", file);
+                                        setImageFileLabel(file ? "Audio Prank Image uploaded" : "Audio Prank Image Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    label="Choose File"
+                                    className="d-none"
+                                    custom
+                                />
+                                <label htmlFor="AudioImage" className="btn mb-2 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                    <div style={{ color: "#c1c1c1" }}>Select Audio Prank Image</div>
+                                    {formik.values.AudioImage && (
+                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                            {formik.values.AudioImage.name}
+                                        </span>
+                                    )}
+                                </label>
+                            </div>
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{audioFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <div className="d-flex flex-column">
+                                <Form.Control
+                                    type="file"
+                                    id="Audio"
+                                    name="Audio"
+                                    onChange={(event) => {
+                                        let file = event.currentTarget.files[0];
+                                        formik.setFieldValue("Audio", file);
+                                        setAudioFileLabel(file ? "Audio Prank File uploaded" : "Audio Prank File Upload");
+                                    }}
+                                    onBlur={formik.handleBlur}
+                                    label="Choose File"
+                                    className="d-none"
+                                    custom
+                                />
+                                <label htmlFor="Audio" className="btn mb-2 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                    <div style={{ color: "#c1c1c1" }}>Select Audio Prank File</div>
+                                    {formik.values.Audio && (
+                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                            {formik.values.Audio.name}
+                                        </span>
+                                    )}
+                                </label>
+                            </div>
+                            {formik.errors.Audio && formik.touched.Audio && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Audio}
+                                </div>
+                            )}
+                        </Form.Group>
+
                         <div className='d-flex flex-wrap gap-sm-4'>
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
                                     id="AudioPremium"
                                     name="AudioPremium"
-                                    label="Premium Audio"
+                                    label="Premium Audio Prank"
                                     checked={formik.values.AudioPremium}
                                     onChange={formik.handleChange}
                                 />
@@ -502,7 +502,7 @@ const Audio = () => {
                                     type="checkbox"
                                     id="Hide"
                                     name="Hide"
-                                    label="Hide Audio"
+                                    label="Hide Audio Prank"
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
                                 />
@@ -539,10 +539,10 @@ const Audio = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Audio Name</th>
+                        <th>Audio Prank Name</th>
                         <th>Artist Name</th>
-                        <th>Audio Image</th>
-                        <th>Audio File</th>
+                        <th>Audio Prank Image</th>
+                        <th>Audio Prank File</th>
                         <th>Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
@@ -590,10 +590,10 @@ const Audio = () => {
                                         <FontAwesomeIcon icon={audio.Hide ? faEyeSlash : faEye} />
                                     </Button></td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
+                                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(audio._id)}>
+                                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(audio._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>

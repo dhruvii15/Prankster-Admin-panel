@@ -28,7 +28,7 @@ const TagSelector = ({
   return (
     <Form.Group>
       <Form.Label className="fw-bold">
-        Searching Tags
+        Searching Tags ( use searching )
         <span className="text-danger ps-2 fw-normal" style={{ fontSize: '17px' }}>
           *
         </span>

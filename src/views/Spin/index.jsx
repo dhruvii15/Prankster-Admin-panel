@@ -15,7 +15,7 @@ const Spin = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [coverImageLabel, setCoverImageLabel] = useState('Cover Image Upload');
-    const [fileLabel, setFileLabel] = useState('File Upload');
+    const [fileLabel, setFileLabel] = useState('Prank Upload');
     const [selectedFileName, setSelectedFileName] = useState('');
     const [selectedCoverImageName, setSelectedCoverImageName] = useState('');
     const [activeTab, setActiveTab] = useState('audio');
@@ -26,7 +26,7 @@ const Spin = () => {
             if (mode === 'add') {
                 setId(undefined);
                 setCoverImageLabel('Cover Image Upload');
-                setFileLabel('File Upload');
+                setFileLabel('Prank Upload');
                 setSelectedFileName('');
                 setSelectedCoverImageName('');
                 formik.resetForm();
@@ -34,7 +34,7 @@ const Spin = () => {
         } else {
             formik.resetForm();
             setCoverImageLabel('Cover Image Upload');
-            setFileLabel('File Upload');
+            setFileLabel('Prank Upload');
             setSelectedFileName('');
             setSelectedCoverImageName('');
         }
@@ -101,7 +101,7 @@ const Spin = () => {
                 resetForm();
                 setId(undefined);
                 setCoverImageLabel('Cover Image Upload');
-                setFileLabel('File Upload');
+                setFileLabel('Prank Upload');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -124,7 +124,7 @@ const Spin = () => {
         });
         setId(spin._id);
         setCoverImageLabel('Cover Image Upload');
-        setFileLabel('File Upload');
+        setFileLabel('Prank Upload');
         toggleModal('edit');
     };
 
@@ -232,7 +232,6 @@ const Spin = () => {
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Prank Management</h4>
-                    <p>Spin / Prank Management</p>
                 </div>
             </div>
 
@@ -283,7 +282,7 @@ const Spin = () => {
                     className="rounded-3 border-0 my-2"
                     style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
-                    Add New Prank
+                    Add Prank
                 </Button>
             </div>
 
@@ -296,7 +295,7 @@ const Spin = () => {
                 keyboard={!isSubmitting}
             >
                 <Modal.Header >
-                    <Modal.Title>{id ? "Edit Spin" : "Add New Spin"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Prank" : "Add Prank"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
@@ -326,6 +325,58 @@ const Spin = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="Name"
+                                name="Name"
+                                className='py-2'
+                                placeholder="Enter Name"
+                                value={formik.values.Name}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.Name && !!formik.errors.Name}
+                            />
+                            {formik.errors.Name && formik.touched.Name && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Name}
+                                </div>
+                            )}
+                        </Form.Group>
+
+<Form.Group className="mb-3">
+    <Form.Label className='fw-bold'>{coverImageLabel} <span className='ps-2' style={{ fontSize: "12px" }}></span>
+        <span className='text-danger fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+    <div className="d-flex align-items-center">
+        <Form.Control
+            type="file"
+            id="CoverImage"
+            name="CoverImage"
+            onChange={(event) => {
+                const file = event.currentTarget.files[0];
+                formik.setFieldValue("CoverImage", file);
+                setCoverImageLabel("Cover Image Upload");
+                setSelectedCoverImageName(file ? file.name : '');
+            }}
+            onBlur={formik.handleBlur}
+            className="d-none"
+        />
+        <label htmlFor="CoverImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+            <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+            <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Cover Image</div>
+            {selectedCoverImageName && (
+                <p style={{ fontSize: "12px", color: "#5E95FE" }}>{selectedCoverImageName}</p>
+            )}
+        </label>
+    </div>
+    {formik.errors.CoverImage && formik.touched.CoverImage && (
+        <div className="invalid-feedback d-block">
+            {formik.errors.CoverImage}
+        </div>
+    )}
+</Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
@@ -335,7 +386,7 @@ const Spin = () => {
                                     onChange={(event) => {
                                         const file = event.currentTarget.files[0];
                                         formik.setFieldValue("File", file);
-                                        setFileLabel("File Upload");
+                                        setFileLabel("Prank Upload");
                                         setSelectedFileName(file ? file.name : '');
                                     }}
                                     onBlur={formik.handleBlur}
@@ -355,58 +406,6 @@ const Spin = () => {
                             {formik.errors.File && formik.touched.File && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.File}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{coverImageLabel} <span className='ps-2' style={{ fontSize: "12px" }}>(1070 x 950)</span>
-                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="CoverImage"
-                                    name="CoverImage"
-                                    onChange={(event) => {
-                                        const file = event.currentTarget.files[0];
-                                        formik.setFieldValue("CoverImage", file);
-                                        setCoverImageLabel("Cover Image Upload");
-                                        setSelectedCoverImageName(file ? file.name : '');
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    className="d-none"
-                                />
-                                <label htmlFor="CoverImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Cover Image</div>
-                                    {selectedCoverImageName && (
-                                        <p style={{ fontSize: "12px", color: "#5E95FE" }}>{selectedCoverImageName}</p>
-                                    )}
-                                </label>
-                            </div>
-                            {formik.errors.CoverImage && formik.touched.CoverImage && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.CoverImage}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="Name"
-                                name="Name"
-                                className='py-2'
-                                placeholder="Enter Name"
-                                value={formik.values.Name}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.Name && !!formik.errors.Name}
-                            />
-                            {formik.errors.Name && formik.touched.Name && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Name}
                                 </div>
                             )}
                         </Form.Group>
@@ -463,10 +462,10 @@ const Spin = () => {
                                 </td>
                                 <td>{spin.Type}</td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(spin)}>
+                                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(spin)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(spin._id)}>
+                                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(spin._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>

@@ -18,7 +18,7 @@ const Video = () => {
     const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [videoFileLabel, setVideoFileLabel] = useState('Video File Upload');
+    const [videoFileLabel, setVideoFileLabel] = useState('Video Prank File Upload');
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedVideoFileName, setSelectedVideoFileName] = useState("");
@@ -32,7 +32,7 @@ const Video = () => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setVideoFileLabel('Video File Upload');
+                setVideoFileLabel('Video Prank File Upload');
                 setSelectedVideoFileName(''); // Clear selected file name
                 const fileInput = document.getElementById('Video');
                 if (fileInput) {
@@ -42,7 +42,7 @@ const Video = () => {
             }
         } else {
             formik.resetForm();
-            setVideoFileLabel('Video File Upload');
+            setVideoFileLabel('Video Prank File Upload');
             setSelectedVideoFileName(''); // Clear selected file name
             const fileInput = document.getElementById('Video');
             if (fileInput) {
@@ -85,7 +85,7 @@ const Video = () => {
     }, []);
 
     // Updated filtering function
-    const filterGalleryData = (dataToFilter, categoryTab, additionalFilter) => {
+    const filterVideoData = (dataToFilter, categoryTab, additionalFilter) => {
         let filtered = [...dataToFilter];
 
         // Filter by category
@@ -105,10 +105,10 @@ const Video = () => {
                 filtered = filtered.filter(item => item.Hide === false);
                 break;
             case "Premium":
-                filtered = filtered.filter(item => item.GalleryPremium === true);
+                filtered = filtered.filter(item => item.VideoPremium === true);
                 break;
             case "Free":
-                filtered = filtered.filter(item => item.GalleryPremium === false);
+                filtered = filtered.filter(item => item.VideoPremium === false);
                 break;
             default:
                 break;
@@ -120,15 +120,15 @@ const Video = () => {
 
     // Update useEffect to handle filtering
     useEffect(() => {
-        filterGalleryData(data, activeTab, selectedFilter);
+        filterVideoData(data, activeTab, selectedFilter);
     }, [activeTab, selectedFilter, data]);
 
 
     const videoSchema = Yup.object().shape({
-        VideoName: Yup.string().required('Video Name is required'),
-        Video: Yup.string().required('Video File is required'),
+        VideoName: Yup.string().required('Video Prank Name is required'),
+        Video: Yup.string().required('Video Prank File is required'),
         VideoPremium: Yup.boolean(),
-        CategoryId: Yup.string().required('Category Name is required'),
+        CategoryId: Yup.string().required('Prank Category Name is required'),
         Hide: Yup.boolean(),
     });
 
@@ -161,7 +161,7 @@ const Video = () => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setVideoFileLabel('Video File Upload');
+                setVideoFileLabel('Video Prank File Upload');
                 setSelectedVideoFileName(''); // Reset the selected video file name
                 getData();
                 toast.success(res.data.message);
@@ -186,7 +186,7 @@ const Video = () => {
             Hide: video.Hide,
         });
         setId(video._id);
-        setVideoFileLabel('Video File Upload');
+        setVideoFileLabel('Video Prank File Upload');
         toggleModal('edit');
     };
 
@@ -215,7 +215,7 @@ const Video = () => {
     };
 
     const handleDelete = (videoId) => {
-        if (window.confirm("Are you sure you want to delete this Video?")) {
+        if (window.confirm("Are you sure you want to delete this Video Prank?")) {
             axios.delete(`https://pslink.world/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
@@ -285,8 +285,7 @@ const Video = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Video Files</h4>
-                    <p>Type / Video Management</p>
+                    <h4>Video Prank</h4>
                 </div>
             </div>
             <div className="d-flex justify-content-between align-items-center">
@@ -295,7 +294,7 @@ const Video = () => {
                     className='my-4 rounded-3 border-0'
                     style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
-                    Add New Video
+                    Add Video Prank
                 </Button>
                 <Form.Select
                     value={selectedFilter}
@@ -349,7 +348,7 @@ const Video = () => {
                 keyboard={!isSubmitting}
             >
                 <Modal.Header>
-                    <Modal.Title>{id ? "Edit Video" : "Add New Video"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Video Prank" : "Add Video Prank"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
@@ -386,50 +385,13 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{videoFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex flex-column">
-                                <div className="d-flex align-items-center">
-                                    <Form.Control
-                                        type="file"
-                                        id="Video"
-                                        name="Video"
-                                        onChange={(event) => {
-                                            let file = event.currentTarget.files[0];
-                                            formik.setFieldValue("Video", file);
-                                            setVideoFileLabel(file ? "Video File uploaded" : "Video File Upload");
-                                            setSelectedVideoFileName(file ? file.name : "");
-                                        }}
-                                        onBlur={formik.handleBlur}
-                                        label="Choose File"
-                                        className="d-none"
-                                        custom
-                                    />
-                                    <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                        <div style={{ color: "#c1c1c1" }}>Select Video File</div>
-                                        {selectedVideoFileName && (
-                                            <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                                {selectedVideoFileName}
-                                            </span>
-                                        )}
-                                    </label>
-                                </div>
-                            </div>
-                            {formik.errors.Video && formik.touched.Video && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Video}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Video Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Video Prank Name ( use searching )<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="VideoName"
                                 name="VideoName"
                                 className='py-2'
-                                placeholder="Enter VideoName"
+                                placeholder="Enter Video Prank Name"
                                 value={formik.values.VideoName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -443,7 +405,7 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
+                            <Form.Label className='fw-bold'>Artist Name ( use searching )</Form.Label>
                             <Form.Control
                                 type="text"
                                 id="ArtistName"
@@ -461,13 +423,51 @@ const Video = () => {
                                 </div>
                             )}
                         </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>{videoFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <div className="d-flex flex-column">
+                                <div className="d-flex align-items-center">
+                                    <Form.Control
+                                        type="file"
+                                        id="Video"
+                                        name="Video"
+                                        onChange={(event) => {
+                                            let file = event.currentTarget.files[0];
+                                            formik.setFieldValue("Video", file);
+                                            setVideoFileLabel(file ? "Video Prank File uploaded" : "Video Prank File Upload");
+                                            setSelectedVideoFileName(file ? file.name : "");
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        label="Choose File"
+                                        className="d-none"
+                                        custom
+                                    />
+                                    <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                        <div style={{ color: "#c1c1c1" }}>Select Video Prank File</div>
+                                        {selectedVideoFileName && (
+                                            <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                                {selectedVideoFileName}
+                                            </span>
+                                        )}
+                                    </label>
+                                </div>
+                            </div>
+                            {formik.errors.Video && formik.touched.Video && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.Video}
+                                </div>
+                            )}
+                        </Form.Group>
+
                         <div className='d-flex flex-wrap gap-sm-4'>
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
                                     id="VideoPremium"
                                     name="VideoPremium"
-                                    label="Premium Video"
+                                    label="Premium Video Prank"
                                     checked={formik.values.VideoPremium}
                                     onChange={formik.handleChange}
                                 />
@@ -478,7 +478,7 @@ const Video = () => {
                                     type="checkbox"
                                     id="Hide"
                                     name="Hide"
-                                    label="Hide video"
+                                    label="Hide Video Prank"
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
                                 />
@@ -516,10 +516,10 @@ const Video = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Video Name</th>
+                        <th>Video Prank Name</th>
                         <th>Artist Name</th>
-                        <th>Video File</th>
-                        <th>Category</th>
+                        <th>Video Prank File</th>
+                        <th>Prank Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
                         <th>Actions</th>
@@ -564,10 +564,10 @@ const Video = () => {
                                     </Button>
                                 </td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(video)}>
+                                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(video)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(video._id)}>
+                                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(video._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>

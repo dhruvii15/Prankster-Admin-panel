@@ -18,8 +18,7 @@ const UserGallery = () => {
     const [formErrors, setFormErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
     const [formData, setFormData] = useState({
-        categoryId: '',
-        artistName: ''
+        categoryId: ''
     });
 
     // Pagination states
@@ -60,7 +59,7 @@ const UserGallery = () => {
     const handleModalClose = () => {
         setShowModal(false);
         setSelectedGallery(null);
-        setFormData({ categoryId: '', artistName: '' });
+        setFormData({ categoryId: ''});
         setFormErrors({});
     };
 
@@ -75,7 +74,7 @@ const UserGallery = () => {
 
         // Validate categoryId
         if (!formData.categoryId) {
-            errors.categoryId = "Please select a category.";
+            errors.categoryId = "Please select a Prank Category.";
         }
         setFormErrors(errors);
 
@@ -93,7 +92,6 @@ const UserGallery = () => {
         submitFormData.append('Hide', false);
         submitFormData.append('role', selectedGallery._id);
         submitFormData.append('CategoryId', formData.categoryId);
-        submitFormData.append('ArtistName', formData.artistName);
 
         if (window.confirm("Are you sure you want to move this Gallery Image?")) {
             axios.post('https://pslink.world/api/gallery/create', submitFormData)
@@ -183,8 +181,7 @@ const UserGallery = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center pb-5'>
                 <div>
-                    <h4>Gallery </h4>
-                    <p>User / Gallery Management</p>
+                    <h4>Image </h4>
                 </div>
             </div>
 
@@ -208,14 +205,14 @@ const UserGallery = () => {
                                 </td>
                                 <td>
                                     <Button
-                                        className='bg-transparent border-0 fs-4'
+                                        className='edit-dlt-btn'
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handleModalShow(gallery)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
                                     <Button
-                                        className='bg-transparent border-0 text-danger fs-5'
+                                        className='edit-dlt-btn text-danger'
                                         onClick={() => handleDelete(gallery._id)}
                                     >
                                         <FontAwesomeIcon icon={faTrash} />
@@ -231,7 +228,7 @@ const UserGallery = () => {
                 </tbody>
             </Table>
 
-            {/* Modal for category selection and artist name */}
+            {/* Modal for category selection  */}
             <Modal show={showModal} onHide={handleModalClose} centered>
                 <Modal.Header>
                     <Modal.Title>Move Gallery Image</Modal.Title>
@@ -240,7 +237,7 @@ const UserGallery = () => {
                     <Form onSubmit={handleFormSubmit}>
                         {/* Category Dropdown */}
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Select Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
+                            <Form.Label className='fw-bold'>Select Prank Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
                             <Form.Control
                                 as="select"
                                 value={formData.categoryId}
@@ -255,7 +252,7 @@ const UserGallery = () => {
                                 }}
                                 isInvalid={!!formErrors.categoryId}
                             >
-                                <option value="">Select a category</option>
+                                <option value="">Select a Prank Category</option>
                                 {category.map((cat) => {
                                     if (cat.Type === 'gallery') {
                                         return (
@@ -270,26 +267,6 @@ const UserGallery = () => {
                             <Form.Control.Feedback type="invalid">
                                 {formErrors.categoryId}
                             </Form.Control.Feedback>
-                        </Form.Group>
-
-                        {/* Artist Name Input */}
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                placeholder="Enter artist name"
-                                className='py-2'
-                                value={formData.artistName}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setFormData({ ...formData, artistName: value });
-                                    setFormErrors((prevErrors) => ({
-                                        ...prevErrors,
-                                        artistName: value.trim() ? '' : prevErrors.artistName,
-                                    }));
-                                }}
-                                isInvalid={!!formErrors.artistName}
-                            />
                         </Form.Group>
 
                         {/* Submit Button */}

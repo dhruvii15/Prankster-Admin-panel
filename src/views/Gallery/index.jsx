@@ -18,10 +18,10 @@ const Gallery = () => {
     const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [imageFileLabel, setImageFileLabel] = useState('Gallery Image Upload');
+    const [imageFileLabel, setImageFileLabel] = useState('Image Prank Image Upload');
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
-    
+
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
     const [selectedFilter, setSelectedFilter] = useState('');
@@ -30,12 +30,12 @@ const Gallery = () => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
-                setImageFileLabel('Gallery Image Upload');
+                setImageFileLabel('Image Prank Image Upload');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
-            setImageFileLabel('Gallery Image Upload');
+            setImageFileLabel('Image Prank Image Upload');
         }
         setVisible(!visible);
     };
@@ -112,17 +112,16 @@ const Gallery = () => {
     }, [activeTab, selectedFilter, data]);
 
     const gallerySchema = Yup.object().shape({
-        GalleryName: Yup.string().required('Gallery Name is required'),
-        GalleryImage: Yup.mixed().required('Gallery Image is required'),
+        GalleryName: Yup.string().required('Image Prank Name is required'),
+        GalleryImage: Yup.mixed().required('Image Prank Image is required'),
         GalleryPremium: Yup.boolean(),
-        CategoryId: Yup.string().required('Category Name is required'),
+        CategoryId: Yup.string().required('Prank Category Name is required'),
         Hide: Yup.boolean(),
     });
 
     const formik = useFormik({
         initialValues: {
             GalleryName: '',
-            ArtistName: '',
             GalleryImage: '',
             GalleryPremium: false,
             CategoryId: '',
@@ -134,7 +133,6 @@ const Gallery = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
                 formData.append('GalleryName', values.GalleryName);
-                formData.append('ArtistName', values.ArtistName);
                 formData.append('GalleryImage', values.GalleryImage);
                 formData.append('GalleryPremium', values.GalleryPremium);
                 formData.append('CategoryId', values.CategoryId);
@@ -148,7 +146,7 @@ const Gallery = () => {
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setImageFileLabel('Gallery Image Upload');
+                setImageFileLabel('Image Prank Image Upload');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -165,14 +163,13 @@ const Gallery = () => {
     const handleEdit = (gallery) => {
         formik.setValues({
             GalleryName: gallery.GalleryName,
-            ArtistName: gallery.ArtistName,
             GalleryImage: gallery.GalleryImage,
             GalleryPremium: gallery.GalleryPremium,
             CategoryId: gallery.CategoryId,
             Hide: gallery.Hide,
         });
         setId(gallery._id);
-        setImageFileLabel('Gallery Image Upload');
+        setImageFileLabel('Image Prank Image Upload');
         toggleModal('edit');
     };
 
@@ -201,7 +198,7 @@ const Gallery = () => {
     };
 
     const handleDelete = (galleryId) => {
-        if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
+        if (window.confirm("Are you sure you want to delete this Image Prank Image?")) {
             axios.delete(`https://pslink.world/api/gallery/delete/${galleryId}`)
                 .then((res) => {
                     getData();
@@ -271,62 +268,61 @@ const Gallery = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Gallery </h4>
-                    <p>Type / Gallery Management</p>
+                    <h4>Image Prank </h4>
                 </div>
             </div>
             <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
                 {/* Filters Dropdown */}
-                    <Button 
-                        onClick={() => toggleModal('add')} 
-                        className='rounded-3 border-0' 
-                        style={{ backgroundColor: "#F9E238", color: "black" }}
-                    >
-                        Add New Gallery
-                    </Button>
-                    <Form.Select
-                        value={selectedFilter}
-                        onChange={(e) => setSelectedFilter(e.target.value)}
-                        style={{ width: 'auto' }}
-                    >
-                        <option value="">All</option>
-                        <option value="Hide">Hide</option>
-                        <option value="Unhide">Unhide</option>
-                        <option value="Premium">Premium</option>
-                        <option value="Free">Free</option>
-                    </Form.Select>
+                <Button
+                    onClick={() => toggleModal('add')}
+                    className='rounded-3 border-0'
+                    style={{ backgroundColor: "#F9E238", color: "black" }}
+                >
+                    Add Image Prank
+                </Button>
+                <Form.Select
+                    value={selectedFilter}
+                    onChange={(e) => setSelectedFilter(e.target.value)}
+                    style={{ width: 'auto' }}
+                >
+                    <option value="">All</option>
+                    <option value="Hide">Hide</option>
+                    <option value="Unhide">Unhide</option>
+                    <option value="Premium">Premium</option>
+                    <option value="Free">Free</option>
+                </Form.Select>
             </div>
 
             {/* Category Tabs Navigation */}
             <Nav variant="tabs" className='pt-5'>
-                    <Nav.Item>
+                <Nav.Item>
+                    <Nav.Link
+                        active={activeTab === 'all'}
+                        className={activeTab === 'all' ? 'active-tab' : ''}
+                        onClick={() => {
+                            setActiveTab('all');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        All ({data.length})
+                    </Nav.Link>
+                </Nav.Item>
+                {category.map((cat) => (
+                    <Nav.Item key={cat._id}>
                         <Nav.Link
-                            active={activeTab === 'all'}
-                            className={activeTab === 'all' ? 'active-tab' : ''}
+                            active={activeTab === cat.CategoryName.toLowerCase()}
+                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
                             onClick={() => {
-                                setActiveTab('all');
+                                setActiveTab(cat.CategoryName.toLowerCase());
                                 setCurrentPage(1);
                             }}
                         >
-                            All ({data.length})
+                            <span className="pe-2">{cat.CategoryName}</span>
+                            ({data.filter(item => item.CategoryId === cat.CategoryId).length})
                         </Nav.Link>
                     </Nav.Item>
-                    {category.map((cat) => (
-                        <Nav.Item key={cat._id}>
-                            <Nav.Link
-                                active={activeTab === cat.CategoryName.toLowerCase()}
-                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                                onClick={() => {
-                                    setActiveTab(cat.CategoryName.toLowerCase());
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <span className="pe-2">{cat.CategoryName}</span>
-                                ({data.filter(item => item.CategoryId === cat.CategoryId).length})
-                            </Nav.Link>
-                        </Nav.Item>
-                    ))}
-                </Nav>
+                ))}
+            </Nav>
 
             <Modal
                 show={visible}
@@ -336,7 +332,7 @@ const Gallery = () => {
                 keyboard={!isSubmitting}
             >
                 <Modal.Header >
-                    <Modal.Title>{id ? "Edit Gallery" : "Add New Gallery"}</Modal.Title>
+                    <Modal.Title>{id ? "Edit Image Prank" : "Add Image Prank"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
@@ -373,9 +369,29 @@ const Gallery = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Image Prank Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="GalleryName"
+                                name="GalleryName"
+                                className='py-2'
+                                placeholder="Enter Image Prank Name"
+                                value={formik.values.GalleryName}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.GalleryName && !!formik.errors.GalleryName}
+                            />
+                            {formik.errors.GalleryName && formik.touched.GalleryName && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.GalleryName}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{imageFileLabel}
-                            <span className='ps-2' style={{fontSize: "12px"}}>(1070 x 950)</span>
-                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                                <span className='ps-2' style={{ fontSize: "12px" }}></span>
+                                <span className='text-danger fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
@@ -384,7 +400,7 @@ const Gallery = () => {
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
                                         formik.setFieldValue("GalleryImage", file);
-                                        setImageFileLabel(file ? "Gallery Image uploaded" : "Gallery Image Upload");
+                                        setImageFileLabel(file ? "Image Prank Image uploaded" : "Image Prank Image Upload");
                                     }}
                                     onBlur={formik.handleBlur}
                                     label="Choose File"
@@ -393,7 +409,7 @@ const Gallery = () => {
                                 />
                                 <label htmlFor="GalleryImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                     <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Gallery Image</div>
+                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Image Prank Image</div>
                                     {formik.values.GalleryImage && (
                                         <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
                                             {formik.values.GalleryImage.name}
@@ -408,53 +424,13 @@ const Gallery = () => {
                             )}
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Gallery Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="GalleryName"
-                                name="GalleryName"
-                                className='py-2'
-                                placeholder="Enter GalleryName"
-                                value={formik.values.GalleryName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.GalleryName && !!formik.errors.GalleryName}
-                            />
-                            {formik.errors.GalleryName && formik.touched.GalleryName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.GalleryName}
-                                </div>
-                            )}
-                        </Form.Group>
-
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Artist Name</Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="ArtistName"
-                                name="ArtistName"
-                                className='py-2'
-                                placeholder="Enter ArtistName"
-                                value={formik.values.ArtistName}
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
-                            />
-                            {formik.errors.ArtistName && formik.touched.ArtistName && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.ArtistName}
-                                </div>
-                            )}
-                        </Form.Group>
-
                         <div className='d-flex flex-wrap gap-sm-4'>
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
                                     id="GalleryPremium"
                                     name="GalleryPremium"
-                                    label="Premium Gallery"
+                                    label="Premium Image Prank"
                                     checked={formik.values.GalleryPremium}
                                     onChange={formik.handleChange}
                                 />
@@ -465,7 +441,7 @@ const Gallery = () => {
                                     type="checkbox"
                                     id="Hide"
                                     name="Hide"
-                                    label="Hide gallery"
+                                    label="Hide Image Prank"
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
                                 />
@@ -502,10 +478,9 @@ const Gallery = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Gallery Name</th>
-                        <th>Artist Name</th>
-                        <th>Gallery Image</th>
-                        <th>Category</th>
+                        <th>Image Prank Name</th>
+                        <th>Image Prank Image</th>
+                        <th>Prank Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
                         <th>Actions</th>
@@ -517,7 +492,6 @@ const Gallery = () => {
                             <tr key={gallery._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{gallery.GalleryName}</td>
-                                <td>{gallery.ArtistName}</td>
                                 <td>
                                     <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
                                 </td>
@@ -540,10 +514,10 @@ const Gallery = () => {
                                     </Button>
                                 </td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleEdit(gallery)}>
+                                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(gallery)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
-                                    <Button className='bg-transparent border-0 text-danger fs-5' onClick={() => handleDelete(gallery._id)}>
+                                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(gallery._id)}>
                                         <FontAwesomeIcon icon={faTrash} />
                                     </Button>
                                 </td>

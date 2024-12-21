@@ -173,7 +173,6 @@ const UserCover = () => {
             <div className="d-sm-flex justify-content-between align-items-center pb-5">
                 <div>
                     <h4>Cover</h4>
-                    <p>User / Cover Management</p>
                 </div>
             </div>
 
@@ -197,14 +196,14 @@ const UserCover = () => {
                                 <td>{cover.CoverName}</td>
                                 <td>
                                     <Button
-                                        className="bg-transparent border-0 fs-4"
+                                        className="edit-dlt-btn"
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handleCheckClick(cover)}
                                     >
                                         <FontAwesomeIcon icon={faCheck} />
                                     </Button>
                                     <Button
-                                        className="bg-transparent border-0 text-danger fs-5"
+                                        className="edit-dlt-btn text-danger"
                                         onClick={() => handleDelete(cover._id)}
                                     >
                                         <FontAwesomeIcon icon={faTrash} />

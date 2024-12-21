@@ -98,7 +98,7 @@ export const routes = [
       },
       {
         exact: true,
-        path: '/type/gallery',
+        path: '/type/image',
         element: () => <AdminProtect><Gallery /></AdminProtect>
       },//==================================
       {
@@ -118,7 +118,7 @@ export const routes = [
       },
       {
         exact: true,
-        path: '/user/gallery',
+        path: '/user/image',
         element: () => <AdminProtect><UserGallery /></AdminProtect>
       },
       {
