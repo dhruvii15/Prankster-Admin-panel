@@ -49,7 +49,7 @@ const Audio = () => {
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
-                setFilteredData(newData, activeTab, selectedFilter);
+                filterAudioData(newData, activeTab, selectedFilter);
                 setLoading(false);
             })
             .catch((err) => {
@@ -318,24 +318,47 @@ const Audio = () => {
                             setCurrentPage(1);
                         }}
                     >
-                        All ({data.length})
+                        All ({selectedFilter ? filteredData.length : data.length})
                     </Nav.Link>
                 </Nav.Item>
-                {category.map((cat) => (
-                    <Nav.Item key={cat._id}>
-                        <Nav.Link
-                            active={activeTab === cat.CategoryName.toLowerCase()}
-                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                            onClick={() => {
-                                setActiveTab(cat.CategoryName.toLowerCase());
-                                setCurrentPage(1);
-                            }}
-                        >
-                            <span className="pe-2">{cat.CategoryName}</span>
-                            ({data.filter(item => item.CategoryId === cat.CategoryId).length})
-                        </Nav.Link>
-                    </Nav.Item>
-                ))}
+                {category.map((cat) => {
+                    // Get count based on current filter and category
+                    const categoryData = data.filter(item => item.CategoryId === cat.CategoryId);
+                    let count;
+                    
+                    switch (selectedFilter) {
+                        case "Hide":
+                            count = categoryData.filter(item => item.Hide).length;
+                            break;
+                        case "Unhide":
+                            count = categoryData.filter(item => !item.Hide).length;
+                            break;
+                        case "Premium":
+                            count = categoryData.filter(item => item.AudioPremium).length;
+                            break;
+                        case "Free":
+                            count = categoryData.filter(item => !item.AudioPremium).length;
+                            break;
+                        default:
+                            count = categoryData.length;
+                    }
+
+                    return (
+                        <Nav.Item key={cat._id}>
+                            <Nav.Link
+                                active={activeTab === cat.CategoryName.toLowerCase()}
+                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
+                                onClick={() => {
+                                    setActiveTab(cat.CategoryName.toLowerCase());
+                                    setCurrentPage(1);
+                                }}
+                            >
+                                <span className="pe-2">{cat.CategoryName}</span>
+                                ({count})
+                            </Nav.Link>
+                        </Nav.Item>
+                    );
+                })}
             </Nav>
 
             <Modal

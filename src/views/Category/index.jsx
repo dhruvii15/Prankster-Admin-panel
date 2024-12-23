@@ -257,7 +257,7 @@ const Category = () => {
                     </Nav.Item>
                 </Nav>
 
-                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-2' style={{ backgroundColor: "#F9E238", color: "black" }}>Add New Category Image</Button>
+                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-2' style={{ backgroundColor: "#F9E238", color: "black" }}>Add Prank Category</Button>
             </div>
             <Modal
                 show={visible}

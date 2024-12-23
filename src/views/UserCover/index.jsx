@@ -180,8 +180,8 @@ const UserCover = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
-                        <th>Cover Image</th>
                         <th>Cover Name</th>
+                        <th>Cover Image</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -190,10 +190,10 @@ const UserCover = () => {
                         currentItems.map((cover, index) => (
                             <tr key={cover._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
-                                <td>
-                                    <img src={cover.CoverURL} alt="cover thumbnail" className='w-25 h-25' />
-                                </td>
                                 <td>{cover.CoverName}</td>
+                                <td>
+                                    <img src={cover.CoverURL} alt="cover thumbnail" width={100} height={100}/>
+                                </td>
                                 <td>
                                     <Button
                                         className="edit-dlt-btn"

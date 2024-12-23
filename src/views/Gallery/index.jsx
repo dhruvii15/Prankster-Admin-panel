@@ -304,24 +304,47 @@ const Gallery = () => {
                             setCurrentPage(1);
                         }}
                     >
-                        All ({data.length})
+                        All ({selectedFilter ? filteredData.length : data.length})
                     </Nav.Link>
                 </Nav.Item>
-                {category.map((cat) => (
-                    <Nav.Item key={cat._id}>
-                        <Nav.Link
-                            active={activeTab === cat.CategoryName.toLowerCase()}
-                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                            onClick={() => {
-                                setActiveTab(cat.CategoryName.toLowerCase());
-                                setCurrentPage(1);
-                            }}
-                        >
-                            <span className="pe-2">{cat.CategoryName}</span>
-                            ({data.filter(item => item.CategoryId === cat.CategoryId).length})
-                        </Nav.Link>
-                    </Nav.Item>
-                ))}
+                {category.map((cat) => {
+                    // Get count based on current filter and category
+                    const categoryData = data.filter(item => item.CategoryId === cat.CategoryId);
+                    let count;
+                    
+                    switch (selectedFilter) {
+                        case "Hide":
+                            count = categoryData.filter(item => item.Hide).length;
+                            break;
+                        case "Unhide":
+                            count = categoryData.filter(item => !item.Hide).length;
+                            break;
+                        case "Premium":
+                            count = categoryData.filter(item => item.GalleryPremium).length;
+                            break;
+                        case "Free":
+                            count = categoryData.filter(item => !item.GalleryPremium).length;
+                            break;
+                        default:
+                            count = categoryData.length;
+                    }
+
+                    return (
+                        <Nav.Item key={cat._id}>
+                            <Nav.Link
+                                active={activeTab === cat.CategoryName.toLowerCase()}
+                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
+                                onClick={() => {
+                                    setActiveTab(cat.CategoryName.toLowerCase());
+                                    setCurrentPage(1);
+                                }}
+                            >
+                                <span className="pe-2">{cat.CategoryName}</span>
+                                ({count})
+                            </Nav.Link>
+                        </Nav.Item>
+                    );
+                })}
             </Nav>
 
             <Modal
@@ -338,7 +361,7 @@ const Gallery = () => {
                     <Form onSubmit={formik.handleSubmit}>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Prank Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="CategoryId"
@@ -349,7 +372,7 @@ const Gallery = () => {
                                 onBlur={formik.handleBlur}
                                 isInvalid={formik.touched.CategoryId && !!formik.errors.CategoryId}
                             >
-                                <option value="">Select a category</option>
+                                <option value="">Select a Prank Category</option>
                                 {category.map((category) => {
                                     if (category.Type === 'gallery') {
                                         return (
