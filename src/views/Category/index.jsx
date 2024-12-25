@@ -66,10 +66,29 @@ const Category = () => {
 
     const portfolioSchema = Yup.object().shape({
         CategoryName: Yup.string().required('Prank Category Name is required'),
-        CategoryImage: Yup.mixed().required('Prank Category Image is required'),
+        CategoryImage: Yup.mixed()
+            .test(
+                'fileValidation',
+                'Only image files are allowed (e.g., .jpg, .png, .jpeg)',
+                function (value) {
+                    if (typeof value === 'string') return true;
+
+                    if (!value) {
+                        return this.parent.isEditing ? true : false;
+                    }
+
+                    if (value instanceof File) {
+                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+                        return allowedExtensions.includes(value.type);
+                    }
+
+                    return false;
+                }
+            ),
         Type: Yup.array()
             .min(1, 'Select at least one type')
             .required('Type is required'),
+        isEditing: Yup.boolean()
     });
 
     const formik = useFormik({
@@ -77,6 +96,7 @@ const Category = () => {
             CategoryName: '',
             CategoryImage: '',
             Type: [],
+            isEditing: false
         },
         validationSchema: portfolioSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -84,9 +104,10 @@ const Category = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
                 formData.append('CategoryName', values.CategoryName);
-                formData.append('CategoryImage', values.CategoryImage);
-
-                // Convert Type array to JSON string
+                // Only append new image if it's a File object
+                if (values.CategoryImage instanceof File) {
+                    formData.append('CategoryImage', values.CategoryImage);
+                }
                 formData.append('Type', JSON.stringify(values.Type));
 
                 const request = id !== undefined
@@ -113,14 +134,33 @@ const Category = () => {
     });
 
     const handleEdit = (cardBg) => {
+        const fileName = cardBg.CategoryImage.split('/').pop();
+        setSelectedFileName(fileName);
+        const typeArray = cardBg.Type.split(',');
+
         formik.setValues({
             CategoryName: cardBg.CategoryName,
             CategoryImage: cardBg.CategoryImage,
-            Type: cardBg.Type.split(','),
+            Type: [typeArray[0]], // Take only the first type for radio button
+            isEditing: true
         });
         setId(cardBg._id);
         setFileLabel('Prank Category Image Upload');
         toggleModal('edit');
+    };
+
+    const handleTypeChange = (type, checked) => {
+        let newTypes;
+        if (id) {
+            // For edit mode (radio buttons)
+            newTypes = [type];
+        } else {
+            // For add mode (checkboxes)
+            newTypes = checked
+                ? [...formik.values.Type, type]
+                : formik.values.Type.filter(t => t !== type);
+        }
+        formik.setFieldValue('Type', newTypes, false);
     };
 
     const handleDelete = (cardBgId) => {
@@ -176,6 +216,24 @@ const Category = () => {
         return items;
     };
 
+    const renderTypeInputs = () => (
+        <div className='d-flex flex-wrap'>
+            {['audio', 'video', 'gallery'].map((type) => (
+                <Form.Check
+                    key={type}
+                    type={id ? "radio" : "checkbox"}
+                    id={`type-${type}`}
+                    label={type.charAt(0).toUpperCase() + type.slice(1)}
+                    name="Type"
+                    value={type}
+                    checked={formik.values.Type.includes(type)}
+                    onChange={(e) => handleTypeChange(type, e.target.checked)}
+                    className="mb-2 px-4"
+                />
+            ))}
+        </div>
+    );
+
     const getCategoryCount = (type) => {
         if (type === 'all') return data.length;
         return data.filter(item => item.Type.split(',').includes(type)).length;
@@ -204,7 +262,11 @@ const Category = () => {
                     <h4>Prank Category</h4>
                 </div>
             </div>
-            <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
+            
+
+            <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-4' style={{ backgroundColor: "#F9E238", color: "black" }}>Add Prank Category</Button>
+
+            <div className='d-flex justify-content-between align-items-sm-center flex-column-reverse flex-sm-row'>
                 {/* Tabs Navigation */}
                 <Nav variant="tabs" className="my-2">
                     <Nav.Item>
@@ -256,8 +318,6 @@ const Category = () => {
                         </Nav.Link>
                     </Nav.Item>
                 </Nav>
-
-                <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-2' style={{ backgroundColor: "#F9E238", color: "black" }}>Add Prank Category</Button>
             </div>
             <Modal
                 show={visible}
@@ -274,27 +334,7 @@ const Category = () => {
                         {/* Type Checkboxes */}
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Type<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className='d-flex flex-wrap'>
-                                {['audio', 'video', 'gallery'].map((type) => (
-                                    <Form.Check
-                                        key={type}
-                                        type={id ? "radio" : "checkbox"}
-                                        id={`type-${type}`}
-                                        label={type.charAt(0).toUpperCase() + type.slice(1)}
-                                        name="Type"
-                                        value={type}
-                                        checked={formik.values.Type.includes(type)}
-                                        onChange={(e) => {
-                                            const newTypes = e.target.checked
-                                                ? [...formik.values.Type, type]
-                                                : formik.values.Type.filter(t => t !== type);
-                                            formik.setFieldValue('Type', newTypes);
-                                        }}
-                                        onBlur={formik.handleBlur}
-                                        className="mb-2 px-4"
-                                    />
-                                ))}
-                            </div>
+                            {renderTypeInputs()}
                             {formik.errors.Type && formik.touched.Type && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.Type}

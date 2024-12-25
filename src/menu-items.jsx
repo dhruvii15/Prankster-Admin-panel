@@ -1,5 +1,5 @@
 import { faImage } from "@fortawesome/free-regular-svg-icons";
-import {faDharmachakra, faFileAudio, faHome, faLayerGroup, faPhotoFilm, faRectangleAd, faVideo} from "@fortawesome/free-solid-svg-icons";
+import {faBell, faDharmachakra, faFileAudio, faHome, faLayerGroup, faPhotoFilm, faRectangleAd, faVideo} from "@fortawesome/free-solid-svg-icons";
 
 const menuItems = {
   items: [
@@ -134,6 +134,20 @@ const menuItems = {
       type: 'group',
       icon: 'icon-ui',
       children: [
+        {
+          id: 'notification',
+          title: 'Auto Notification',
+          type: 'item',
+          url: '/auto-notification',
+          icon: faBell
+        },
+        {
+          id: 'notification',
+          title: 'Push Notification',
+          type: 'item',
+          url: '/push-notification',
+          icon: faBell
+        },
         {
           id: 'ads',
           title: 'Ads',

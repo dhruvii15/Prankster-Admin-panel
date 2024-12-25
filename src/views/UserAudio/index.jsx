@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -19,7 +19,10 @@ const UserAudio = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [formData, setFormData] = useState({
         categoryId: '',
-        artistName: ''
+        artistName: '',
+        audioName: '',
+        audioPremium: false,
+        hide: false
     });
 
     // Pagination states
@@ -60,11 +63,24 @@ const UserAudio = () => {
     const handleModalClose = () => {
         setShowModal(false);
         setSelectedAudio(null);
-        setFormData({ categoryId: '', artistName: '' });
+        setFormData({
+            categoryId: '',
+            artistName: '',
+            audioName: '',
+            audioPremium: false,
+            hide: false
+        });
     };
 
     const handleModalShow = (audio) => {
         setSelectedAudio(audio);
+        setFormData({
+            categoryId: '',
+            artistName: '',
+            audioName: audio.AudioName,
+            audioPremium: false,
+            hide: false
+        });
         setShowModal(true);
     };
 
@@ -72,25 +88,25 @@ const UserAudio = () => {
         e.preventDefault();
         const errors = {};
 
-        // Validate categoryId
         if (!formData.categoryId) {
             errors.categoryId = "Please select a Prank Category.";
         }
+        if (!formData.audioName.trim()) {
+            errors.audioName = "Audio name is required.";
+        }
         setFormErrors(errors);
 
-        // If validation fails, stop the submission
         if (Object.keys(errors).length > 0) {
-
             return;
         }
 
-        setFormLoading(true); // Start the loader
+        setFormLoading(true);
 
         const submitFormData = new FormData();
-        submitFormData.append('AudioName', selectedAudio.AudioName);
+        submitFormData.append('AudioName', formData.audioName);
         submitFormData.append('Audio', selectedAudio.Audio);
-        submitFormData.append('AudioPremium', false);
-        submitFormData.append('Hide', false);
+        submitFormData.append('AudioPremium', formData.audioPremium);
+        submitFormData.append('Hide', formData.hide);
         submitFormData.append('role', selectedAudio._id);
         submitFormData.append('CategoryId', formData.categoryId);
         submitFormData.append('ArtistName', formData.artistName);
@@ -107,10 +123,10 @@ const UserAudio = () => {
                     toast.error("An error occurred. Please try again.");
                 })
                 .finally(() => {
-                    setFormLoading(false); // Stop the loader
+                    setFormLoading(false);
                 });
         } else {
-            setFormLoading(false); // Stop the loader if canceled
+            setFormLoading(false);
         }
     };
 
@@ -160,6 +176,22 @@ const UserAudio = () => {
                     toast.error("An error occurred. Please try again.");
                 });
         }
+    };
+
+    const handleDownload = (fileUrl) => {
+        fetch(fileUrl)
+            .then((response) => response.blob()) // Convert the file to a Blob
+            .then((blob) => {
+                const url = window.URL.createObjectURL(blob); // Create an object URL
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'audio-file.mp3'; // Set the default download filename as .mp3
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url); // Release the URL object
+            })
+            .catch((error) => console.error('Download failed:', error));
     };
 
     if (loading) return (
@@ -217,6 +249,12 @@ const UserAudio = () => {
                                 </td>
                                 <td>
                                     <Button
+                                        className="edit-dlt-btn"
+                                        onClick={() => handleDownload(audio.Audio)} // Pass your image URL here
+                                    >
+                                        <FontAwesomeIcon icon={faDownload} />
+                                    </Button>
+                                    <Button
                                         className='edit-dlt-btn'
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handleModalShow(audio)}
@@ -247,6 +285,28 @@ const UserAudio = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleFormSubmit}>
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Audio Name<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter audio name"
+                                className='py-2'
+                                value={formData.audioName}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, audioName: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        audioName: value.trim() ? '' : prevErrors.audioName,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.audioName}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.audioName}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
                         {/* Category Dropdown */}
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Select Prank Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
@@ -259,7 +319,7 @@ const UserAudio = () => {
                                     setFormData({ ...formData, categoryId: value });
                                     setFormErrors((prevErrors) => ({
                                         ...prevErrors,
-                                        categoryId: value ? '' : prevErrors.categoryId, // Clear error if value exists
+                                        categoryId: value ? '' : prevErrors.categoryId,
                                     }));
                                 }}
                                 isInvalid={!!formErrors.categoryId}
@@ -289,17 +349,31 @@ const UserAudio = () => {
                                 placeholder="Enter artist name"
                                 className='py-2'
                                 value={formData.artistName}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setFormData({ ...formData, artistName: value });
-                                    setFormErrors((prevErrors) => ({
-                                        ...prevErrors,
-                                        artistName: value.trim() ? '' : prevErrors.artistName, // Clear error if value exists
-                                    }));
-                                }}
-                                isInvalid={!!formErrors.artistName}
+                                onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
                             />
                         </Form.Group>
+
+                        <div className='d-flex flex-wrap gap-sm-4'>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="AudioPremium"
+                                    label="Premium Audio Prank"
+                                    checked={formData.audioPremium}
+                                    onChange={(e) => setFormData({ ...formData, audioPremium: e.target.checked })}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="Hide"
+                                    label="Hide Audio Prank"
+                                    checked={formData.hide}
+                                    onChange={(e) => setFormData({ ...formData, hide: e.target.checked })}
+                                />
+                            </Form.Group>
+                        </div>
 
                         <Row className="mt-5">
                             <Col xs={6}>

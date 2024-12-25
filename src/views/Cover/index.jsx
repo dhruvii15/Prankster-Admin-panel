@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Nav, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
-import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -28,6 +28,7 @@ const CoverURL = () => {
     const [TagName, setTagName] = useState([]);
     const [customTagName, setCustomTagName] = useState('');
     const [showCustomInput, setShowCustomInput] = useState(false);
+    const [currentFileName, setCurrentFileName] = useState('');
     const [currentImage, setCurrentImage] = useState(null);
     console.log(previewUrl);
 
@@ -92,14 +93,8 @@ const CoverURL = () => {
         if (file) {
             formik.setFieldValue("CoverURL", file);
             setSelectedFile(file);
-            setFileLabel('Cover Image Uploaded'); // Update to show the file name
-
-            // Create preview URL for the new file
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setCurrentImage(reader.result);
-            };
-            reader.readAsDataURL(file);
+            setFileLabel('Cover Image Uploaded');
+            setCurrentFileName(file.name);
         }
     };
 
@@ -184,22 +179,18 @@ const CoverURL = () => {
             .test('fileRequired', 'Cover Image is required', function (value) {
                 if (isEditing && !value && currentImage) return true;
                 return value instanceof File;
-                // })
-                // .test('fileDimensions', 'Image dimensions must be 1070 x 950 pixels', function (value) {
-                //     return new Promise((resolve) => {
-                //         if (!value) return resolve(true); // No file provided, skip dimension check
-                //         const reader = new FileReader();
-                //         reader.onload = (e) => {
-                //             const img = new Image();
-                //             img.onload = () => {
-                //                 resolve(img.width === 1070 && img.height === 950);
-                //             };
-                //             img.onerror = () => resolve(false);
-                //             img.src = e.target.result;
-                //         };
-                //         reader.readAsDataURL(value);
-                //     });
-            }),
+            })
+            .test(
+                'fileType',
+                'Only image files are allowed (e.g., .jpg, .png, .jpeg)',
+                function (value) {
+                    if (value instanceof File) {
+                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+                        return allowedExtensions.includes(value.type);
+                    }
+                    return true; // Allow if no value (handled by `fileRequired`)
+                }
+            ),
         CoverPremium: Yup.boolean(),
         Hide: Yup.boolean(),
     });
@@ -245,7 +236,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'https://pslink.world/api/cover/create',
+                        'http://localhost:5000/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -331,15 +322,15 @@ const CoverURL = () => {
     };
 
     const handleEdit = (cover) => {
-        const subCategories = Array.isArray(cover.TagName)
-            ? cover.TagName
-            : cover.TagName ? [cover.TagName] : [];
+        const fileName = cover.CoverURL.split('/').pop(); // Get filename from URL
+        setCurrentFileName(fileName);
+        setFileLabel('Current Cover Image');
 
         formik.setValues({
             Category: cover.Category || '',
-            TagName: subCategories,
+            TagName: Array.isArray(cover.TagName) ? cover.TagName : cover.TagName ? [cover.TagName] : [],
             CoverName: cover.CoverName || '',
-            CoverURL: '', // Clear the file input
+            CoverURL: '',
             CoverPremium: cover.CoverPremium || false,
             Hide: cover.Hide || false,
             isEditing: true,
@@ -347,8 +338,7 @@ const CoverURL = () => {
 
         setIsEditing(true);
         setId(cover._id);
-        setFileLabel('Current Cover Image');
-        setCurrentImage(cover.CoverURL); // Set the current image URL
+        setCurrentImage(cover.CoverURL);
         toggleModal('edit');
     };
 
@@ -383,6 +373,20 @@ const CoverURL = () => {
             </div>
         );
     }
+
+    const handleCopyToClipboard = (cover) => {
+        if (cover?.CoverURL) {
+            navigator.clipboard.writeText(cover.CoverURL)
+                .then(() => {
+                    toast.success("Cover URL copied to clipboard!");
+                })
+                .catch((error) => {
+                    console.error("Failed to copy: ", error);
+                });
+        } else {
+            alert("No URL to copy!");
+        }
+    };
 
     const filteredItems = filterData(data);
     const indexOfLastItem = currentPage * itemsPerPage;
@@ -444,9 +448,9 @@ const CoverURL = () => {
                 <thead>
                     <tr>
                         <th>Id</th>
+                        <th>CoverName</th>
                         <th>Cover Image</th>
                         <th>TagName</th>
-                        <th>CoverName</th>
                         <th>Premium</th>
                         <th>Hidden</th>
                         <th>Actions</th>
@@ -457,6 +461,7 @@ const CoverURL = () => {
                         currentItems.map((cover, index) => (
                             <tr key={cover._id}>
                                 <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                <td>{cover.CoverName || 'No Name'}</td>
                                 <td>
                                     <img
                                         src={cover.CoverURL || 'placeholder.jpg'} // Default fallback image
@@ -467,7 +472,6 @@ const CoverURL = () => {
                                 <td>
                                     {cover.TagName?.filter(Boolean).slice(0, 7).join(', ') || 'No Tags'} {/* Fallback text */}
                                 </td>
-                                <td>{cover.CoverName || 'No Name'}</td>
                                 <td>
                                     <Button
                                         className="bg-transparent border-0 fs-4"
@@ -493,6 +497,13 @@ const CoverURL = () => {
                                     </Button>
                                 </td>
                                 <td>
+                                    <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(cover)} // Use an arrow function to pass the parameter
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
+                                    </Button>
+
                                     <Button
                                         className="edit-dlt-btn"
                                         style={{ color: "#0385C3" }}
@@ -630,9 +641,9 @@ const CoverURL = () => {
                                             <span style={{ color: "#c1c1c1" }}>
                                                 {isEditing ? "Select New Image" : "Select Image"}
                                             </span>
-                                            {selectedFile && (
+                                            {(selectedFile || currentFileName) && (
                                                 <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                                    {selectedFile.name}
+                                                    {selectedFile ? selectedFile.name : currentFileName}
                                                 </span>
                                             )}
                                         </div>

@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -19,7 +19,10 @@ const UserVideo = () => {
     const [formLoading, setFormLoading] = useState(false);
     const [formData, setFormData] = useState({
         categoryId: '',
-        artistName: ''
+        artistName: '',
+        videoName: '',
+        videoPremium: false,
+        hide: false
     });
 
     // Pagination states
@@ -60,12 +63,25 @@ const UserVideo = () => {
     const handleModalClose = () => {
         setShowModal(false);
         setSelectedVideo(null);
-        setFormData({ categoryId: '', artistName: '' });
+        setFormData({
+            categoryId: '',
+            artistName: '',
+            videoName: '',
+            videoPremium: false,
+            hide: false
+        });
         setFormErrors({});
     };
 
     const handleModalShow = (video) => {
         setSelectedVideo(video);
+        setFormData({
+            categoryId: '',
+            artistName: '',
+            videoName: video.VideoName,
+            videoPremium: false,
+            hide: false
+        });
         setShowModal(true);
     };
 
@@ -73,25 +89,25 @@ const UserVideo = () => {
         e.preventDefault();
         const errors = {};
 
-        // Validate categoryId
         if (!formData.categoryId) {
             errors.categoryId = "Please select a Prank Category.";
         }
+        if (!formData.videoName.trim()) {
+            errors.videoName = "Video name is required.";
+        }
         setFormErrors(errors);
 
-        // If validation fails, stop the submission
         if (Object.keys(errors).length > 0) {
-
             return;
         }
 
         setFormLoading(true);
 
         const submitFormData = new FormData();
-        submitFormData.append('VideoName', selectedVideo.VideoName);
+        submitFormData.append('VideoName', formData.videoName);
         submitFormData.append('Video', selectedVideo.Video);
-        submitFormData.append('VideoPremium', false);
-        submitFormData.append('Hide', false);
+        submitFormData.append('VideoPremium', formData.videoPremium);
+        submitFormData.append('Hide', formData.hide);
         submitFormData.append('role', selectedVideo._id);
         submitFormData.append('CategoryId', formData.categoryId);
         submitFormData.append('ArtistName', formData.artistName);
@@ -163,6 +179,22 @@ const UserVideo = () => {
         }
     };
 
+    const handleDownload = (fileUrl) => {
+        fetch(fileUrl)
+            .then((response) => response.blob()) // Convert the file to a Blob
+            .then((blob) => {
+                const url = window.URL.createObjectURL(blob); // Create an object URL
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'video-file.mp4'; // Set the default download filename as .mp4
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url); // Release the URL object
+            })
+            .catch((error) => console.error('Download failed:', error));
+    };
+
     if (loading) return (
         <div
             style={{
@@ -218,6 +250,12 @@ const UserVideo = () => {
                                 </td>
                                 <td>
                                     <Button
+                                        className="edit-dlt-btn"
+                                        onClick={() => handleDownload(video.Video)}
+                                    >
+                                        <FontAwesomeIcon icon={faDownload} />
+                                    </Button>
+                                    <Button
                                         className='edit-dlt-btn'
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handleModalShow(video)}
@@ -248,6 +286,28 @@ const UserVideo = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleFormSubmit}>
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Video Name<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter video name"
+                                className='py-2'
+                                value={formData.videoName}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, videoName: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        videoName: value.trim() ? '' : prevErrors.videoName,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.videoName}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.videoName}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
                         {/* Category Dropdown */}
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Select Prank Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
@@ -290,17 +350,31 @@ const UserVideo = () => {
                                 placeholder="Enter artist name"
                                 className='py-2'
                                 value={formData.artistName}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    setFormData({ ...formData, artistName: value });
-                                    setFormErrors((prevErrors) => ({
-                                        ...prevErrors,
-                                        artistName: value.trim() ? '' : prevErrors.artistName,
-                                    }));
-                                }}
-                                isInvalid={!!formErrors.artistName}
+                                onChange={(e) => setFormData({ ...formData, artistName: e.target.value })}
                             />
                         </Form.Group>
+
+                        <div className='d-flex flex-wrap gap-sm-4'>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="VideoPremium"
+                                    label="Premium Video Prank"
+                                    checked={formData.videoPremium}
+                                    onChange={(e) => setFormData({ ...formData, videoPremium: e.target.checked })}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="Hide"
+                                    label="Hide Video Prank"
+                                    checked={formData.hide}
+                                    onChange={(e) => setFormData({ ...formData, hide: e.target.checked })}
+                                />
+                            </Form.Group>
+                        </div>
 
                         {/* Submit Button */}
                         <Row className="mt-5">

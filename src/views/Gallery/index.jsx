@@ -6,7 +6,7 @@ import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
-import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import 'react-toastify/dist/ReactToastify.css';
 
 // img
@@ -21,6 +21,7 @@ const Gallery = () => {
     const [imageFileLabel, setImageFileLabel] = useState('Image Prank Image Upload');
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedFileName, setSelectedFileName] = useState('');
 
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
@@ -31,10 +32,12 @@ const Gallery = () => {
             if (mode === 'add') {
                 setId(undefined);
                 setImageFileLabel('Image Prank Image Upload');
+                setSelectedFileName('');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
+            setSelectedFileName('');
             setImageFileLabel('Image Prank Image Upload');
         }
         setVisible(!visible);
@@ -113,10 +116,33 @@ const Gallery = () => {
 
     const gallerySchema = Yup.object().shape({
         GalleryName: Yup.string().required('Image Prank Name is required'),
-        GalleryImage: Yup.mixed().required('Image Prank Image is required'),
+        GalleryImage: Yup.mixed()
+            .test(
+                'fileValidation',
+                'Only image files are allowed (e.g., .jpg, .png, .jpeg)',
+                function (value) {
+                    // If editing and no new file is selected, skip validation
+                    if (typeof value === 'string') return true;
+                    
+                    // For new entries or when a new file is selected during edit
+                    if (!value) {
+                        // Required only for new entries
+                        return this.parent.isEditing ? true : false;
+                    }
+                    
+                    // Validate file type if a file is provided
+                    if (value instanceof File) {
+                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+                        return allowedExtensions.includes(value.type);
+                    }
+                    
+                    return false;
+                }
+            ),
         GalleryPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Prank Category Name is required'),
         Hide: Yup.boolean(),
+        isEditing: Yup.boolean()
     });
 
     const formik = useFormik({
@@ -126,6 +152,7 @@ const Gallery = () => {
             GalleryPremium: false,
             CategoryId: '',
             Hide: false,
+            isEditing: false
         },
         validationSchema: gallerySchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -133,7 +160,10 @@ const Gallery = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
                 formData.append('GalleryName', values.GalleryName);
-                formData.append('GalleryImage', values.GalleryImage);
+                // Only append new image if it's a File object
+                if (values.GalleryImage instanceof File) {
+                    formData.append('GalleryImage', values.GalleryImage);
+                }
                 formData.append('GalleryPremium', values.GalleryPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('Hide', values.Hide);
@@ -161,12 +191,16 @@ const Gallery = () => {
     });
 
     const handleEdit = (gallery) => {
+        const fileName = gallery.GalleryImage.split('/').pop();
+        setSelectedFileName(fileName);
+
         formik.setValues({
             GalleryName: gallery.GalleryName,
             GalleryImage: gallery.GalleryImage,
             GalleryPremium: gallery.GalleryPremium,
             CategoryId: gallery.CategoryId,
             Hide: gallery.Hide,
+            isEditing: true
         });
         setId(gallery._id);
         setImageFileLabel('Image Prank Image Upload');
@@ -248,6 +282,20 @@ const Gallery = () => {
         return items;
     };
 
+    const handleCopyToClipboard = (gallery) => {
+        if (gallery?.GalleryImage) {
+            navigator.clipboard.writeText(gallery.GalleryImage)
+                .then(() => {
+                    toast.success("Image URL copied to clipboard!");
+                })
+                .catch((error) => {
+                    console.error("Failed to copy: ", error);
+                });
+        } else {
+            alert("No URL to copy!");
+        }
+    };
+
     if (loading) return (
         <div
             style={{
@@ -311,7 +359,7 @@ const Gallery = () => {
                     // Get count based on current filter and category
                     const categoryData = data.filter(item => item.CategoryId === cat.CategoryId);
                     let count;
-                    
+
                     switch (selectedFilter) {
                         case "Hide":
                             count = categoryData.filter(item => item.Hide).length;
@@ -414,7 +462,8 @@ const Gallery = () => {
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{imageFileLabel}
                                 <span className='ps-2' style={{ fontSize: "12px" }}></span>
-                                <span className='text-danger fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                                <span className='text-danger fw-normal' style={{ fontSize: "17px" }}>* </span>
+                            </Form.Label>
                             <div className="d-flex align-items-center">
                                 <Form.Control
                                     type="file"
@@ -423,6 +472,7 @@ const Gallery = () => {
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
                                         formik.setFieldValue("GalleryImage", file);
+                                        setSelectedFileName(file ? file.name : '');
                                         setImageFileLabel(file ? "Image Prank Image uploaded" : "Image Prank Image Upload");
                                     }}
                                     onBlur={formik.handleBlur}
@@ -433,9 +483,9 @@ const Gallery = () => {
                                 <label htmlFor="GalleryImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                     <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
                                     <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Image Prank Image</div>
-                                    {formik.values.GalleryImage && (
+                                    {selectedFileName && (
                                         <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                            {formik.values.GalleryImage.name}
+                                            {selectedFileName}
                                         </span>
                                     )}
                                 </label>
@@ -537,6 +587,12 @@ const Gallery = () => {
                                     </Button>
                                 </td>
                                 <td>
+                                <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(gallery)} // Use an arrow function to pass the parameter
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
+                                    </Button>
                                     <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(gallery)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>

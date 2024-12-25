@@ -4,7 +4,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faCheck, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -18,7 +18,10 @@ const UserGallery = () => {
     const [formErrors, setFormErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
     const [formData, setFormData] = useState({
-        categoryId: ''
+        categoryId: '',
+        galleryName: '',
+        galleryPremium: false,
+        hide: false
     });
 
     // Pagination states
@@ -59,12 +62,23 @@ const UserGallery = () => {
     const handleModalClose = () => {
         setShowModal(false);
         setSelectedGallery(null);
-        setFormData({ categoryId: ''});
+        setFormData({
+            categoryId: '',
+            galleryName: '',
+            galleryPremium: false,
+            hide: false
+        });
         setFormErrors({});
     };
 
     const handleModalShow = (gallery) => {
         setSelectedGallery(gallery);
+        setFormData({
+            categoryId: '',
+            galleryName: gallery.GalleryName,
+            galleryPremium: false,
+            hide: false
+        });
         setShowModal(true);
     };
 
@@ -72,13 +86,14 @@ const UserGallery = () => {
         e.preventDefault();
         const errors = {};
 
-        // Validate categoryId
         if (!formData.categoryId) {
             errors.categoryId = "Please select a Prank Category.";
         }
+        if (!formData.galleryName.trim()) {
+            errors.galleryName = "Gallery name is required.";
+        }
         setFormErrors(errors);
 
-        // If validation fails, stop the submission
         if (Object.keys(errors).length > 0) {
             return;
         }
@@ -86,10 +101,10 @@ const UserGallery = () => {
         setFormLoading(true);
 
         const submitFormData = new FormData();
-        submitFormData.append('GalleryName', selectedGallery.GalleryName);
+        submitFormData.append('GalleryName', formData.galleryName);
         submitFormData.append('GalleryImage', selectedGallery.GalleryImage);
-        submitFormData.append('GalleryPremium', false);
-        submitFormData.append('Hide', false);
+        submitFormData.append('GalleryPremium', formData.galleryPremium);
+        submitFormData.append('Hide', formData.hide);
         submitFormData.append('role', selectedGallery._id);
         submitFormData.append('CategoryId', formData.categoryId);
 
@@ -160,6 +175,22 @@ const UserGallery = () => {
         }
     };
 
+    const handleDownload = (imageUrl) => {
+        fetch(imageUrl)
+            .then((response) => response.blob()) // Convert the image to a Blob
+            .then((blob) => {
+                const url = window.URL.createObjectURL(blob); // Create an object URL
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'image-file.jpg'; // Set the default download filename
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url); // Release the URL object
+            })
+            .catch((error) => console.error('Download failed:', error));
+    };
+
     if (loading) return (
         <div
             style={{
@@ -205,6 +236,12 @@ const UserGallery = () => {
                                 </td>
                                 <td>
                                     <Button
+                                        className="edit-dlt-btn"
+                                        onClick={() => handleDownload(gallery.GalleryImage)} // Pass your image URL here
+                                    >
+                                        <FontAwesomeIcon icon={faDownload} />
+                                    </Button>
+                                    <Button
                                         className='edit-dlt-btn'
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handleModalShow(gallery)}
@@ -235,6 +272,29 @@ const UserGallery = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleFormSubmit}>
+                        {/* Gallery Name Input */}
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Gallery Name<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
+                            <Form.Control
+                                type="text"
+                                placeholder="Enter gallery name"
+                                className='py-2'
+                                value={formData.galleryName}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, galleryName: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        galleryName: value.trim() ? '' : prevErrors.galleryName,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.galleryName}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.galleryName}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
                         {/* Category Dropdown */}
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Select Prank Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
@@ -269,7 +329,28 @@ const UserGallery = () => {
                             </Form.Control.Feedback>
                         </Form.Group>
 
-                        {/* Submit Button */}
+                        <div className='d-flex flex-wrap gap-sm-4'>
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="GalleryPremium"
+                                    label="Premium Gallery Prank"
+                                    checked={formData.galleryPremium}
+                                    onChange={(e) => setFormData({ ...formData, galleryPremium: e.target.checked })}
+                                />
+                            </Form.Group>
+
+                            <Form.Group className="mb-3">
+                                <Form.Check
+                                    type="checkbox"
+                                    id="Hide"
+                                    label="Hide Gallery Prank"
+                                    checked={formData.hide}
+                                    onChange={(e) => setFormData({ ...formData, hide: e.target.checked })}
+                                />
+                            </Form.Group>
+                        </div>
+
                         <Row className="mt-5">
                             <Col xs={6}>
                                 <Button

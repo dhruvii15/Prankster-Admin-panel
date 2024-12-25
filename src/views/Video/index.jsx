@@ -7,7 +7,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -22,6 +22,7 @@ const Video = () => {
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedVideoFileName, setSelectedVideoFileName] = useState("");
+    const [currentVideoFileName, setCurrentVideoFileName] = useState('');
 
 
     // New state for category and additional filters
@@ -33,20 +34,22 @@ const Video = () => {
             if (mode === 'add') {
                 setId(undefined);
                 setVideoFileLabel('Video Prank File Upload');
-                setSelectedVideoFileName(''); // Clear selected file name
+                setSelectedVideoFileName('');
+                setCurrentVideoFileName('');
                 const fileInput = document.getElementById('Video');
                 if (fileInput) {
-                    fileInput.value = ''; // Clear the file input
+                    fileInput.value = '';
                 }
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
             setVideoFileLabel('Video Prank File Upload');
-            setSelectedVideoFileName(''); // Clear selected file name
+            setSelectedVideoFileName('');
+            setCurrentVideoFileName('');
             const fileInput = document.getElementById('Video');
             if (fileInput) {
-                fileInput.value = ''; // Clear the file input
+                fileInput.value = '';
             }
         }
         setVisible(!visible);
@@ -126,10 +129,37 @@ const Video = () => {
 
     const videoSchema = Yup.object().shape({
         VideoName: Yup.string().required('Video Prank Name is required'),
-        Video: Yup.string().required('Video Prank File is required'),
+        Video: Yup.mixed()
+            .test(
+                'fileValidation',
+                'Only video files are allowed (e.g., .mp4, .mkv, .avi)',
+                function (value) {
+                    // If editing and no new file is selected, skip validation
+                    if (typeof value === 'string') return true;
+
+                    // For new entries or when a new file is selected during edit
+                    if (!value) {
+                        // Required only for new entries
+                        return this.parent.isEditing ? true : false;
+                    }
+
+                    // Validate file type if a file is provided
+                    if (value instanceof File) {
+                        const allowedExtensions = [
+                            'video/mp4',
+                            'video/x-matroska', // for .mkv
+                            'video/x-msvideo', // for .avi
+                        ];
+                        return allowedExtensions.includes(value.type);
+                    }
+
+                    return false;
+                }
+            ),
         VideoPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Prank Category Name is required'),
         Hide: Yup.boolean(),
+        isEditing: Yup.boolean()
     });
 
     const formik = useFormik({
@@ -140,6 +170,7 @@ const Video = () => {
             VideoPremium: false,
             CategoryId: '',
             Hide: false,
+            isEditing: false
         },
         validationSchema: videoSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -148,7 +179,10 @@ const Video = () => {
                 const formData = new FormData();
                 formData.append('VideoName', values.VideoName);
                 formData.append('ArtistName', values.ArtistName);
-                formData.append('Video', values.Video);
+                // Only append new video if it's a File object
+                if (values.Video instanceof File) {
+                    formData.append('Video', values.Video);
+                }
                 formData.append('VideoPremium', values.VideoPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('Hide', values.Hide);
@@ -162,7 +196,8 @@ const Video = () => {
                 resetForm();
                 setId(undefined);
                 setVideoFileLabel('Video Prank File Upload');
-                setSelectedVideoFileName(''); // Reset the selected video file name
+                setSelectedVideoFileName('');
+                setCurrentVideoFileName('');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -177,6 +212,11 @@ const Video = () => {
     });
 
     const handleEdit = (video) => {
+        const videoFileName = video.Video.split('/').pop();
+        setCurrentVideoFileName(videoFileName);
+        setSelectedVideoFileName('');
+        setVideoFileLabel('Video Prank File Upload');
+
         formik.setValues({
             VideoName: video.VideoName,
             ArtistName: video.ArtistName,
@@ -184,9 +224,9 @@ const Video = () => {
             VideoPremium: video.VideoPremium,
             CategoryId: video.CategoryId,
             Hide: video.Hide,
+            isEditing: true
         });
         setId(video._id);
-        setVideoFileLabel('Video Prank File Upload');
         toggleModal('edit');
     };
 
@@ -265,6 +305,20 @@ const Video = () => {
         return items;
     };
 
+    const handleCopyToClipboard = (video) => {
+        if (video?.Video) {
+            navigator.clipboard.writeText(video.Video)
+                .then(() => {
+                    toast.success("video URL copied to clipboard!");
+                })
+                .catch((error) => {
+                    console.error("Failed to copy: ", error);
+                });
+        } else {
+            alert("No URL to copy!");
+        }
+    };
+
     if (loading) return (
         <div
             style={{
@@ -310,58 +364,58 @@ const Video = () => {
             </div>
 
             {/* Category Tabs Navigation */}
-             <Nav variant="tabs" className="pt-4">
-                            <Nav.Item>
-                                <Nav.Link
-                                    active={activeTab === 'all'}
-                                    className={activeTab === 'all' ? 'active-tab' : ''}
-                                    onClick={() => {
-                                        setActiveTab('all');
-                                        setCurrentPage(1);
-                                    }}
-                                >
-                                    All ({selectedFilter ? filteredData.length : data.length})
-                                </Nav.Link>
-                            </Nav.Item>
-                            {category.map((cat) => {
-                                // Get count based on current filter and category
-                                const categoryData = data.filter(item => item.CategoryId === cat.CategoryId);
-                                let count;
-                                
-                                switch (selectedFilter) {
-                                    case "Hide":
-                                        count = categoryData.filter(item => item.Hide).length;
-                                        break;
-                                    case "Unhide":
-                                        count = categoryData.filter(item => !item.Hide).length;
-                                        break;
-                                    case "Premium":
-                                        count = categoryData.filter(item => item.AudioPremium).length;
-                                        break;
-                                    case "Free":
-                                        count = categoryData.filter(item => !item.AudioPremium).length;
-                                        break;
-                                    default:
-                                        count = categoryData.length;
-                                }
-            
-                                return (
-                                    <Nav.Item key={cat._id}>
-                                        <Nav.Link
-                                            active={activeTab === cat.CategoryName.toLowerCase()}
-                                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                                            onClick={() => {
-                                                setActiveTab(cat.CategoryName.toLowerCase());
-                                                setCurrentPage(1);
-                                            }}
-                                        >
-                                            <span className="pe-2">{cat.CategoryName}</span>
-                                            ({count})
-                                        </Nav.Link>
-                                    </Nav.Item>
-                                );
-                            })}
-                        </Nav>
+            <Nav variant="tabs" className="pt-4">
+                <Nav.Item>
+                    <Nav.Link
+                        active={activeTab === 'all'}
+                        className={activeTab === 'all' ? 'active-tab' : ''}
+                        onClick={() => {
+                            setActiveTab('all');
+                            setCurrentPage(1);
+                        }}
+                    >
+                        All ({selectedFilter ? filteredData.length : data.length})
+                    </Nav.Link>
+                </Nav.Item>
+                {category.map((cat) => {
+                    // Get count based on current filter and category
+                    const categoryData = data.filter(item => item.CategoryId === cat.CategoryId);
+                    let count;
+
+                    switch (selectedFilter) {
+                        case "Hide":
+                            count = categoryData.filter(item => item.Hide).length;
+                            break;
+                        case "Unhide":
+                            count = categoryData.filter(item => !item.Hide).length;
+                            break;
+                        case "Premium":
+                            count = categoryData.filter(item => item.AudioPremium).length;
+                            break;
+                        case "Free":
+                            count = categoryData.filter(item => !item.AudioPremium).length;
+                            break;
+                        default:
+                            count = categoryData.length;
+                    }
+
+                    return (
+                        <Nav.Item key={cat._id}>
+                            <Nav.Link
+                                active={activeTab === cat.CategoryName.toLowerCase()}
+                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
+                                onClick={() => {
+                                    setActiveTab(cat.CategoryName.toLowerCase());
+                                    setCurrentPage(1);
+                                }}
+                            >
+                                <span className="pe-2">{cat.CategoryName}</span>
+                                ({count})
+                            </Nav.Link>
+                        </Nav.Item>
+                    );
+                })}
+            </Nav>
 
             <Modal
                 show={visible}
@@ -458,7 +512,13 @@ const Video = () => {
                                         onChange={(event) => {
                                             let file = event.currentTarget.files[0];
                                             formik.setFieldValue("Video", file);
-                                            setVideoFileLabel(file ? "Video Prank File uploaded" : "Video Prank File Upload");
+                                            if (file) {
+                                                setVideoFileLabel("Audio Prank Image uploaded");
+                                                setCurrentVideoFileName(file.name);
+                                            } else {
+                                                setVideoFileLabel("Audio Prank Image Upload");
+                                                setCurrentVideoFileName('');
+                                            }
                                             setSelectedVideoFileName(file ? file.name : "");
                                         }}
                                         onBlur={formik.handleBlur}
@@ -469,11 +529,9 @@ const Video = () => {
                                     <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                         <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
                                         <div style={{ color: "#c1c1c1" }}>Select Video Prank File</div>
-                                        {selectedVideoFileName && (
-                                            <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                                {selectedVideoFileName}
-                                            </span>
-                                        )}
+                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                            {currentVideoFileName ? currentVideoFileName : selectedVideoFileName}
+                                        </span>
                                     </label>
                                 </div>
                             </div>
@@ -587,6 +645,12 @@ const Video = () => {
                                     </Button>
                                 </td>
                                 <td>
+                                <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(video)} // Use an arrow function to pass the parameter
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
+                                    </Button>
                                     <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(video)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>

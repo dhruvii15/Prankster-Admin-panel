@@ -21,6 +21,8 @@ import UserVideo from 'views/UserVideo';
 import UserCover from 'views/UserCover';
 import Spin from 'views/Spin';
 import SubCategory from 'views/SubCategory';
+import Notification from 'views/Notification';
+import PushNotification from 'views/Push-Notification';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -125,6 +127,16 @@ export const routes = [
         exact: true,
         path: '/user/cover',
         element: () => <AdminProtect><UserCover /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/auto-notification',
+        element: () => <AdminProtect><Notification /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/push-notification',
+        element: () => <AdminProtect><PushNotification /></AdminProtect>
       },
       {
         path: '*',

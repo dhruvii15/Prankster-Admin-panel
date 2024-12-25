@@ -7,7 +7,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 
 // img
 import logo from "../../assets/images/logo.svg";
@@ -22,6 +22,8 @@ const Audio = () => {
     const [audioFileLabel, setAudioFileLabel] = useState('Audio Prank File Upload');
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [selectedImageFileName, setSelectedImageFileName] = useState('');
+    const [selectedAudioFileName, setSelectedAudioFileName] = useState('');
 
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
@@ -33,12 +35,16 @@ const Audio = () => {
                 setId(undefined);
                 setImageFileLabel('Audio Prank Image Upload');
                 setAudioFileLabel('Audio Prank File Upload');
+                setSelectedImageFileName('');
+                setSelectedAudioFileName('');
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
             setImageFileLabel('Audio Prank Image Upload');
             setAudioFileLabel('Audio Prank File Upload');
+            setSelectedImageFileName('');
+            setSelectedAudioFileName('');
         }
         setVisible(!visible);
     };
@@ -119,11 +125,43 @@ const Audio = () => {
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Prank Name is required'),
-        Audio: Yup.mixed().required('Audio Prank File is required'),
+        Audio: Yup.mixed()
+            .test(
+                'fileValidation',
+                'Only audio files are allowed (e.g., .mp3, .wav)',
+                function (value) {
+                    if (typeof value === 'string') return true;
+                    if (!value) {
+                        return this.parent.isEditing ? true : false;
+                    }
+
+                    if (value instanceof File) {
+                        const allowedExtensions = ['audio/mpeg', 'audio/wav'];
+                        return allowedExtensions.includes(value.type);
+                    }
+
+                    return false;
+                }
+            ),
+        AudioImage: Yup.mixed()
+            .test(
+                'fileType',
+                'Only image files are allowed (e.g., .jpg, .png, .jpeg)',
+                function (value) {
+                    if (!value) return true; // Optional field
+                    if (value instanceof File) {
+                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+                        return allowedExtensions.includes(value.type);
+                    }
+                    return true; // For existing files during edit
+                }
+            ),
         AudioPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Prank Category Name is required'),
-        Hide: Yup.boolean(),  // Add Hide field to schema
+        Hide: Yup.boolean(),
+        isEditing: Yup.boolean()
     });
+
 
     const formik = useFormik({
         initialValues: {
@@ -133,21 +171,25 @@ const Audio = () => {
             AudioImage: '',
             AudioPremium: false,
             CategoryId: '',
-            Hide: false,  // Add Hide field to initial values
+            Hide: false,
+            isEditing: false
         },
         validationSchema: audioSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
-
             try {
                 setIsSubmitting(true);
                 const formData = new FormData();
                 formData.append('AudioName', values.AudioName);
                 formData.append('ArtistName', values.ArtistName);
-                formData.append('Audio', values.Audio);
-                formData.append('AudioImage', values.AudioImage);
+                if (values.Audio instanceof File) {
+                    formData.append('Audio', values.Audio);
+                }
+                if (values.AudioImage instanceof File) {
+                    formData.append('AudioImage', values.AudioImage);
+                }
                 formData.append('AudioPremium', values.AudioPremium);
                 formData.append('CategoryId', values.CategoryId);
-                formData.append('Hide', values.Hide);  // Add Hide field to formData
+                formData.append('Hide', values.Hide);
 
                 const request = id !== undefined
                     ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
@@ -159,6 +201,8 @@ const Audio = () => {
                 setId(undefined);
                 setImageFileLabel('Audio Prank Image Upload');
                 setAudioFileLabel('Audio Prank File Upload');
+                setSelectedImageFileName('');
+                setSelectedAudioFileName('');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -173,14 +217,20 @@ const Audio = () => {
     });
 
     const handleEdit = (audio) => {
+        const imageFileName = audio.AudioImage.split('/').pop();
+        const audioFileName = audio.Audio.split('/').pop();
+        setSelectedImageFileName(imageFileName);
+        setSelectedAudioFileName(audioFileName);
+
         formik.setValues({
             AudioName: audio.AudioName,
             ArtistName: audio.ArtistName,
-            Audio: audio.Audio,
-            AudioImage: audio.AudioImage,
+            Audio: '',  // Reset file input
+            AudioImage: '', // Reset file input
             AudioPremium: audio.AudioPremium,
             CategoryId: audio.CategoryId,
-            Hide: audio.Hide,  // Set Hide value when editing
+            Hide: audio.Hide,
+            isEditing: true
         });
         setId(audio._id);
         setImageFileLabel('Audio Prank Image Upload');
@@ -263,6 +313,20 @@ const Audio = () => {
         return items;
     };
 
+    const handleCopyToClipboard = (audio) => {
+        if (audio?.Audio) {
+            navigator.clipboard.writeText(audio.Audio)
+                .then(() => {
+                    toast.success("audio URL copied to clipboard!");
+                })
+                .catch((error) => {
+                    console.error("Failed to copy: ", error);
+                });
+        } else {
+            alert("No URL to copy!");
+        }
+    };
+
     if (loading) return (
         <div
             style={{
@@ -325,7 +389,7 @@ const Audio = () => {
                     // Get count based on current filter and category
                     const categoryData = data.filter(item => item.CategoryId === cat.CategoryId);
                     let count;
-                    
+
                     switch (selectedFilter) {
                         case "Hide":
                             count = categoryData.filter(item => item.Hide).length;
@@ -455,23 +519,31 @@ const Audio = () => {
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
                                         formik.setFieldValue("AudioImage", file);
-                                        setImageFileLabel(file ? "Audio Prank Image uploaded" : "Audio Prank Image Upload");
+                                        if (file) {
+                                            setImageFileLabel("Audio Prank Image uploaded");
+                                            setSelectedImageFileName(file.name);
+                                        } else {
+                                            setImageFileLabel("Audio Prank Image Upload");
+                                            setSelectedImageFileName('');
+                                        }
                                     }}
                                     onBlur={formik.handleBlur}
-                                    label="Choose File"
                                     className="d-none"
                                     custom
                                 />
                                 <label htmlFor="AudioImage" className="btn mb-2 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                     <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
                                     <div style={{ color: "#c1c1c1" }}>Select Audio Prank Image</div>
-                                    {formik.values.AudioImage && (
-                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                            {formik.values.AudioImage.name}
-                                        </span>
-                                    )}
+                                    <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                        {selectedImageFileName}
+                                    </span>
                                 </label>
                             </div>
+                            {formik.errors.AudioImage && formik.touched.AudioImage && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.AudioImage}
+                                </div>
+                            )}
                         </Form.Group>
 
                         <Form.Group className="mb-3">
@@ -484,21 +556,24 @@ const Audio = () => {
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
                                         formik.setFieldValue("Audio", file);
-                                        setAudioFileLabel(file ? "Audio Prank File uploaded" : "Audio Prank File Upload");
+                                        if (file) {
+                                            setAudioFileLabel("Audio Prank File uploaded");
+                                            setSelectedAudioFileName(file.name);
+                                        } else {
+                                            setAudioFileLabel("Audio Prank File Upload");
+                                            setSelectedAudioFileName('');
+                                        }
                                     }}
                                     onBlur={formik.handleBlur}
-                                    label="Choose File"
                                     className="d-none"
                                     custom
                                 />
                                 <label htmlFor="Audio" className="btn mb-2 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
                                     <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
                                     <div style={{ color: "#c1c1c1" }}>Select Audio Prank File</div>
-                                    {formik.values.Audio && (
-                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                            {formik.values.Audio.name}
-                                        </span>
-                                    )}
+                                    <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                        {selectedAudioFileName}
+                                    </span>
                                 </label>
                             </div>
                             {formik.errors.Audio && formik.touched.Audio && (
@@ -556,7 +631,7 @@ const Audio = () => {
                         </Row>
                     </Form>
                 </Modal.Body>
-            </Modal>
+            </Modal >
 
             <Table striped bordered hover responsive className='text-center fs-6'>
                 <thead>
@@ -613,6 +688,12 @@ const Audio = () => {
                                         <FontAwesomeIcon icon={audio.Hide ? faEyeSlash : faEye} />
                                     </Button></td>
                                 <td>
+                                    <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(audio)} // Use an arrow function to pass the parameter
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
+                                    </Button>
                                     <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
@@ -630,16 +711,18 @@ const Audio = () => {
                 </tbody>
             </Table>
 
-            {totalPages > 1 && (
-                <div className='d-flex justify-content-center'>
-                    <Pagination>
-                        {renderPaginationItems()}
-                    </Pagination>
-                </div>
-            )}
+            {
+                totalPages > 1 && (
+                    <div className='d-flex justify-content-center'>
+                        <Pagination>
+                            {renderPaginationItems()}
+                        </Pagination>
+                    </div>
+                )
+            }
 
             <ToastContainer />
-        </div>
+        </div >
     );
 };
 

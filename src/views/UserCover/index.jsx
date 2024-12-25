@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Pagination, Form, Modal, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faCheck, faTrash, faTimes, faChevronUp, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrash, faTimes, faChevronUp, faChevronDown, faDownload } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,8 +16,16 @@ const UserCover = () => {
     const [selectedTags, setSelectedTags] = useState([]);
     const [customTagName, setCustomTagName] = useState('');
     const [isExpanded, setIsExpanded] = useState(false);
+    const [formErrors, setFormErrors] = useState({});
+    const [formData, setFormData] = useState({
+        Category: '',
+        CoverName: '',  // Add this new state for cover name
+        CoverPremium: false,
+        Hide: false
+    });
 
     const maxTags = 7;
+    const itemsPerPage = 15;
 
     // Sort and prepare available tags alphabetically
     const availableTags = category && category.length > 0
@@ -27,7 +35,32 @@ const UserCover = () => {
     const visibleTags = isExpanded ? availableTags : availableTags.slice(0, 7);
     const totalTags = availableTags.length;
 
-    const itemsPerPage = 15;
+    const validateForm = () => {
+        const errors = {};
+        if (!formData.Category) {
+            errors.Category = 'Category is required';
+        }
+        if (!formData.CoverName) {  // Add validation for cover name
+            errors.CoverName = 'Cover name is required';
+        }
+        if (selectedTags.length === 0) {
+            errors.tags = 'At least one tag is required';
+        }
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
+    };
+
+    const handleFormChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? checked : value
+        }));
+        // Clear error when field is updated
+        if (formErrors[name]) {
+            setFormErrors(prev => ({ ...prev, [name]: '' }));
+        }
+    };
 
     const toggleExpand = () => {
         setIsExpanded(!isExpanded);
@@ -66,6 +99,14 @@ const UserCover = () => {
     const handleCheckClick = (cover) => {
         setSelectedCover(cover);
         setSelectedTags([]);
+        // Set the cover name in form data when modal opens
+        setFormData(prev => ({
+            ...prev,
+            CoverName: cover.CoverName || '',
+            Category: '',
+            CoverPremium: false,
+            Hide: false
+        }));
         setShowModal(true);
     };
 
@@ -87,32 +128,44 @@ const UserCover = () => {
     };
 
     const handleSubmit = () => {
-        if (selectedTags.length === 0) {
-            toast.error("Please select at least one tag");
+        if (!validateForm()) {
+            toast.error("Please fill in all required fields");
             return;
         }
 
-        const formData = new FormData();
-        formData.append('Category', 'realistic');
-        formData.append('CoverURL', selectedCover.CoverURL);
-        formData.append('CoverName', selectedCover.CoverName);
-        formData.append('CoverPremium', false);
-        formData.append('Hide', false);
-        formData.append('role', selectedCover._id);
-        formData.append('TagName', JSON.stringify(selectedTags));
+        const apiFormData = new FormData();
+        apiFormData.append('Category', formData.Category);
+        apiFormData.append('CoverURL', selectedCover.CoverURL);
+        apiFormData.append('CoverName', formData.CoverName);  // Use the updated cover name
+        apiFormData.append('CoverPremium', formData.CoverPremium);
+        apiFormData.append('Hide', formData.Hide);
+        apiFormData.append('role', selectedCover._id);
+        apiFormData.append('TagName', JSON.stringify(selectedTags));
 
         if (window.confirm("Are you sure you want to move this Cover Image?")) {
-            axios.post('https://pslink.world/api/cover/create', formData)
+            axios.post('https://pslink.world/api/cover/create', apiFormData)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
                     setShowModal(false);
+                    resetForm();
                 })
                 .catch((err) => {
                     console.error(err);
                     toast.error("An error occurred. Please try again.");
                 });
         }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            Category: '',
+            CoverName: '',  // Reset cover name
+            CoverPremium: false,
+            Hide: false
+        });
+        setSelectedTags([]);
+        setFormErrors({});
     };
 
     const handleDelete = (coverId) => {
@@ -160,6 +213,23 @@ const UserCover = () => {
         return items;
     };
 
+    const handleDownload = (imageUrl) => {
+        fetch(imageUrl)
+            .then((response) => response.blob()) // Convert the image to a Blob
+            .then((blob) => {
+                const url = window.URL.createObjectURL(blob); // Create an object URL
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'cover-image.jpg'; // Set the default download filename
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+                window.URL.revokeObjectURL(url); // Release the URL object
+            })
+            .catch((error) => console.error('Download failed:', error));
+    };
+    
+
     if (loading) {
         return (
             <div className="h-screen flex justify-center items-center">
@@ -192,9 +262,15 @@ const UserCover = () => {
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{cover.CoverName}</td>
                                 <td>
-                                    <img src={cover.CoverURL} alt="cover thumbnail" width={100} height={100}/>
+                                    <img src={cover.CoverURL} alt="cover thumbnail" width={100} height={100} />
                                 </td>
                                 <td>
+                                    <Button
+                                        className="edit-dlt-btn"
+                                        onClick={() => handleDownload(cover.CoverURL)} // Pass your image URL here
+                                    >
+                                        <FontAwesomeIcon icon={faDownload} />
+                                    </Button>
                                     <Button
                                         className="edit-dlt-btn"
                                         style={{ color: "#0385C3" }}
@@ -231,11 +307,53 @@ const UserCover = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form.Group className="mb-4">
+                        <Form.Label className='fw-bold'>
+                            Cover Name
+                            <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span>
+                        </Form.Label>
+                        <Form.Control
+                            type="text"
+                            id="CoverName"
+                            name="CoverName"
+                            value={formData.CoverName}
+                            onChange={handleFormChange}
+                            className={`py-2 ${formErrors.CoverName ? 'is-invalid' : ''}`}
+                            placeholder="Enter cover name"
+                        />
+                        {formErrors.CoverName && (
+                            <div className="invalid-feedback">{formErrors.CoverName}</div>
+                        )}
+                    </Form.Group>
+
+                    <Form.Group className="mb-4">
+                        <Form.Label className='fw-bold'>
+                            Category
+                            <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span>
+                        </Form.Label>
+                        <Form.Control
+                            as="select"
+                            id="Category"
+                            name="Category"
+                            className={`py-2 ${formErrors.Category ? 'is-invalid' : ''}`}
+                            onChange={handleFormChange}
+                            value={formData.Category}
+                        >
+                            <option value="">Select Category</option>
+                            <option value="emoji">Emoji & Gift Cover Image</option>
+                            <option value="realistic">Realistic Cover Image</option>
+                        </Form.Control>
+                        {formErrors.Category && (
+                            <div className="invalid-feedback">{formErrors.Category}</div>
+                        )}
+                    </Form.Group>
+
+                    <Form.Group className="mb-4">
                         <Form.Label className="fw-bold">
                             Searching Tags
                             <span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span>
                         </Form.Label>
 
+                        {/* Selected Tags */}
                         <div className="mb-3 d-flex flex-wrap gap-2">
                             {selectedTags.map((tag, index) => (
                                 <div
@@ -255,18 +373,25 @@ const UserCover = () => {
                             ))}
                         </div>
 
+                        {/* Add Custom Tag Input */}
                         <div className="d-flex align-items-center gap-2 mb-2">
                             <Form.Control
                                 type="text"
                                 value={customTagName}
                                 onChange={(e) => setCustomTagName(e.target.value)}
                                 placeholder="Add custom tag"
+                                className={formErrors.tags ? "is-invalid" : ""}
                             />
-                            <Button style={{ backgroundColor: '#F9E238', color: 'black' }}
-                                className="border-0 rounded-2 px-5" 
-                                onClick={handleCustomTagAdd}>Add</Button>
+                            <Button
+                                style={{ backgroundColor: "#F9E238", color: "black" }}
+                                className="border-0 rounded-2 px-5"
+                                onClick={handleCustomTagAdd}
+                            >
+                                Add
+                            </Button>
                         </div>
 
+                        {/* Tags List */}
                         <div
                             style={{
                                 width: "100%",
@@ -286,13 +411,14 @@ const UserCover = () => {
                                             border: "1px solid #dee2e6",
                                             color: selectedTags.includes(tag) ? "#6c757d" : "#212529",
                                             cursor: selectedTags.includes(tag) ? "default" : "pointer",
-                                            fontSize: "13px"
+                                            fontSize: "13px",
                                         }}
                                     >
                                         {tag}
                                     </Button>
                                 ))}
 
+                                {/* Toggle Expand Button */}
                                 {totalTags > 7 && !isExpanded && (
                                     <span
                                         style={{ marginLeft: "8px", fontWeight: "bold", cursor: "pointer" }}
@@ -302,7 +428,7 @@ const UserCover = () => {
                                             }
                                         }}
                                         onClick={toggleExpand}
-                                        className='border px-2 py-1 rounded-2'
+                                        className="border px-2 py-1 rounded-2"
                                     >
                                         + {totalTags - 7}
                                     </span>
@@ -323,12 +449,46 @@ const UserCover = () => {
                                             color: "#212529",
                                         }}
                                     >
-                                        {isExpanded ? <FontAwesomeIcon icon={faChevronUp} /> : <FontAwesomeIcon icon={faChevronDown} />}
+                                        {isExpanded ? (
+                                            <FontAwesomeIcon icon={faChevronUp} />
+                                        ) : (
+                                            <FontAwesomeIcon icon={faChevronDown} />
+                                        )}
                                     </Button>
                                 )}
                             </div>
                         </div>
+
+                        {/* Error Message for Tags */}
+                        {formErrors.tags && (
+                            <div className="invalid-feedback d-block mt-2">{formErrors.tags}</div>
+                        )}
                     </Form.Group>
+
+
+                    <div className='d-flex flex-wrap gap-sm-4'>
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="CoverPremium"
+                                name="CoverPremium"
+                                label="Premium Cover"
+                                checked={formData.CoverPremium}
+                                onChange={handleFormChange}
+                            />
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Check
+                                type="checkbox"
+                                id="Hide"
+                                name="Hide"
+                                label="Hide Cover"
+                                checked={formData.Hide}
+                                onChange={handleFormChange}
+                            />
+                        </Form.Group>
+                    </div>
 
                     <Row className="mt-2">
                         <Col xs={6}>
