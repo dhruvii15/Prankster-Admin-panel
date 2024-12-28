@@ -68,6 +68,7 @@ const CoverURL = () => {
                 setFileLabel('Cover Image Upload');
                 setSelectedFile(null);
                 setPreviewUrl(null);
+                setCurrentFileName(''); // Reset current filename
             }
             setVisible(!visible);
             // Fetch subcategories when modal opens
@@ -85,6 +86,7 @@ const CoverURL = () => {
             setCurrentImage(null);
             setFileLabel('Cover Image Upload');
             setIsEditing(false);
+            setCurrentFileName(''); // Reset current filename when modal closes
         }
     }, [visible]);
 
@@ -236,7 +238,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'http://localhost:5000/api/cover/create',
+                        'https://pslink.world/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -255,6 +257,7 @@ const CoverURL = () => {
                 setId(undefined);
                 setIsEditing(false);
                 setFileLabel('Cover Image Upload');
+                setCurrentFileName(''); // Reset current filename after successful submission
                 getData();
                 toggleModal();
             } catch (error) {

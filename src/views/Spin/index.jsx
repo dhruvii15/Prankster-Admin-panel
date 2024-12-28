@@ -57,6 +57,80 @@ const Spin = () => {
         setVisible(!visible);
     };
 
+    const renderTableColumns = () => {
+        const columns = [
+            { key: 'id', label: 'Id' },
+            { key: 'name', label: 'Name' },
+            { key: 'coverImage', label: 'Cover Image' },
+            ...(activeTab === 'audio' ? [{ key: 'prankImage', label: 'Prank Image' }] : []),
+            { key: 'file', label: 'File' },
+            { key: 'type', label: 'Type' },
+            { key: 'actions', label: 'Actions' }
+        ];
+
+        return (
+            <tr>
+                {columns.map(col => <th key={col.key}>{col.label}</th>)}
+            </tr>
+        );
+    };
+
+    const renderTableRow = (spin, index) => {
+        return (
+            <tr key={spin._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
+                <td>{indexOfFirstItem + index + 1}</td>
+                <td>{spin.Name}</td>
+                <td>
+                    <img src={spin.CoverImage} alt="cover" style={{ width: '100px', height: '100px' }} />
+                </td>
+                {activeTab === 'audio' && (
+                    <td>
+                        <img src={spin.Image} alt="cover" style={{ width: '100px', height: '100px' }} />
+                    </td>
+                )}
+                <td>
+                    <MediaDisplay type={spin.Type} file={spin.File} name={spin.Name} />
+                </td>
+                <td>{spin.Type}</td>
+                <td>
+                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(spin)}>
+                        <FontAwesomeIcon icon={faEdit} />
+                    </Button>
+                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(spin._id)}>
+                        <FontAwesomeIcon icon={faTrash} />
+                    </Button>
+                </td>
+            </tr>
+        );
+    };
+
+    const getTypeSpecificLabels = (type) => {
+        switch (type.toLowerCase()) {
+            case 'audio':
+                return {
+                    coverImage: 'Audio Prank Cover Image Upload',
+                    prankImage: 'Audio Prank Image Upload',
+                    file: 'Audio Prank File Upload'
+                };
+            case 'video':
+                return {
+                    coverImage: 'Video Prank Cover Image Upload',
+                    file: 'Video Prank File Upload'
+                };
+            case 'gallery':
+                return {
+                    coverImage: 'Image Prank Cover Image Upload',
+                    file: 'Image Prank File Upload'
+                };
+            default:
+                return {
+                    coverImage: 'Cover Image Upload',
+                    prankImage: 'Prank Image Upload',
+                    file: 'File Upload'
+                };
+        }
+    };
+
     // Get filtered data based on active tab
     const getFilteredData = () => {
         return data.filter(item => item.Type.toLowerCase() === activeTab.toLowerCase());
@@ -91,37 +165,44 @@ const Spin = () => {
             'Only image files are allowed (e.g., .jpg, .png, .jpeg)',
             function (value) {
                 if (typeof value === 'string') return true;
-                if (!value) {
-                    // Required only for new entries
-                    return this.parent.isEditing ? true : false;
-                }
+                if (!value) return false;
                 if (value instanceof File) {
                     const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
                     return allowedExtensions.includes(value.type);
                 }
-                return false; // Invalid if no value or not a file
+                return false;
             }
         ),
-        Image: Yup.mixed().required('Prank Image is required').test(
-            'fileValidation',
-            'Only image files are allowed (e.g., .jpg, .png, .jpeg)',
+        Image: Yup.mixed().when('Type', {
+            is: (type) => type === 'audio',
+            then: () => Yup.mixed(),
+            otherwise: () => Yup.mixed().strip(),
+        }),
+        File: Yup.mixed().required('File is required').test(
+            'fileTypeValidation',
+            'Invalid file type for selected content type',
             function (value) {
                 if (typeof value === 'string') return true;
-                if (!value) {
-                    // Required only for new entries
-                    return this.parent.isEditing ? true : false;
-                }
+                if (!value) return false;
                 if (value instanceof File) {
-                    const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
-                    return allowedExtensions.includes(value.type);
+                    switch (this.parent.Type.toLowerCase()) {
+                        case 'audio':
+                            return value.type === 'audio/mpeg';
+                        case 'video':
+                            return value.type === 'video/mp4';
+                        case 'gallery':
+                            return ['image/jpeg', 'image/jpg'].includes(value.type);
+                        default:
+                            return false;
+                    }
                 }
-                return false; // Invalid if no value or not a file
+                return false;
             }
         ),
-        File: Yup.mixed().required('File is required'),
         Type: Yup.string().required('Type is required'),
-        isEditing: Yup.boolean()
     });
+    
+
 
     const formik = useFormik({
         initialValues: {
@@ -137,27 +218,38 @@ const Spin = () => {
             try {
                 setIsSubmitting(true);
                 const formData = new FormData();
+                
+                // Always append these required fields
                 formData.append('Name', values.Name);
+                formData.append('Type', values.Type);
+                
+                // Handle CoverImage
                 if (values.CoverImage instanceof File) {
                     formData.append('CoverImage', values.CoverImage);
                 }
-                if (values.Image instanceof File) {
+                
+                // Handle File
+                if (values.File instanceof File) {
+                    formData.append('File', values.File);
+                }
+                
+                // Only append Image if it's an audio type AND an image was selected
+                if (values.Type === 'audio' && values.Image instanceof File) {
                     formData.append('Image', values.Image);
                 }
-                formData.append('File', values.File);
-                formData.append('Type', values.Type);
-
+    
                 const request = id !== undefined
                     ? axios.patch(`https://pslink.world/api/admin/spin/update/${id}`, formData)
                     : axios.post('https://pslink.world/api/admin/spin/create', formData);
-
+    
                 const res = await request;
                 setSubmitting(false);
                 resetForm();
                 setId(undefined);
-                setCoverImageLabel('Cover Image Upload');
-                setImageLabel('Prank Image Upload');
-                setFileLabel('Prank Upload');
+                const labels = getTypeSpecificLabels(values.Type);
+                setCoverImageLabel(labels.coverImage);
+                setImageLabel(labels.prankImage || '');
+                setFileLabel(labels.file);
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -172,9 +264,10 @@ const Spin = () => {
     });
 
     const handleEdit = (spin) => {
-        const imageFileName = spin.CoverImage.split('/').pop();
-        const image2FileName = spin.Image.split('/').pop();
-        const fileFileName = spin.File.split('/').pop();
+        const imageFileName = spin.CoverImage ? spin.CoverImage.split('/').pop() : '';
+        const image2FileName = spin.Image ? spin.Image.split('/').pop() : '';
+        const fileFileName = spin.File ? spin.File.split('/').pop() : '';
+        
         setCurrentImageFileName(imageFileName);
         setCurrentImage2FileName(image2FileName);
         setCurrentFileFileName(fileFileName);
@@ -184,18 +277,26 @@ const Spin = () => {
         setSelectedFileName('');
         setSelectedCoverImageName('');
         setSelectedImageName('');
-
+    
         formik.setValues({
-            Name: spin.Name,
-            CoverImage: spin.CoverImage,
-            Image: spin.Image,
-            File: spin.File,
-            Type: spin.Type,
+            Name: spin.Name || '',
+            CoverImage: spin.CoverImage || '',
+            Image: spin.Image || '',
+            File: spin.File || '',
+            Type: spin.Type || '',
             isEditing: true
         });
+        
         setId(spin._id);
-        toggleModal('edit');
+        setVisible(true);
     };
+
+    useEffect(() => {
+        const labels = getTypeSpecificLabels(formik.values.Type);
+        setCoverImageLabel(labels.coverImage);
+        setImageLabel(labels.prankImage || '');
+        setFileLabel(labels.file);
+    }, [formik.values.Type]);
 
     const handleDelete = (spinId) => {
         if (window.confirm("Are you sure you want to delete this Spin?")) {
@@ -349,7 +450,7 @@ const Spin = () => {
                                 setCurrentPage(1);
                             }}
                         >
-                            Gallery ({getTypeCount('gallery')})
+                            Image ({getTypeCount('gallery')})
                         </Nav.Link>
                     </Nav.Item>
                 </Nav>
@@ -384,7 +485,7 @@ const Spin = () => {
                                 <option value="">Select Type</option>
                                 <option value="audio">Audio</option>
                                 <option value="video">Video</option>
-                                <option value="gallery">Gallery</option>
+                                <option value="gallery">Image</option>
                             </Form.Control>
                             {formik.errors.Type && formik.touched.Type && (
                                 <div className="invalid-feedback d-block">
@@ -446,38 +547,34 @@ const Spin = () => {
                             )}
                         </Form.Group>
 
-                        <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{ImageLabel} <span className='ps-2' style={{ fontSize: "12px" }}></span>
-                                <span className='text-danger fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="Image"
-                                    name="Image"
-                                    onChange={(event) => {
-                                        const file = event.currentTarget.files[0];
-                                        formik.setFieldValue("Image", file);
-                                        setImageLabel("Prank Image Upload");
-                                        setSelectedImageName(file ? file.name : '');
-                                        setCurrentImage2FileName(''); // Clear current filename when new file is selected
-                                    }}
-                                    onBlur={formik.handleBlur}
-                                    className="d-none"
-                                />
-                                <label htmlFor="Image" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Prank Image</div>
-                                    <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                        {selectedImageName || currentImage2FileName || 'No file selected'}
-                                    </span>
-                                </label>
-                            </div>
-                            {formik.errors.Image && formik.touched.Image && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Image}
+                        {formik.values.Type === 'audio' && (
+                            <Form.Group className="mb-3">
+                                <Form.Label className='fw-bold'>{ImageLabel} <span className='ps-2' style={{ fontSize: "12px" }}></span></Form.Label>
+                                <div className="d-flex align-items-center">
+                                    <Form.Control
+                                        type="file"
+                                        id="Image"
+                                        name="Image"
+                                        onChange={(event) => {
+                                            const file = event.currentTarget.files[0];
+                                            formik.setFieldValue("Image", file);
+                                            setImageLabel(getTypeSpecificLabels(formik.values.Type).prankImage);
+                                            setSelectedImageName(file ? file.name : '');
+                                            setCurrentImage2FileName('');
+                                        }}
+                                        onBlur={formik.handleBlur}
+                                        className="d-none"
+                                    />
+                                    <label htmlFor="Image" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                        <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Prank Image</div>
+                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                            {selectedImageName || currentImage2FileName || 'No file selected'}
+                                        </span>
+                                    </label>
                                 </div>
-                            )}
-                        </Form.Group>
+                            </Form.Group>
+                        )}
 
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{fileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
@@ -540,45 +637,14 @@ const Spin = () => {
 
             <Table striped bordered hover responsive className='text-center fs-6'>
                 <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Name</th>
-                        <th>Cover Image</th>
-                        <th>Prank Image</th>
-                        <th>File</th>
-                        <th>Type</th>
-                        <th>Actions</th>
-                    </tr>
+                    {renderTableColumns()}
                 </thead>
                 <tbody>
                     {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((spin, index) => (
-                            <tr key={spin._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td>{indexOfFirstItem + index + 1}</td>
-                                <td>{spin.Name}</td>
-                                <td>
-                                    <img src={spin.CoverImage} alt="cover" style={{ width: '100px', height: '100px' }} />
-                                </td>
-                                <td>
-                                    <img src={spin.Image} alt="cover" style={{ width: '100px', height: '100px' }} />
-                                </td>
-                                <td>
-                                    <MediaDisplay type={spin.Type} file={spin.File} name={spin.Name} />
-                                </td>
-                                <td>{spin.Type}</td>
-                                <td>
-                                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(spin)}>
-                                        <FontAwesomeIcon icon={faEdit} />
-                                    </Button>
-                                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(spin._id)}>
-                                        <FontAwesomeIcon icon={faTrash} />
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))
+                        currentItems.map((spin, index) => renderTableRow(spin, index))
                     ) : (
                         <tr>
-                            <td colSpan={7} className="text-center">No Data Found</td>
+                            <td colSpan={activeTab === 'audio' ? 7 : 6} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>
