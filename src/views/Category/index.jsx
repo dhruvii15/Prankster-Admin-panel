@@ -10,6 +10,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // img
 import logo from "../../assets/images/logo.svg";
+import ImagePreviewModal from 'components/ImagePreviewModal';
 
 const Category = () => {
     const [visible, setVisible] = useState(false);
@@ -20,6 +21,8 @@ const Category = () => {
     const [selectedFileName, setSelectedFileName] = useState('');
     const [activeTab, setActiveTab] = useState('all');
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewIndex, setPreviewIndex] = useState(0);
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -262,7 +265,7 @@ const Category = () => {
                     <h4>Prank Category</h4>
                 </div>
             </div>
-            
+
 
             <Button onClick={() => toggleModal('add')} className='rounded-3 border-0 my-4' style={{ backgroundColor: "#F9E238", color: "black" }}>Add Prank Category</Button>
 
@@ -436,7 +439,34 @@ const Category = () => {
                         currentItems.map((cardBg, index) => (
                             <tr key={cardBg._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
-                                <td><img src={cardBg.CategoryImage} alt='CategoryImage' width={100} /></td>
+                                <td>
+                                    <button
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => {
+                                            setPreviewIndex(indexOfFirstItem + index);
+                                            setShowPreview(true);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                setPreviewIndex(indexOfFirstItem + index);
+                                                setShowPreview(true);
+                                                e.preventDefault();
+                                            }
+                                        }}
+                                    >
+                                        <img
+                                            src={cardBg.CategoryImage}
+                                            alt="CategoryImage"
+                                            width={100}
+                                        />
+                                    </button>
+                                </td>
+
                                 <td>{cardBg.CategoryName}</td>
                                 <td>{cardBg.Type}</td>
                                 <td>
@@ -466,6 +496,18 @@ const Category = () => {
             )}
 
             <ToastContainer />
+
+            <ImagePreviewModal
+                show={showPreview}
+                onHide={() => setShowPreview(false)}
+                images={currentItems.map(item => item.CategoryImage)}
+                currentIndex={previewIndex}
+                onNavigate={(newIndex) => {
+                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                        setPreviewIndex(newIndex);
+                    }
+                }}
+            />
         </div>
     );
 };

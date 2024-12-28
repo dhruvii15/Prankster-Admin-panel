@@ -610,7 +610,9 @@ const Video = () => {
                     {currentItems && currentItems.length > 0 ? (
                         currentItems.map((video, index) => (
                             <tr key={video._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td>{indexOfFirstItem + index + 1}</td>
+                                <td style={{
+                                    backgroundColor: video.Hide ? '#ffcccc' : ''
+                                }}>{indexOfFirstItem + index + 1}</td>
                                 <td>{video.VideoName}</td>
                                 <td>{video.ArtistName}</td>
                                 <td>

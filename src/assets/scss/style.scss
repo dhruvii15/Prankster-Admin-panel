@@ -298,3 +298,10 @@ File: style.css
     background-color: #e0e0e0;
     border: 1px solid black;
   }
+
+  .rounded-circle{
+    width: 45px;
+    height: 45px;
+    line-height: 45px !important;
+    border-radius: 100%;
+  }

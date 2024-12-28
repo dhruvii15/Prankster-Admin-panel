@@ -8,6 +8,7 @@ import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 // img
 import logo from "../../assets/images/logo.svg";
+import ImagePreviewModal from 'components/ImagePreviewModal';
 
 const UserGallery = () => {
     const [loading, setLoading] = useState(true);
@@ -23,6 +24,8 @@ const UserGallery = () => {
         galleryPremium: false,
         hide: false
     });
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewIndex, setPreviewIndex] = useState(0);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -232,8 +235,26 @@ const UserGallery = () => {
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{gallery.GalleryName}</td>
                                 <td>
-                                    <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
+                                    <button
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => {
+                                            setPreviewIndex(indexOfFirstItem + index);
+                                            setShowPreview(true);
+                                        }}
+                                    >
+                                        <img
+                                            src={gallery.GalleryImage || 'placeholder.jpg'} // Fallback image if GalleryImage is missing
+                                            alt="gallery thumbnail"
+                                            style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                                        />
+                                    </button>
                                 </td>
+
                                 <td>
                                     <Button
                                         className="edit-dlt-btn"
@@ -386,6 +407,18 @@ const UserGallery = () => {
             )}
 
             <ToastContainer />
+
+            <ImagePreviewModal
+                show={showPreview}
+                onHide={() => setShowPreview(false)}
+                images={currentItems.map(item => item.GalleryImage)}
+                currentIndex={previewIndex}
+                onNavigate={(newIndex) => {
+                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                        setPreviewIndex(newIndex);
+                    }
+                }}
+            />
         </div>
     );
 };

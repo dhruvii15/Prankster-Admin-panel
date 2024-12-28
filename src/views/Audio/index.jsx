@@ -651,7 +651,9 @@ const Audio = () => {
                     {currentItems && currentItems.length > 0 ? (
                         currentItems.map((audio, index) => (
                             <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td>{indexOfFirstItem + index + 1}</td>
+                                <td style={{
+                                    backgroundColor: audio.Hide ? '#ffcccc' : ''
+                                }}>{indexOfFirstItem + index + 1}</td>
                                 <td>{audio.AudioName}</td>
                                 <td>{audio.ArtistName}</td>
                                 <td>

@@ -8,6 +8,7 @@ import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import logo from "../../assets/images/logo.svg";
+import ImagePreviewModal from 'components/ImagePreviewModal';
 
 const Spin = () => {
     const [visible, setVisible] = useState(false);
@@ -25,6 +26,10 @@ const Spin = () => {
     const [currentImageFileName, setCurrentImageFileName] = useState('');
     const [currentImage2FileName, setCurrentImage2FileName] = useState('');
     const [currentFileFileName, setCurrentFileFileName] = useState('');
+    const [showCoverPreview, setShowCoverPreview] = useState(false);
+    const [showPrankPreview, setShowPrankPreview] = useState(false);
+    const [coverPreviewIndex, setCoverPreviewIndex] = useState(0);
+    const [prankPreviewIndex, setPrankPreviewIndex] = useState(0);
 
 
     const toggleModal = (mode) => {
@@ -81,13 +86,48 @@ const Spin = () => {
                 <td>{indexOfFirstItem + index + 1}</td>
                 <td>{spin.Name}</td>
                 <td>
-                    <img src={spin.CoverImage} alt="cover" style={{ width: '100px', height: '100px' }} />
+                    <button
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: 0,
+                            cursor: 'pointer',
+                        }}
+                        onClick={() => {
+                            setCoverPreviewIndex(indexOfFirstItem + index);
+                            setShowCoverPreview(true);
+                        }}
+                    >
+                        <img
+                            src={spin.CoverImage}
+                            alt="cover"
+                            style={{ width: '100px', height: '100px' }}
+                        />
+                    </button>
                 </td>
                 {activeTab === 'audio' && (
                     <td>
-                        <img src={spin.Image} alt="cover" style={{ width: '100px', height: '100px' }} />
+                        <button
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: 0,
+                                cursor: 'pointer',
+                            }}
+                            onClick={() => {
+                                setPrankPreviewIndex(indexOfFirstItem + index);
+                                setShowPrankPreview(true);
+                            }}
+                        >
+                            <img
+                                src={spin.Image}
+                                alt="prank"
+                                style={{ width: '100px', height: '100px' }}
+                            />
+                        </button>
                     </td>
                 )}
+
                 <td>
                     <MediaDisplay type={spin.Type} file={spin.File} name={spin.Name} />
                 </td>
@@ -201,7 +241,7 @@ const Spin = () => {
         ),
         Type: Yup.string().required('Type is required'),
     });
-    
+
 
 
     const formik = useFormik({
@@ -218,30 +258,30 @@ const Spin = () => {
             try {
                 setIsSubmitting(true);
                 const formData = new FormData();
-                
+
                 // Always append these required fields
                 formData.append('Name', values.Name);
                 formData.append('Type', values.Type);
-                
+
                 // Handle CoverImage
                 if (values.CoverImage instanceof File) {
                     formData.append('CoverImage', values.CoverImage);
                 }
-                
+
                 // Handle File
                 if (values.File instanceof File) {
                     formData.append('File', values.File);
                 }
-                
+
                 // Only append Image if it's an audio type AND an image was selected
                 if (values.Type === 'audio' && values.Image instanceof File) {
                     formData.append('Image', values.Image);
                 }
-    
+
                 const request = id !== undefined
                     ? axios.patch(`https://pslink.world/api/admin/spin/update/${id}`, formData)
                     : axios.post('https://pslink.world/api/admin/spin/create', formData);
-    
+
                 const res = await request;
                 setSubmitting(false);
                 resetForm();
@@ -267,7 +307,7 @@ const Spin = () => {
         const imageFileName = spin.CoverImage ? spin.CoverImage.split('/').pop() : '';
         const image2FileName = spin.Image ? spin.Image.split('/').pop() : '';
         const fileFileName = spin.File ? spin.File.split('/').pop() : '';
-        
+
         setCurrentImageFileName(imageFileName);
         setCurrentImage2FileName(image2FileName);
         setCurrentFileFileName(fileFileName);
@@ -277,7 +317,7 @@ const Spin = () => {
         setSelectedFileName('');
         setSelectedCoverImageName('');
         setSelectedImageName('');
-    
+
         formik.setValues({
             Name: spin.Name || '',
             CoverImage: spin.CoverImage || '',
@@ -286,7 +326,7 @@ const Spin = () => {
             Type: spin.Type || '',
             isEditing: true
         });
-        
+
         setId(spin._id);
         setVisible(true);
     };
@@ -659,6 +699,34 @@ const Spin = () => {
             )}
 
             <ToastContainer />
+
+
+            <ImagePreviewModal
+                show={showCoverPreview}
+                onHide={() => setShowCoverPreview(false)}
+                images={currentItems.map(item => item.CoverImage)}
+                currentIndex={coverPreviewIndex}
+                onNavigate={(newIndex) => {
+                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                        setCoverPreviewIndex(newIndex);
+                    }
+                }}
+                title="Cover Image Preview"
+            />
+
+            {/* Prank Image Preview Modal */}
+            <ImagePreviewModal
+                show={showPrankPreview}
+                onHide={() => setShowPrankPreview(false)}
+                images={currentItems.map(item => item.Image).filter(Boolean)} // Filter out null/undefined values
+                currentIndex={prankPreviewIndex}
+                onNavigate={(newIndex) => {
+                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                        setPrankPreviewIndex(newIndex);
+                    }
+                }}
+                title="Prank Image Preview"
+            />
         </div>
     );
 };

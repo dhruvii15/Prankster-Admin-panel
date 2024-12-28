@@ -10,6 +10,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import logo from "../../assets/images/logo.svg";
 import TagSelector from 'views/TagSelector';
+import ImagePreviewModal from 'components/ImagePreviewModal';
 
 const CoverURL = () => {
     const [visible, setVisible] = useState(false);
@@ -30,6 +31,8 @@ const CoverURL = () => {
     const [showCustomInput, setShowCustomInput] = useState(false);
     const [currentFileName, setCurrentFileName] = useState('');
     const [currentImage, setCurrentImage] = useState(null);
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewIndex, setPreviewIndex] = useState(0);
     console.log(previewUrl);
 
 
@@ -463,15 +466,35 @@ const CoverURL = () => {
                     {currentItems && currentItems.length > 0 ? (
                         currentItems.map((cover, index) => (
                             <tr key={cover._id}>
-                                <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                <td style={{
+                                    backgroundColor: cover.Hide ? '#ffcccc' : ''
+                                }}>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                 <td>{cover.CoverName || 'No Name'}</td>
                                 <td>
-                                    <img
-                                        src={cover.CoverURL || 'placeholder.jpg'} // Default fallback image
-                                        alt="CoverImage"
-                                        style={{ width: '150px', height: '120px', objectFit: 'cover' }}
-                                    />
+                                    <button
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => {
+                                            setPreviewIndex(indexOfFirstItem + index);
+                                            setShowPreview(true);
+                                        }}
+                                    >
+                                        <img
+                                            src={cover.CoverURL || 'placeholder.jpg'} // Default fallback image
+                                            alt="CoverImage"
+                                            style={{
+                                                width: '150px',
+                                                height: '120px',
+                                                objectFit: 'cover',
+                                            }}
+                                        />
+                                    </button>
                                 </td>
+
                                 <td>
                                     {cover.TagName?.filter(Boolean).slice(0, 7).join(', ') || 'No Tags'} {/* Fallback text */}
                                 </td>
@@ -726,6 +749,18 @@ const CoverURL = () => {
             </Modal>
 
             <ToastContainer />
+
+            <ImagePreviewModal
+                show={showPreview}
+                onHide={() => setShowPreview(false)}
+                images={currentItems.map(item => item.CoverURL)}
+                currentIndex={previewIndex}
+                onNavigate={(newIndex) => {
+                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                        setPreviewIndex(newIndex);
+                    }
+                }}
+            />
         </div>
     );
 

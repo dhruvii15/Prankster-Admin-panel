@@ -11,6 +11,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 // img
 import logo from "../../assets/images/logo.svg";
+import ImagePreviewModal from 'components/ImagePreviewModal';
 
 const Gallery = () => {
     const [visible, setVisible] = useState(false);
@@ -22,6 +23,8 @@ const Gallery = () => {
     const [filteredData, setFilteredData] = useState([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedFileName, setSelectedFileName] = useState('');
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewIndex, setPreviewIndex] = useState(0);
 
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
@@ -123,19 +126,19 @@ const Gallery = () => {
                 function (value) {
                     // If editing and no new file is selected, skip validation
                     if (typeof value === 'string') return true;
-                    
+
                     // For new entries or when a new file is selected during edit
                     if (!value) {
                         // Required only for new entries
                         return this.parent.isEditing ? true : false;
                     }
-                    
+
                     // Validate file type if a file is provided
                     if (value instanceof File) {
                         const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
                         return allowedExtensions.includes(value.type);
                     }
-                    
+
                     return false;
                 }
             ),
@@ -563,11 +566,31 @@ const Gallery = () => {
                     {currentItems && currentItems.length > 0 ? (
                         currentItems.map((gallery, index) => (
                             <tr key={gallery._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td>{indexOfFirstItem + index + 1}</td>
+                                <td style={{
+                                    backgroundColor: gallery.Hide ? '#ffcccc' : ''
+                                }}>{indexOfFirstItem + index + 1}</td>
                                 <td>{gallery.GalleryName}</td>
                                 <td>
-                                    <img src={gallery.GalleryImage} alt="gallery thumbnail" style={{ width: '100px', height: '100px' }} />
+                                    <button
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => {
+                                            setPreviewIndex(indexOfFirstItem + index);
+                                            setShowPreview(true);
+                                        }}
+                                    >
+                                        <img
+                                            src={gallery.GalleryImage}
+                                            alt="Gallery thumbnail"
+                                            style={{ width: '100px', height: '100px' }}
+                                        />
+                                    </button>
                                 </td>
+
                                 <td>{gallery.CategoryName}</td>
                                 <td>
                                     <Button
@@ -587,7 +610,7 @@ const Gallery = () => {
                                     </Button>
                                 </td>
                                 <td>
-                                <Button
+                                    <Button
                                         className="edit-dlt-btn text-black"
                                         onClick={() => handleCopyToClipboard(gallery)} // Use an arrow function to pass the parameter
                                     >
@@ -620,6 +643,18 @@ const Gallery = () => {
             )}
 
             <ToastContainer />
+
+            <ImagePreviewModal
+                show={showPreview}
+                onHide={() => setShowPreview(false)}
+                images={currentItems.map(item => item.GalleryImage)}
+                currentIndex={previewIndex}
+                onNavigate={(newIndex) => {
+                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                        setPreviewIndex(newIndex);
+                    }
+                }}
+            />
         </div>
     );
 };

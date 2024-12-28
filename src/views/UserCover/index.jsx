@@ -5,6 +5,7 @@ import { faCheck, faTrash, faTimes, faChevronUp, faChevronDown, faDownload } fro
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import ImagePreviewModal from 'components/ImagePreviewModal';
 
 const UserCover = () => {
     const [loading, setLoading] = useState(true);
@@ -23,6 +24,8 @@ const UserCover = () => {
         CoverPremium: false,
         Hide: false
     });
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewIndex, setPreviewIndex] = useState(0);
 
     const maxTags = 7;
     const itemsPerPage = 15;
@@ -228,7 +231,7 @@ const UserCover = () => {
             })
             .catch((error) => console.error('Download failed:', error));
     };
-    
+
 
     if (loading) {
         return (
@@ -262,8 +265,26 @@ const UserCover = () => {
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{cover.CoverName}</td>
                                 <td>
-                                    <img src={cover.CoverURL} alt="cover thumbnail" width={100} height={100} />
+                                    <button
+                                        style={{
+                                            background: 'none',
+                                            border: 'none',
+                                            padding: 0,
+                                            cursor: 'pointer',
+                                        }}
+                                        onClick={() => {
+                                            setPreviewIndex(indexOfFirstItem + index);
+                                            setShowPreview(true);
+                                        }}
+                                    >
+                                        <img
+                                            src={cover.CoverURL || 'placeholder.jpg'} // Default fallback image
+                                            alt="cover thumbnail"
+                                            style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                                        />
+                                    </button>
                                 </td>
+
                                 <td>
                                     <Button
                                         className="edit-dlt-btn"
@@ -515,6 +536,20 @@ const UserCover = () => {
                 </Modal.Body>
             </Modal>
             <ToastContainer />
+
+
+
+            <ImagePreviewModal
+                show={showPreview}
+                onHide={() => setShowPreview(false)}
+                images={currentItems.map(item => item.CoverURL)}
+                currentIndex={previewIndex}
+                onNavigate={(newIndex) => {
+                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                        setPreviewIndex(newIndex);
+                    }
+                }}
+            />
         </div>
     );
 };
