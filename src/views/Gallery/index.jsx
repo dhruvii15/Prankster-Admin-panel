@@ -25,10 +25,25 @@ const Gallery = () => {
     const [selectedFileName, setSelectedFileName] = useState('');
     const [showPreview, setShowPreview] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
+    const [isOn, setIsOn] = useState(false);
+    const [isSubmitting2, setIsSubmitting2] = useState(false);
+    const [adminId, setAdminId] = useState(null);
 
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
     const [selectedFilter, setSelectedFilter] = useState('');
+
+    const getAdminData = () => {
+        axios.get('https://pslink.world/api/admin/read')
+            .then((res) => {
+                setIsOn(res.data.data[0].ImageSafe);
+                setAdminId(res.data.data[0]._id);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to fetch admin data.");
+            });
+    };
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -76,13 +91,39 @@ const Gallery = () => {
     useEffect(() => {
         getData();
         getCategory();
+        getAdminData();
     }, []);
+
+    const getFilteredCount = (categoryId = null, filterType = '') => {
+        // First filter by safe/unsafe status
+        let filtered = data.filter(item => item.Unsafe === !isOn);
+
+        // Then apply category filter if specified
+        if (categoryId) {
+            filtered = filtered.filter(item => item.CategoryId === categoryId);
+        }
+
+        // Finally apply additional filters
+        switch (filterType) {
+            case "Hide":
+                return filtered.filter(item => item.Hide).length;
+            case "Unhide":
+                return filtered.filter(item => !item.Hide).length;
+            case "Premium":
+                return filtered.filter(item => item.GalleryPremium).length;
+            case "Free":
+                return filtered.filter(item => !item.GalleryPremium).length;
+            default:
+                return filtered.length;
+        }
+    };
 
     // Updated filtering function
     const filterGalleryData = (dataToFilter, categoryTab, additionalFilter) => {
-        let filtered = [...dataToFilter];
+        // First filter by safe/unsafe status
+        let filtered = dataToFilter.filter(item => item.Unsafe === !isOn);
 
-        // Filter by category
+        // Then filter by category
         if (categoryTab !== 'all') {
             const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
             if (selectedCategory) {
@@ -110,6 +151,38 @@ const Gallery = () => {
 
         setFilteredData(filtered);
         setCurrentPage(1);
+    };
+
+    // Update useEffect to handle filtering
+    useEffect(() => {
+        filterGalleryData(data, activeTab, selectedFilter);
+    }, [activeTab, selectedFilter, data, isOn]);
+
+    const handleToggle = async () => {
+        if (!isSubmitting2) {
+            const newState = !isOn;
+            try {
+                setIsSubmitting2(true);
+                setIsOn(newState);
+
+                // Call the appropriate API based on the state
+                const apiEndpoint = newState ? 'safe' : 'unsafe';
+                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "3" });
+
+                // Reset to first page when toggling safe mode
+                setCurrentPage(1);
+                getData();
+                getAdminData();
+
+                toast.success(response.data.message);
+            } catch (error) {
+                console.error('Error updating safe status:', error);
+                toast.error("Failed to update safe status.");
+                setIsOn(!newState); // Revert to previous state on error
+            } finally {
+                setIsSubmitting2(false);
+            }
+        }
     };
 
     // Update useEffect to handle filtering
@@ -155,7 +228,8 @@ const Gallery = () => {
             GalleryPremium: false,
             CategoryId: '',
             Hide: false,
-            isEditing: false
+            isEditing: false,
+            Unsafe: true
         },
         validationSchema: gallerySchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -163,13 +237,13 @@ const Gallery = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
                 formData.append('GalleryName', values.GalleryName);
-                // Only append new image if it's a File object
                 if (values.GalleryImage instanceof File) {
                     formData.append('GalleryImage', values.GalleryImage);
                 }
                 formData.append('GalleryPremium', values.GalleryPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('Hide', values.Hide);
+                formData.append('Unsafe', "true");
 
                 const request = id !== undefined
                     ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
@@ -248,6 +322,26 @@ const Gallery = () => {
         }
     };
 
+    const handleShowPreview = (currentPageIndex) => {
+        // Calculate the actual index in the full filtered dataset
+        const actualIndex = (currentPage - 1) * itemsPerPage + currentPageIndex;
+        setPreviewIndex(actualIndex);
+        setShowPreview(true);
+    };
+
+    // Navigation in preview should work across all pages
+    const handlePreviewNavigation = (newIndex) => {
+        if (newIndex >= 0 && newIndex < filteredData.length) {
+            setPreviewIndex(newIndex);
+            // Calculate which page this image is on
+            const newPage = Math.floor(newIndex / itemsPerPage) + 1;
+            // Update the current page if necessary
+            if (newPage !== currentPage) {
+                setCurrentPage(newPage);
+            }
+        }
+    };
+
     // Pagination logic
     const itemsPerPage = 15;
     const [currentPage, setCurrentPage] = useState(1);
@@ -319,8 +413,20 @@ const Gallery = () => {
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
-                    <h4>Image Prank </h4>
+                    <h4>Image Prank</h4>
                 </div>
+                <Form className='d-flex align-items-center gap-3'>
+                    <span>Safe : </span>
+                    <Form.Check
+                        type="switch"
+                        id="custom-switch"
+                        checked={isOn}
+                        onChange={handleToggle}
+                        className="custom-switch-lg"
+                        style={{ transform: 'scale(1.3)' }}
+                        disabled={isSubmitting2}
+                    />
+                </Form>
             </div>
             <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
                 {/* Filters Dropdown */}
@@ -355,47 +461,24 @@ const Gallery = () => {
                             setCurrentPage(1);
                         }}
                     >
-                        All ({selectedFilter ? filteredData.length : data.length})
+                        All ({getFilteredCount(null, selectedFilter)})
                     </Nav.Link>
                 </Nav.Item>
-                {category.map((cat) => {
-                    // Get count based on current filter and category
-                    const categoryData = data.filter(item => item.CategoryId === cat.CategoryId);
-                    let count;
-
-                    switch (selectedFilter) {
-                        case "Hide":
-                            count = categoryData.filter(item => item.Hide).length;
-                            break;
-                        case "Unhide":
-                            count = categoryData.filter(item => !item.Hide).length;
-                            break;
-                        case "Premium":
-                            count = categoryData.filter(item => item.GalleryPremium).length;
-                            break;
-                        case "Free":
-                            count = categoryData.filter(item => !item.GalleryPremium).length;
-                            break;
-                        default:
-                            count = categoryData.length;
-                    }
-
-                    return (
-                        <Nav.Item key={cat._id}>
-                            <Nav.Link
-                                active={activeTab === cat.CategoryName.toLowerCase()}
-                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                                onClick={() => {
-                                    setActiveTab(cat.CategoryName.toLowerCase());
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <span className="pe-2">{cat.CategoryName}</span>
-                                ({count})
-                            </Nav.Link>
-                        </Nav.Item>
-                    );
-                })}
+                {category.map((cat) => (
+                    <Nav.Item key={cat._id}>
+                        <Nav.Link
+                            active={activeTab === cat.CategoryName.toLowerCase()}
+                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab(cat.CategoryName.toLowerCase());
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <span className="pe-2">{cat.CategoryName}</span>
+                            ({getFilteredCount(cat.CategoryId, selectedFilter)})
+                        </Nav.Link>
+                    </Nav.Item>
+                ))}
             </Nav>
 
             <Modal
@@ -578,10 +661,7 @@ const Gallery = () => {
                                             padding: 0,
                                             cursor: 'pointer',
                                         }}
-                                        onClick={() => {
-                                            setPreviewIndex(indexOfFirstItem + index);
-                                            setShowPreview(true);
-                                        }}
+                                        onClick={() => handleShowPreview(index)}
                                     >
                                         <img
                                             src={gallery.GalleryImage}
@@ -627,10 +707,9 @@ const Gallery = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={8} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
+                            <td colSpan={8} className="text-center">No Data Found</td>
                         </tr>
                     )}
-
                 </tbody>
             </Table>
 
@@ -647,13 +726,10 @@ const Gallery = () => {
             <ImagePreviewModal
                 show={showPreview}
                 onHide={() => setShowPreview(false)}
-                images={currentItems.map(item => item.GalleryImage)}
+                images={filteredData.map(item => item.GalleryImage)}
                 currentIndex={previewIndex}
-                onNavigate={(newIndex) => {
-                    if (newIndex >= 0 && newIndex < currentItems.length) {
-                        setPreviewIndex(newIndex);
-                    }
-                }}
+                onNavigate={handlePreviewNavigation}
+                totalImages={filteredData.length}
             />
         </div>
     );

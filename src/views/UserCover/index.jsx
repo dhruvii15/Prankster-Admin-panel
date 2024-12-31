@@ -185,6 +185,13 @@ const UserCover = () => {
         }
     };
 
+    const handlePreviewClick = (index) => {
+        // Calculate the actual index in filteredData based on current page and clicked index
+        const actualIndex = indexOfFirstItem + index;
+        setPreviewIndex(actualIndex);
+        setShowPreview(true);
+    };
+
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
     const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -272,13 +279,10 @@ const UserCover = () => {
                                             padding: 0,
                                             cursor: 'pointer',
                                         }}
-                                        onClick={() => {
-                                            setPreviewIndex(indexOfFirstItem + index);
-                                            setShowPreview(true);
-                                        }}
+                                        onClick={() => handlePreviewClick(index)}
                                     >
                                         <img
-                                            src={cover.CoverURL || 'placeholder.jpg'} // Default fallback image
+                                            src={cover.CoverURL || 'placeholder.jpg'}
                                             alt="cover thumbnail"
                                             style={{ width: '100px', height: '100px', objectFit: 'cover' }}
                                         />
@@ -542,10 +546,10 @@ const UserCover = () => {
             <ImagePreviewModal
                 show={showPreview}
                 onHide={() => setShowPreview(false)}
-                images={currentItems.map(item => item.CoverURL)}
+                images={filteredData.map(item => item.CoverURL)} // Use filteredData instead of currentItems
                 currentIndex={previewIndex}
                 onNavigate={(newIndex) => {
-                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                    if (newIndex >= 0 && newIndex < filteredData.length) { // Check against filteredData length
                         setPreviewIndex(newIndex);
                     }
                 }}

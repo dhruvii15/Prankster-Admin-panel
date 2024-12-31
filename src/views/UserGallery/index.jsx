@@ -62,6 +62,10 @@ const UserGallery = () => {
         getCategory();
     }, []);
 
+    const getAbsoluteIndex = (pageIndex) => {
+        return indexOfFirstItem + pageIndex;
+    };
+
     const handleModalClose = () => {
         setShowModal(false);
         setSelectedGallery(null);
@@ -243,12 +247,12 @@ const UserGallery = () => {
                                             cursor: 'pointer',
                                         }}
                                         onClick={() => {
-                                            setPreviewIndex(indexOfFirstItem + index);
+                                            setPreviewIndex(getAbsoluteIndex(index));
                                             setShowPreview(true);
                                         }}
                                     >
                                         <img
-                                            src={gallery.GalleryImage || 'placeholder.jpg'} // Fallback image if GalleryImage is missing
+                                            src={gallery.GalleryImage || 'placeholder.jpg'}
                                             alt="gallery thumbnail"
                                             style={{ width: '100px', height: '100px', objectFit: 'cover' }}
                                         />
@@ -411,10 +415,10 @@ const UserGallery = () => {
             <ImagePreviewModal
                 show={showPreview}
                 onHide={() => setShowPreview(false)}
-                images={currentItems.map(item => item.GalleryImage)}
+                images={filteredData.map(item => item.GalleryImage)}
                 currentIndex={previewIndex}
                 onNavigate={(newIndex) => {
-                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                    if (newIndex >= 0 && newIndex < filteredData.length) {
                         setPreviewIndex(newIndex);
                     }
                 }}

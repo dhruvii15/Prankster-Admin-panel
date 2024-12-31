@@ -24,10 +24,54 @@ const Audio = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [selectedImageFileName, setSelectedImageFileName] = useState('');
     const [selectedAudioFileName, setSelectedAudioFileName] = useState('');
+    const [isOn, setIsOn] = useState(false);
+    const [isSubmitting2, setIsSubmitting2] = useState(false);
+    const [adminId, setAdminId] = useState(null);
 
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
     const [selectedFilter, setSelectedFilter] = useState('');
+
+    const getAdminData = () => {
+        axios.get('https://pslink.world/api/admin/read')
+            .then((res) => {
+                setIsOn(res.data.data[0].AudioSafe);
+                setAdminId(res.data.data[0]._id);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to fetch admin data.");
+            });
+    };
+
+    const handleToggle = async () => {
+        if (!isSubmitting2) {
+            const newState = !isOn;
+            try {
+                setIsSubmitting2(true);
+                setIsOn(newState);
+
+                // Call the appropriate API based on the state
+                const apiEndpoint = newState ? 'safe' : 'unsafe';
+                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "1" });
+
+                // Reset to first page when toggling safe mode
+                setCurrentPage(1);
+
+                // Fetch updated data
+                getData();
+                getAdminData();
+
+                toast.success(response.data.message);
+            } catch (error) {
+                console.error('Error updating safe status:', error);
+                toast.error("Failed to update safe status.");
+                setIsOn(!newState); // Revert to previous state on error
+            } finally {
+                setIsSubmitting2(false);
+            }
+        }
+    };
 
     const toggleModal = (mode) => {
         if (!visible) {
@@ -81,13 +125,40 @@ const Audio = () => {
     useEffect(() => {
         getData();
         getCategory();
+        getAdminData();
     }, []);
+
+
+    const getFilteredCount = (categoryId = null, filterType = '') => {
+        // First filter by safe/unsafe status
+        let filtered = data.filter(item => item.Unsafe === !isOn);
+
+        // Then apply category filter if specified
+        if (categoryId) {
+            filtered = filtered.filter(item => item.CategoryId === categoryId);
+        }
+
+        // Finally apply additional filters
+        switch (filterType) {
+            case "Hide":
+                return filtered.filter(item => item.Hide).length;
+            case "Unhide":
+                return filtered.filter(item => !item.Hide).length;
+            case "Premium":
+                return filtered.filter(item => item.AudioPremium).length;
+            case "Free":
+                return filtered.filter(item => !item.AudioPremium).length;
+            default:
+                return filtered.length;
+        }
+    };
 
     // Updated filtering function
     const filterAudioData = (dataToFilter, categoryTab, additionalFilter) => {
-        let filtered = [...dataToFilter];
+        // First filter by unsafe status
+        let filtered = dataToFilter.filter(item => item.Unsafe === !isOn);
 
-        // Filter by category
+        // Then filter by category
         if (categoryTab !== 'all') {
             const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
             if (selectedCategory) {
@@ -172,7 +243,8 @@ const Audio = () => {
             AudioPremium: false,
             CategoryId: '',
             Hide: false,
-            isEditing: false
+            isEditing: false,
+            Unsafe: true
         },
         validationSchema: audioSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -190,6 +262,7 @@ const Audio = () => {
                 formData.append('AudioPremium', values.AudioPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('Hide', values.Hide);
+                formData.append('Unsafe', "true");
 
                 const request = id !== undefined
                     ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
@@ -345,10 +418,22 @@ const Audio = () => {
 
     return (
         <div>
-            <div className='d-sm-flex justify-content-between align-items-center'>
+             <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Audio Prank</h4>
                 </div>
+                <Form className='d-flex align-items-center gap-3'>
+                    <span>Safe : </span>
+                    <Form.Check
+                        type="switch"
+                        id="custom-switch"
+                        checked={isOn}
+                        onChange={handleToggle}
+                        className="custom-switch-lg"
+                        style={{ transform: 'scale(1.3)' }}
+                        disabled={isSubmitting2}
+                    />
+                </Form>
             </div>
             <div className="d-flex justify-content-between align-items-center">
                 <Button
@@ -382,47 +467,24 @@ const Audio = () => {
                             setCurrentPage(1);
                         }}
                     >
-                        All ({selectedFilter ? filteredData.length : data.length})
+                        All ({getFilteredCount(null, selectedFilter)})
                     </Nav.Link>
                 </Nav.Item>
-                {category.map((cat) => {
-                    // Get count based on current filter and category
-                    const categoryData = data.filter(item => item.CategoryId === cat.CategoryId);
-                    let count;
-
-                    switch (selectedFilter) {
-                        case "Hide":
-                            count = categoryData.filter(item => item.Hide).length;
-                            break;
-                        case "Unhide":
-                            count = categoryData.filter(item => !item.Hide).length;
-                            break;
-                        case "Premium":
-                            count = categoryData.filter(item => item.AudioPremium).length;
-                            break;
-                        case "Free":
-                            count = categoryData.filter(item => !item.AudioPremium).length;
-                            break;
-                        default:
-                            count = categoryData.length;
-                    }
-
-                    return (
-                        <Nav.Item key={cat._id}>
-                            <Nav.Link
-                                active={activeTab === cat.CategoryName.toLowerCase()}
-                                className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                                onClick={() => {
-                                    setActiveTab(cat.CategoryName.toLowerCase());
-                                    setCurrentPage(1);
-                                }}
-                            >
-                                <span className="pe-2">{cat.CategoryName}</span>
-                                ({count})
-                            </Nav.Link>
-                        </Nav.Item>
-                    );
-                })}
+                {category.map((cat) => (
+                    <Nav.Item key={cat._id}>
+                        <Nav.Link
+                            active={activeTab === cat.CategoryName.toLowerCase()}
+                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
+                            onClick={() => {
+                                setActiveTab(cat.CategoryName.toLowerCase());
+                                setCurrentPage(1);
+                            }}
+                        >
+                            <span className="pe-2">{cat.CategoryName}</span>
+                            ({getFilteredCount(cat.CategoryId, selectedFilter)})
+                        </Nav.Link>
+                    </Nav.Item>
+                ))}
             </Nav>
 
             <Modal

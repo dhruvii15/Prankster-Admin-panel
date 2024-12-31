@@ -33,6 +33,9 @@ const CoverURL = () => {
     const [currentImage, setCurrentImage] = useState(null);
     const [showPreview, setShowPreview] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
+    const [isOn, setIsOn] = useState(false);
+    const [isSubmitting2, setIsSubmitting2] = useState(false);
+    const [adminId, setAdminId] = useState(null);
     console.log(previewUrl);
 
 
@@ -129,14 +132,63 @@ const CoverURL = () => {
             });
     };
 
+    const getAdminData = () => {
+        axios.get('https://pslink.world/api/admin/read')
+            .then((res) => {
+                setIsOn(res.data.data[0].CoverSafe);
+                setAdminId(res.data.data[0]._id);
+            })
+            .catch((err) => {
+                console.error(err);
+                toast.error("Failed to fetch admin data.");
+            });
+    };
+
     useEffect(() => {
         getData();
         getTagName();
+        getAdminData();
     }, []);
 
-    const filterData = (covers) => {
-        const categoryData = covers.filter(cover => cover.Category === activeTab);
+    const getGlobalIndex = (localIndex) => {
+        return (currentPage - 1) * itemsPerPage + localIndex;
+    };
 
+    // Get the local index from global index
+    const getLocalIndex = (globalIndex) => {
+        return globalIndex % itemsPerPage;
+    };
+
+    // Get the page number from global index
+    const getPageFromIndex = (globalIndex) => {
+        return Math.floor(globalIndex / itemsPerPage) + 1;
+    };
+
+    // Handle navigation in the preview modal
+    const handlePreviewNavigation = (newGlobalIndex) => {
+        const filteredData = filterData(data);
+        if (newGlobalIndex >= 0 && newGlobalIndex < filteredData.length) {
+            // Calculate the new page number
+            const newPage = getPageFromIndex(newGlobalIndex);
+
+            // Update the current page if necessary
+            if (newPage !== currentPage) {
+                setCurrentPage(newPage);
+            }
+
+            // Update the preview index
+            setPreviewIndex(newGlobalIndex);
+        }
+    };
+
+    const filterData = (covers) => {
+        // First filter by unsafe status based on isOn state
+        const safetyFilteredData = covers.filter(cover => cover.Unsafe === !isOn);
+
+        // Then filter by category
+        const categoryData = safetyFilteredData.filter(cover => cover.Category === activeTab);
+
+        // Finally apply the selected filter
         switch (selectedFilter) {
             case "Hide":
                 return categoryData.filter(cover => cover.Hide === true);
@@ -152,7 +204,11 @@ const CoverURL = () => {
     };
 
     const getTabCount = (category) => {
-        const categoryData = data.filter(cover => cover.Category === category);
+        // First filter by unsafe status
+        const safetyFilteredData = data.filter(cover => cover.Unsafe === !isOn);
+
+        // Then filter by category
+        const categoryData = safetyFilteredData.filter(cover => cover.Category === category);
 
         switch (selectedFilter) {
             case "Hide":
@@ -209,6 +265,7 @@ const CoverURL = () => {
             CoverURL: '',
             CoverPremium: false,
             Hide: false,
+            Unsafe: true,
             isEditing: false,
         },
         validationSchema: coverSchema,
@@ -227,6 +284,7 @@ const CoverURL = () => {
                 formData.append('CoverName', values.CoverName);
                 formData.append('CoverPremium', values.CoverPremium);
                 formData.append('Hide', values.Hide);
+                formData.append('Unsafe', "true");
 
                 let response;
                 if (isEditing) {
@@ -372,6 +430,32 @@ const CoverURL = () => {
             });
     };
 
+    const handleToggle = async () => {
+        if (!isSubmitting2) {
+            const newState = !isOn;
+            try {
+                setIsSubmitting2(true);
+                setIsOn(newState);
+
+                const apiEndpoint = newState ? 'safe' : 'unsafe';
+                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "4" });
+
+                // Reset to first page when toggling safe mode
+                setCurrentPage(1);
+                getData();
+                getAdminData(); // Refresh admin data after toggle
+
+                toast.success(response.data.message);
+            } catch (error) {
+                console.error('Error updating safe status:', error);
+                toast.error("Failed to update safe status.");
+                setIsOn(!newState);  // Revert to previous state on error
+            } finally {
+                setIsSubmitting2(false);
+            }
+        }
+    };
+
     if (loading) {
         return (
             <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: "hidden" }}>
@@ -405,6 +489,18 @@ const CoverURL = () => {
                 <div>
                     <h4>Cover Image</h4>
                 </div>
+                <Form className='d-flex align-items-center gap-3'>
+                    <span>Safe : </span>
+                    <Form.Check
+                        type="switch"
+                        id="custom-switch"
+                        checked={isOn}
+                        onChange={handleToggle}
+                        className="custom-switch-lg"
+                        style={{ transform: 'scale(1.3)' }}
+                        disabled={isSubmitting2}
+                    />
+                </Form>
             </div>
 
             <div className="d-flex justify-content-between align-items-center">
@@ -479,12 +575,13 @@ const CoverURL = () => {
                                             cursor: 'pointer',
                                         }}
                                         onClick={() => {
-                                            setPreviewIndex(indexOfFirstItem + index);
+                                            // Use global index instead of local index
+                                            setPreviewIndex(getGlobalIndex(index));
                                             setShowPreview(true);
                                         }}
                                     >
                                         <img
-                                            src={cover.CoverURL || 'placeholder.jpg'} // Default fallback image
+                                            src={cover.CoverURL || 'placeholder.jpg'}
                                             alt="CoverImage"
                                             style={{
                                                 width: '150px',
@@ -753,13 +850,9 @@ const CoverURL = () => {
             <ImagePreviewModal
                 show={showPreview}
                 onHide={() => setShowPreview(false)}
-                images={currentItems.map(item => item.CoverURL)}
+                images={filterData(data).map(item => item.CoverURL)} // Use the full filtered dataset
                 currentIndex={previewIndex}
-                onNavigate={(newIndex) => {
-                    if (newIndex >= 0 && newIndex < currentItems.length) {
-                        setPreviewIndex(newIndex);
-                    }
-                }}
+                onNavigate={handlePreviewNavigation} // Use the new navigation handler
             />
         </div>
     );

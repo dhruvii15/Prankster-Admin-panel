@@ -24,6 +24,15 @@ const Category = () => {
     const [showPreview, setShowPreview] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
 
+    const getActualImageIndex = (pageIndex) => {
+        return indexOfFirstItem + pageIndex;
+    };
+
+    // Get all images for the preview modal based on filtered data
+    const getAllFilteredImages = () => {
+        return filteredItems.map(item => item.CategoryImage);
+    };
+
     const toggleModal = (mode) => {
         if (!visible) {
             if (mode === 'add') {
@@ -448,12 +457,13 @@ const Category = () => {
                                             cursor: 'pointer',
                                         }}
                                         onClick={() => {
-                                            setPreviewIndex(indexOfFirstItem + index);
+                                            // Use the actual index in the full dataset
+                                            setPreviewIndex(getActualImageIndex(index));
                                             setShowPreview(true);
                                         }}
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' || e.key === ' ') {
-                                                setPreviewIndex(indexOfFirstItem + index);
+                                                setPreviewIndex(getActualImageIndex(index));
                                                 setShowPreview(true);
                                                 e.preventDefault();
                                             }
@@ -466,7 +476,6 @@ const Category = () => {
                                         />
                                     </button>
                                 </td>
-
                                 <td>{cardBg.CategoryName}</td>
                                 <td>{cardBg.Type}</td>
                                 <td>
@@ -500,10 +509,10 @@ const Category = () => {
             <ImagePreviewModal
                 show={showPreview}
                 onHide={() => setShowPreview(false)}
-                images={currentItems.map(item => item.CategoryImage)}
+                images={getAllFilteredImages()}
                 currentIndex={previewIndex}
                 onNavigate={(newIndex) => {
-                    if (newIndex >= 0 && newIndex < currentItems.length) {
+                    if (newIndex >= 0 && newIndex < filteredItems.length) {
                         setPreviewIndex(newIndex);
                     }
                 }}
