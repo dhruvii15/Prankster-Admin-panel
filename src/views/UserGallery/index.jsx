@@ -22,7 +22,8 @@ const UserGallery = () => {
         categoryId: '',
         galleryName: '',
         galleryPremium: false,
-        hide: false
+        hide: false,
+        Unsafe: true
     });
     const [showPreview, setShowPreview] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
@@ -73,7 +74,8 @@ const UserGallery = () => {
             categoryId: '',
             galleryName: '',
             galleryPremium: false,
-            hide: false
+            hide: false,
+            Unsafe: true
         });
         setFormErrors({});
     };
@@ -84,7 +86,8 @@ const UserGallery = () => {
             categoryId: '',
             galleryName: gallery.GalleryName,
             galleryPremium: false,
-            hide: false
+            hide: false,
+            Unsafe: true
         });
         setShowModal(true);
     };
@@ -113,6 +116,7 @@ const UserGallery = () => {
         submitFormData.append('GalleryPremium', formData.galleryPremium);
         submitFormData.append('Hide', formData.hide);
         submitFormData.append('role', selectedGallery._id);
+        submitFormData.append('Unsafe', 'true');
         submitFormData.append('CategoryId', formData.categoryId);
 
         if (window.confirm("Are you sure you want to move this Gallery Image?")) {

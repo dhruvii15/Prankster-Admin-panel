@@ -105,7 +105,7 @@ const Video = () => {
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
-                filterVideoData(newData, activeTab, selectedFilter);
+                // Remove the filterVideoData call here
                 setLoading(false);
             })
             .catch((err) => {
@@ -134,6 +134,8 @@ const Video = () => {
 
 
     const getFilteredCount = (categoryId = null, filterType = '') => {
+        if (!data || data.length === 0) return 0;
+        
         // First filter by safe/unsafe status
         let filtered = data.filter(item => item.Unsafe === !isOn);
 
@@ -159,14 +161,20 @@ const Video = () => {
 
     // Updated filtering function
     const filterVideoData = (dataToFilter, categoryTab, additionalFilter) => {
+        if (!dataToFilter || dataToFilter.length === 0) return [];
+        
         // First filter by unsafe status
         let filtered = dataToFilter.filter(item => item.Unsafe === !isOn);
 
         // Then filter by category
         if (categoryTab !== 'all') {
-            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
+            const selectedCategory = category.find(cat => 
+                cat.CategoryName.toLowerCase() === categoryTab
+            );
             if (selectedCategory) {
-                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+                filtered = filtered.filter(item => 
+                    item.CategoryId === selectedCategory.CategoryId
+                );
             }
         }
 
@@ -188,14 +196,16 @@ const Video = () => {
                 break;
         }
 
-        setFilteredData(filtered);
-        setCurrentPage(1);
+        return filtered;
     };
 
     // Update useEffect to handle filtering
     useEffect(() => {
-        filterVideoData(data, activeTab, selectedFilter);
-    }, [activeTab, selectedFilter, data]);
+        if (data.length > 0) {
+            const filtered = filterVideoData(data, activeTab, selectedFilter);
+            setFilteredData(filtered);
+        }
+    }, [data, activeTab, selectedFilter, isOn, category]);
 
 
     const videoSchema = Yup.object().shape({

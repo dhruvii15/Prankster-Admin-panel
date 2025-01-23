@@ -38,6 +38,15 @@ const UserCover = () => {
     const visibleTags = isExpanded ? availableTags : availableTags.slice(0, 7);
     const totalTags = availableTags.length;
 
+    const handleKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault(); // Prevent form submission
+            if (customTagName.trim() && selectedTags.length < maxTags && !selectedTags.includes(customTagName.trim())) {
+                handleCustomTagAdd();
+            }
+        }
+    };
+
     const validateForm = () => {
         const errors = {};
         if (!formData.Category) {
@@ -108,7 +117,8 @@ const UserCover = () => {
             CoverName: cover.CoverName || '',
             Category: '',
             CoverPremium: false,
-            Hide: false
+            Hide: false,
+            Unsafe: true,
         }));
         setShowModal(true);
     };
@@ -143,6 +153,7 @@ const UserCover = () => {
         apiFormData.append('CoverPremium', formData.CoverPremium);
         apiFormData.append('Hide', formData.Hide);
         apiFormData.append('role', selectedCover._id);
+        apiFormData.append('Unsafe', 'true');
         apiFormData.append('TagName', JSON.stringify(selectedTags));
 
         if (window.confirm("Are you sure you want to move this Cover Image?")) {
@@ -165,7 +176,8 @@ const UserCover = () => {
             Category: '',
             CoverName: '',  // Reset cover name
             CoverPremium: false,
-            Hide: false
+            Hide: false,
+            Unsafe: true
         });
         setSelectedTags([]);
         setFormErrors({});
@@ -398,12 +410,13 @@ const UserCover = () => {
                             ))}
                         </div>
 
-                        {/* Add Custom Tag Input */}
+                        {/* Add Custom Tag Input - Modified with Enter key support */}
                         <div className="d-flex align-items-center gap-2 mb-2">
                             <Form.Control
                                 type="text"
                                 value={customTagName}
                                 onChange={(e) => setCustomTagName(e.target.value)}
+                                onKeyDown={handleKeyDown} // Add Enter key support
                                 placeholder="Add custom tag"
                                 className={formErrors.tags ? "is-invalid" : ""}
                             />
@@ -411,6 +424,7 @@ const UserCover = () => {
                                 style={{ backgroundColor: "#F9E238", color: "black" }}
                                 className="border-0 rounded-2 px-5"
                                 onClick={handleCustomTagAdd}
+                                disabled={!customTagName.trim() || selectedTags.length >= maxTags || selectedTags.includes(customTagName.trim())}
                             >
                                 Add
                             </Button>

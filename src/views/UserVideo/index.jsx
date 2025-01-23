@@ -22,7 +22,8 @@ const UserVideo = () => {
         artistName: '',
         videoName: '',
         videoPremium: false,
-        hide: false
+        hide: false,
+        Unsafe: true,
     });
 
     // Pagination states
@@ -68,7 +69,8 @@ const UserVideo = () => {
             artistName: '',
             videoName: '',
             videoPremium: false,
-            hide: false
+            hide: false,
+            Unsafe: true
         });
         setFormErrors({});
     };
@@ -80,7 +82,8 @@ const UserVideo = () => {
             artistName: '',
             videoName: video.VideoName,
             videoPremium: false,
-            hide: false
+            hide: false,
+            Unsafe: true
         });
         setShowModal(true);
     };
@@ -111,6 +114,7 @@ const UserVideo = () => {
         submitFormData.append('role', selectedVideo._id);
         submitFormData.append('CategoryId', formData.categoryId);
         submitFormData.append('ArtistName', formData.artistName);
+        submitFormData.append('Unsafe', 'true');
 
         if (window.confirm("Are you sure you want to move this Video?")) {
             axios.post('https://pslink.world/api/video/create', submitFormData)

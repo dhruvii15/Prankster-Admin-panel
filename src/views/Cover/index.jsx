@@ -154,11 +154,6 @@ const CoverURL = () => {
         return (currentPage - 1) * itemsPerPage + localIndex;
     };
 
-    // Get the local index from global index
-    const getLocalIndex = (globalIndex) => {
-        return globalIndex % itemsPerPage;
-    };
-
     // Get the page number from global index
     const getPageFromIndex = (globalIndex) => {
         return Math.floor(globalIndex / itemsPerPage) + 1;

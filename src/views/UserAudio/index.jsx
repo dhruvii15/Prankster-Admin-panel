@@ -22,7 +22,8 @@ const UserAudio = () => {
         artistName: '',
         audioName: '',
         audioPremium: false,
-        hide: false
+        hide: false,
+        Unsafe: true
     });
 
     // Pagination states
@@ -68,7 +69,8 @@ const UserAudio = () => {
             artistName: '',
             audioName: '',
             audioPremium: false,
-            hide: false
+            hide: false,
+            Unsafe: true
         });
     };
 
@@ -79,7 +81,8 @@ const UserAudio = () => {
             artistName: '',
             audioName: audio.AudioName,
             audioPremium: false,
-            hide: false
+            hide: false,
+            Unsafe: true
         });
         setShowModal(true);
     };
@@ -110,6 +113,7 @@ const UserAudio = () => {
         submitFormData.append('role', selectedAudio._id);
         submitFormData.append('CategoryId', formData.categoryId);
         submitFormData.append('ArtistName', formData.artistName);
+        submitFormData.append('Unsafe', 'true');
 
         if (window.confirm("Are you sure you want to move this Audio?")) {
             axios.post('https://pslink.world/api/audio/create', submitFormData)

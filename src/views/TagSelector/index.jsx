@@ -20,6 +20,16 @@ const TagSelector = ({
     setIsExpanded(!isExpanded);
   };
 
+  // Handle Enter key press
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // Prevent form submission
+      if (customTagName.trim() && selectedTags.length < maxTags) {
+        handleCustomTagAdd();
+      }
+    }
+  };
+
   // Sort available tags alphabetically
   const sortedTags = [...availableTags].sort((a, b) => a.localeCompare(b));
   const visibleTags = isExpanded ? sortedTags : sortedTags.slice(0, 5);
@@ -59,6 +69,7 @@ const TagSelector = ({
           type="text"
           value={customTagName}
           onChange={(e) => setCustomTagName(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Enter custom tag name"
         />
         <Button
@@ -114,8 +125,8 @@ const TagSelector = ({
                     toggleExpand();
                   }
                 }}
-                role="button" // Inform screen readers it's interactive
-                tabIndex={0} // Make it focusable
+                role="button"
+                tabIndex={0}
                 className="border px-2 py-1 rounded-2"
               >
                 + {totalTags - 5}
