@@ -13,9 +13,27 @@ import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import logo from "../../assets/images/logo.svg";
 
 const Audio = () => {
+
+    const category = [
+        { CategoryId: 1, CategoryName: 'Trending' },
+        { CategoryId: 2, CategoryName: 'Nonveg' },
+        { CategoryId: 3, CategoryName: 'Hot' },
+        { CategoryId: 4, CategoryName: 'Funny' },
+        { CategoryId: 5, CategoryName: 'Horror' },
+        { CategoryId: 6, CategoryName: 'Celebrity' }
+    ];
+
+    const language = [
+        { LanguageId: 1, LanguageName: 'Hindi' },
+        { LanguageId: 2, LanguageName: 'English' },
+        { LanguageId: 3, LanguageName: 'Marathi' },
+        { LanguageId: 4, LanguageName: 'Gujarati' },
+        { LanguageId: 5, LanguageName: 'Tamil' },
+        { LanguageId: 6, LanguageName: 'Punjabi' }
+    ];
+
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Audio Prank Image Upload');
@@ -31,9 +49,21 @@ const Audio = () => {
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
     const [selectedFilter, setSelectedFilter] = useState('');
+    const [selectedLanguageFilter, setSelectedLanguageFilter] = useState('');
+
+
+    const getCategoryName = (categoryId) => {
+        const cat = category.find(c => c.CategoryId === parseInt(categoryId));
+        return cat ? cat.CategoryName : categoryId;
+    };
+
+    const getLanguageName = (languageId) => {
+        const lang = language.find(l => l.LanguageId === parseInt(languageId));
+        return lang ? lang.LanguageName : languageId;
+    };
 
     const getAdminData = () => {
-        axios.get('http://localhost:5001/api/admin/read')
+        axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].AudioSafe);
                 setAdminId(res.data.data[0]._id);
@@ -53,7 +83,7 @@ const Audio = () => {
 
                 // Call the appropriate API based on the state
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
-                const response = await axios.post(`http://localhost:5001/api/${apiEndpoint}/${adminId}`, { type: "1" });
+                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "1" });
 
                 // Reset to first page when toggling safe mode
                 setCurrentPage(1);
@@ -95,7 +125,7 @@ const Audio = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/audio/read')
+        axios.post('https://pslink.world/api/audio/read')
             .then((res) => {
                 const newData = res.data.data.reverse();
                 setData(newData);
@@ -110,55 +140,24 @@ const Audio = () => {
     };
 
 
-    const getCategory = () => {
-        axios.post('http://localhost:5001/api/category/read')
-            .then((res) => {
-                setCategory(res.data.data.filter(cat => cat.Type.includes('audio')));
-            })
-            .catch((err) => {
-                console.error(err);
-                toast.error("Failed to fetch category.");
-            });
-    };
-
-
     useEffect(() => {
         getData();
-        getCategory();
         getAdminData();
     }, []);
 
 
-    const getFilteredCount = (categoryId = null, filterType = '') => {
-        // First filter by safe/unsafe status
+    const getFilteredCount = (options = {}) => {
+        const {
+            categoryId = null,
+            languageId = null,
+            filterType = '',
+            categoryTab = 'all'
+        } = options;
+
+        // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Unsafe === !isOn);
 
-        // Then apply category filter if specified
-        if (categoryId) {
-            filtered = filtered.filter(item => item.CategoryId === categoryId);
-        }
-
-        // Finally apply additional filters
-        switch (filterType) {
-            case "Hide":
-                return filtered.filter(item => item.Hide).length;
-            case "Unhide":
-                return filtered.filter(item => !item.Hide).length;
-            case "Premium":
-                return filtered.filter(item => item.AudioPremium).length;
-            case "Free":
-                return filtered.filter(item => !item.AudioPremium).length;
-            default:
-                return filtered.length;
-        }
-    };
-
-    // Updated filtering function
-    const filterAudioData = (dataToFilter, categoryTab, additionalFilter) => {
-        // First filter by unsafe status
-        let filtered = dataToFilter.filter(item => item.Unsafe === !isOn);
-
-        // Then filter by category
+        // Apply category filter
         if (categoryTab !== 'all') {
             const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
             if (selectedCategory) {
@@ -166,8 +165,18 @@ const Audio = () => {
             }
         }
 
+        // Apply specific category filter if provided
+        if (categoryId) {
+            filtered = filtered.filter(item => item.CategoryId === categoryId);
+        }
+
+        // Apply language filter
+        if (languageId) {
+            filtered = filtered.filter(item => item.LanguageId === parseInt(languageId));
+        }
+
         // Apply additional filters
-        switch (additionalFilter) {
+        switch (filterType) {
             case "Hide":
                 filtered = filtered.filter(item => item.Hide === true);
                 break;
@@ -180,19 +189,52 @@ const Audio = () => {
             case "Free":
                 filtered = filtered.filter(item => item.AudioPremium === false);
                 break;
-            default:
+        }
+
+        return filtered.length;
+    };
+
+    const filterAudioData = () => {
+        // Start with base filtering by safe/unsafe
+        let filtered = data.filter(item => item.Unsafe === !isOn);
+
+        // Apply category filter
+        if (activeTab !== 'all') {
+            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === activeTab);
+            if (selectedCategory) {
+                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            }
+        }
+
+        // Apply language filter
+        if (selectedLanguageFilter) {
+            filtered = filtered.filter(item => item.LanguageId === parseInt(selectedLanguageFilter));
+        }
+
+        // Apply additional filters
+        switch (selectedFilter) {
+            case "Hide":
+                filtered = filtered.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = filtered.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = filtered.filter(item => item.AudioPremium === true);
+                break;
+            case "Free":
+                filtered = filtered.filter(item => item.AudioPremium === false);
                 break;
         }
 
         setFilteredData(filtered);
-        setCurrentPage(1);
     };
 
 
     // Update useEffect to handle filtering
     useEffect(() => {
-        filterAudioData(data, activeTab, selectedFilter);
-    }, [activeTab, selectedFilter, data]);
+        filterAudioData();
+    }, [activeTab, selectedFilter, selectedLanguageFilter, data, isOn]);
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Prank Name is required'),
@@ -229,6 +271,7 @@ const Audio = () => {
             ),
         AudioPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Prank Category Name is required'),
+        LanguageId: Yup.string().required('Prank Language is required'),
         Hide: Yup.boolean(),
         isEditing: Yup.boolean()
     });
@@ -242,6 +285,7 @@ const Audio = () => {
             AudioImage: '',
             AudioPremium: false,
             CategoryId: '',
+            LanguageId: '',
             Hide: false,
             isEditing: false,
             Unsafe: true
@@ -261,12 +305,13 @@ const Audio = () => {
                 }
                 formData.append('AudioPremium', values.AudioPremium);
                 formData.append('CategoryId', values.CategoryId);
+                formData.append('LanguageId', values.LanguageId);
                 formData.append('Hide', values.Hide);
                 formData.append('Unsafe', "true");
 
                 const request = id !== undefined
-                    ? axios.patch(`http://localhost:5001/api/audio/update/${id}`, formData)
-                    : axios.post('http://localhost:5001/api/audio/create', formData);
+                    ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/audio/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -281,7 +326,7 @@ const Audio = () => {
                 toggleModal('add');
             } catch (err) {
                 console.error(err);
-                toast.error("An error occurred. Please try again.");
+                toast.error(err.response.data.message);
             } finally {
                 setIsSubmitting(false);
                 setSubmitting(false);
@@ -302,6 +347,7 @@ const Audio = () => {
             AudioImage: '', // Reset file input
             AudioPremium: audio.AudioPremium,
             CategoryId: audio.CategoryId,
+            LanguageId: audio.LanguageId,
             Hide: audio.Hide,
             isEditing: true
         });
@@ -311,8 +357,78 @@ const Audio = () => {
         toggleModal('edit');
     };
 
+    const handleFileChange = async (event) => {
+        const file = event.currentTarget.files[0];
+        if (file) {
+            try {
+                // First compress the image
+                const compressedFile = await compressImage(file);
+    
+                // Check file size after compression
+                if (compressedFile.size > 5 * 1024 * 1024) { // 5MB in bytes
+                    toast.error('Compressed file still exceeds 5MB limit');
+                    return;
+                }
+    
+                // Update Formik field and file state
+                formik.setFieldValue("AudioImage", compressedFile);  // Change from CoverURL to AudioImage
+                setSelectedImageFileName(compressedFile.name);
+                setImageFileLabel(compressedFile.name);
+            } catch (error) {
+                toast.error('Error processing image');
+                console.error(error);
+            }
+        }
+    };
+    
+    // Image compression function (same as previous implementation)
+    const compressImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+    
+                    // Reduce image quality and size
+                    const maxWidth = 1920;
+                    const maxHeight = 1080;
+                    let width = img.width;
+                    let height = img.height;
+    
+                    // Scale down if larger than max dimensions
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width *= ratio;
+                        height *= ratio;
+                    }
+    
+                    canvas.width = width;
+                    canvas.height = height;
+    
+                    ctx.drawImage(img, 0, 0, width, height);
+    
+                    // Convert to blob with reduced quality
+                    canvas.toBlob((blob) => {
+                        // Create a new file from the compressed blob
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        resolve(compressedFile);
+                    }, 'image/jpeg', 0.7); // 0.7 quality (70%)
+                };
+                img.onerror = reject;
+            };
+            reader.onerror = reject;
+        });
+    };
+
     const handlePremiumToggle = (audioId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5001/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -324,7 +440,7 @@ const Audio = () => {
     };
 
     const handleHideToggle = (audioId, currentHideStatus) => {
-        axios.patch(`http://localhost:5001/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
+        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -337,7 +453,7 @@ const Audio = () => {
 
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio Prank?")) {
-            axios.delete(`http://localhost:5001/api/audio/delete/${audioId}`)
+            axios.delete(`https://pslink.world/api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -418,7 +534,7 @@ const Audio = () => {
 
     return (
         <div>
-             <div className='d-sm-flex justify-content-between align-items-center'>
+            <div className='d-sm-flex justify-content-between align-items-center'>
                 <div>
                     <h4>Audio Prank</h4>
                 </div>
@@ -435,53 +551,76 @@ const Audio = () => {
                     />
                 </Form>
             </div>
-            <div className="d-flex justify-content-between align-items-center">
+            <div className='d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4'>
                 <Button
                     onClick={() => toggleModal('add')}
-                    className='my-4 rounded-3 border-0'
+                    className='rounded-3 border-0'
                     style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
                     Add Audio Prank
                 </Button>
-                <Form.Select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
-                    style={{ width: 'auto' }}
-                >
-                    <option value="">All</option>
-                    <option value="Hide">Hide</option>
-                    <option value="Unhide">Unhide</option>
-                    <option value="Premium">Premium</option>
-                    <option value="Free">Free</option>
-                </Form.Select>
+                <div className='d-flex gap-4 flex-wrap align-items-center'>
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Status :</span>
+                        <Form.Select
+                            value={selectedFilter}
+                            onChange={(e) => setSelectedFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All Status</option>
+                            <option value="Hide">Hide</option>
+                            <option value="Unhide">Unhide</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Free">Free</option>
+                        </Form.Select>
+                    </div>
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Language :</span>
+                        <Form.Select
+                            value={selectedLanguageFilter}
+                            onChange={(e) => setSelectedLanguageFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All Languages</option>
+                            {language.map((lang) => (
+                                <option key={lang.LanguageId} value={lang.LanguageId}>
+                                    {lang.LanguageName}
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </div>
+                </div>
             </div>
 
-            {/* Category Tabs Navigation */}
-            <Nav variant="tabs" className="pt-4">
+            <Nav variant="tabs" className='pt-5 mt-3'>
                 <Nav.Item>
                     <Nav.Link
                         active={activeTab === 'all'}
                         className={activeTab === 'all' ? 'active-tab' : ''}
-                        onClick={() => {
-                            setActiveTab('all');
-                            setCurrentPage(1);
-                        }}
+                        onClick={() => setActiveTab('all')}
                     >
-                        All ({getFilteredCount(null, selectedFilter)})
+                        All ({getFilteredCount({
+                            filterType: selectedFilter,
+                            languageId: selectedLanguageFilter
+                        })})
                     </Nav.Link>
                 </Nav.Item>
                 {category.map((cat) => (
-                    <Nav.Item key={cat._id}>
+                    <Nav.Item key={cat.CategoryId}>
                         <Nav.Link
                             active={activeTab === cat.CategoryName.toLowerCase()}
                             className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                            onClick={() => {
-                                setActiveTab(cat.CategoryName.toLowerCase());
-                                setCurrentPage(1);
-                            }}
+                            onClick={() => setActiveTab(cat.CategoryName.toLowerCase())}
                         >
                             <span className="pe-2">{cat.CategoryName}</span>
-                            ({getFilteredCount(cat.CategoryId, selectedFilter)})
+                            ({getFilteredCount({
+                                categoryId: cat.CategoryId,
+                                filterType: selectedFilter,
+                                languageId: selectedLanguageFilter,
+                                categoryTab: cat.CategoryName.toLowerCase()
+                            })})
                         </Nav.Link>
                     </Nav.Item>
                 ))}
@@ -500,6 +639,35 @@ const Audio = () => {
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
                         <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Prank Language<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Control
+                                as="select"
+                                id="LanguageId"
+                                name="LanguageId"
+                                className='py-2'
+                                value={formik.values.LanguageId}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                disabled={isSubmitting}
+                                isInvalid={formik.touched.LanguageId && !!formik.errors.LanguageId}
+                            >
+                                <option value="">Select a Prank Language</option>
+                                {language.map((language) => {
+                                    return (
+                                        <option key={language._id} value={language.LanguageId}>
+                                            {language.LanguageName}
+                                        </option>
+                                    );
+                                })}
+                            </Form.Control>
+                            {formik.errors.LanguageId && formik.touched.LanguageId && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.LanguageId}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Prank Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
@@ -509,18 +677,16 @@ const Audio = () => {
                                 value={formik.values.CategoryId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
+                                disabled={isSubmitting}
                                 isInvalid={formik.touched.CategoryId && !!formik.errors.CategoryId}
                             >
                                 <option value="">Select a Prank Category</option>
                                 {category.map((category) => {
-                                    if (category.Type === 'audio') {
-                                        return (
-                                            <option key={category._id} value={category.CategoryId}>
-                                                {category.CategoryName}
-                                            </option>
-                                        );
-                                    }
-                                    return null; // Return null for category not in the audio category
+                                    return (
+                                        <option key={category._id} value={category.CategoryId}>
+                                            {category.CategoryName}
+                                        </option>
+                                    );
                                 })}
                             </Form.Control>
                             {formik.errors.CategoryId && formik.touched.CategoryId && (
@@ -541,6 +707,7 @@ const Audio = () => {
                                 value={formik.values.AudioName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
+                                disabled={isSubmitting}
                                 isInvalid={formik.touched.AudioName && !!formik.errors.AudioName}
                             />
                             {formik.errors.AudioName && formik.touched.AudioName && (
@@ -561,6 +728,7 @@ const Audio = () => {
                                 value={formik.values.ArtistName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
+                                disabled={isSubmitting}
                                 isInvalid={formik.touched.ArtistName && !!formik.errors.ArtistName}
                             />
                             {formik.errors.ArtistName && formik.touched.ArtistName && (
@@ -572,23 +740,14 @@ const Audio = () => {
 
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}<span style={{ fontSize: "12px" }}></span></Form.Label>
+                            <Form.Label className='fw-bold'>{imageFileLabel}<span style={{ fontSize: "12px" }}> (5 MB)</span></Form.Label>
                             <div className="d-flex flex-column">
                                 <Form.Control
                                     type="file"
                                     id="AudioImage"
                                     name="AudioImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("AudioImage", file);
-                                        if (file) {
-                                            setImageFileLabel("Audio Prank Image uploaded");
-                                            setSelectedImageFileName(file.name);
-                                        } else {
-                                            setImageFileLabel("Audio Prank Image Upload");
-                                            setSelectedImageFileName('');
-                                        }
-                                    }}
+                                    disabled={isSubmitting}
+                                    onChange={handleFileChange}
                                     onBlur={formik.handleBlur}
                                     className="d-none"
                                     custom
@@ -609,12 +768,13 @@ const Audio = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{audioFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>{audioFileLabel}<span style={{ fontSize: "12px" }}> (3 MB)</span><span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex flex-column">
                                 <Form.Control
                                     type="file"
                                     id="Audio"
                                     name="Audio"
+                                    disabled={isSubmitting}
                                     onChange={(event) => {
                                         let file = event.currentTarget.files[0];
                                         formik.setFieldValue("Audio", file);
@@ -652,6 +812,7 @@ const Audio = () => {
                                     id="AudioPremium"
                                     name="AudioPremium"
                                     label="Premium Audio Prank"
+                                    disabled={isSubmitting}
                                     checked={formik.values.AudioPremium}
                                     onChange={formik.handleChange}
                                 />
@@ -665,6 +826,7 @@ const Audio = () => {
                                     label="Hide Audio Prank"
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
+                                    disabled={isSubmitting}
                                 />
                             </Form.Group>
                         </div>
@@ -703,7 +865,8 @@ const Audio = () => {
                         <th>Artist Name</th>
                         <th>Audio Prank Image</th>
                         <th>Audio Prank File</th>
-                        <th>Category</th>
+                        <th>Prank Language</th>
+                        <th>Prank Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
                         <th>Actions</th>
@@ -734,7 +897,8 @@ const Audio = () => {
                                         Your browser does not support the audio element.
                                     </audio>
                                 </td>
-                                <td>{audio.CategoryName}</td>
+                                <td>{getLanguageName(audio.LanguageId)}</td>
+                                <td>{getCategoryName(audio.CategoryId)}</td>
                                 <td>
                                     <Button
                                         className='bg-transparent border-0 fs-4'
@@ -769,7 +933,7 @@ const Audio = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={9} className="text-center">No Data Found</td>
+                            <td colSpan={10} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>

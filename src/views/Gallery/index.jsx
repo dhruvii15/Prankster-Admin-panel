@@ -14,9 +14,27 @@ import logo from "../../assets/images/logo.svg";
 import ImagePreviewModal from 'components/ImagePreviewModal';
 
 const Gallery = () => {
+
+    const category = [
+        { CategoryId: 1, CategoryName: 'Trending' },
+        { CategoryId: 2, CategoryName: 'Nonveg' },
+        { CategoryId: 3, CategoryName: 'Hot' },
+        { CategoryId: 4, CategoryName: 'Funny' },
+        { CategoryId: 5, CategoryName: 'Horror' },
+        { CategoryId: 6, CategoryName: 'Celebrity' }
+    ];
+
+    const language = [
+        { LanguageId: 1, LanguageName: 'Hindi' },
+        { LanguageId: 2, LanguageName: 'English' },
+        { LanguageId: 3, LanguageName: 'Marathi' },
+        { LanguageId: 4, LanguageName: 'Gujarati' },
+        { LanguageId: 5, LanguageName: 'Tamil' },
+        { LanguageId: 6, LanguageName: 'Punjabi' }
+    ];
+
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [imageFileLabel, setImageFileLabel] = useState('Image Prank Image Upload');
@@ -32,6 +50,18 @@ const Gallery = () => {
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
     const [selectedFilter, setSelectedFilter] = useState('');
+    const [selectedLanguageFilter, setSelectedLanguageFilter] = useState('');
+
+
+    const getCategoryName = (categoryId) => {
+        const cat = category.find(c => c.CategoryId === parseInt(categoryId));
+        return cat ? cat.CategoryName : categoryId;
+    };
+
+    const getLanguageName = (languageId) => {
+        const lang = language.find(l => l.LanguageId === parseInt(languageId));
+        return lang ? lang.LanguageName : languageId;
+    };
 
     const getAdminData = () => {
         axios.get('https://pslink.world/api/admin/read')
@@ -77,53 +107,23 @@ const Gallery = () => {
             });
     };
 
-    const getCategory = () => {
-        axios.post('https://pslink.world/api/category/read')
-            .then((res) => {
-                setCategory(res.data.data.filter(cat => cat.Type.includes('gallery')));
-            })
-            .catch((err) => {
-                console.error(err);
-                toast.error("Failed to fetch category.");
-            });
-    };
-
     useEffect(() => {
         getData();
-        getCategory();
         getAdminData();
     }, []);
 
-    const getFilteredCount = (categoryId = null, filterType = '') => {
-        // First filter by safe/unsafe status
+    const getFilteredCount = (options = {}) => {
+        const {
+            categoryId = null,
+            languageId = null,
+            filterType = '',
+            categoryTab = 'all'
+        } = options;
+
+        // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Unsafe === !isOn);
 
-        // Then apply category filter if specified
-        if (categoryId) {
-            filtered = filtered.filter(item => item.CategoryId === categoryId);
-        }
-
-        // Finally apply additional filters
-        switch (filterType) {
-            case "Hide":
-                return filtered.filter(item => item.Hide).length;
-            case "Unhide":
-                return filtered.filter(item => !item.Hide).length;
-            case "Premium":
-                return filtered.filter(item => item.GalleryPremium).length;
-            case "Free":
-                return filtered.filter(item => !item.GalleryPremium).length;
-            default:
-                return filtered.length;
-        }
-    };
-
-    // Updated filtering function
-    const filterGalleryData = (dataToFilter, categoryTab, additionalFilter) => {
-        // First filter by safe/unsafe status
-        let filtered = dataToFilter.filter(item => item.Unsafe === !isOn);
-
-        // Then filter by category
+        // Apply category filter
         if (categoryTab !== 'all') {
             const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
             if (selectedCategory) {
@@ -131,8 +131,18 @@ const Gallery = () => {
             }
         }
 
+        // Apply specific category filter if provided
+        if (categoryId) {
+            filtered = filtered.filter(item => item.CategoryId === categoryId);
+        }
+
+        // Apply language filter
+        if (languageId) {
+            filtered = filtered.filter(item => item.LanguageId === parseInt(languageId));
+        }
+
         // Apply additional filters
-        switch (additionalFilter) {
+        switch (filterType) {
             case "Hide":
                 filtered = filtered.filter(item => item.Hide === true);
                 break;
@@ -145,18 +155,50 @@ const Gallery = () => {
             case "Free":
                 filtered = filtered.filter(item => item.GalleryPremium === false);
                 break;
-            default:
+        }
+
+        return filtered.length;
+    };
+
+    const filterGalleryData = () => {
+        // Start with base filtering by safe/unsafe
+        let filtered = data.filter(item => item.Unsafe === !isOn);
+
+        // Apply category filter
+        if (activeTab !== 'all') {
+            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === activeTab);
+            if (selectedCategory) {
+                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            }
+        }
+
+        // Apply language filter
+        if (selectedLanguageFilter) {
+            filtered = filtered.filter(item => item.LanguageId === parseInt(selectedLanguageFilter));
+        }
+
+        // Apply additional filters
+        switch (selectedFilter) {
+            case "Hide":
+                filtered = filtered.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = filtered.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = filtered.filter(item => item.GalleryPremium === true);
+                break;
+            case "Free":
+                filtered = filtered.filter(item => item.GalleryPremium === false);
                 break;
         }
 
         setFilteredData(filtered);
-        setCurrentPage(1);
     };
 
-    // Update useEffect to handle filtering
     useEffect(() => {
-        filterGalleryData(data, activeTab, selectedFilter);
-    }, [activeTab, selectedFilter, data, isOn]);
+        filterGalleryData();
+    }, [activeTab, selectedFilter, selectedLanguageFilter, data, isOn]);
 
     const handleToggle = async () => {
         if (!isSubmitting2) {
@@ -190,6 +232,76 @@ const Gallery = () => {
         filterGalleryData(data, activeTab, selectedFilter);
     }, [activeTab, selectedFilter, data]);
 
+    const compressImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+
+                    // Reduce image quality and size
+                    const maxWidth = 1920;
+                    const maxHeight = 1080;
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Scale down if larger than max dimensions
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width *= ratio;
+                        height *= ratio;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convert to blob with reduced quality
+                    canvas.toBlob((blob) => {
+                        // Create a new file from the compressed blob
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        resolve(compressedFile);
+                    }, 'image/jpeg', 0.7); // 0.7 quality (70%)
+                };
+                img.onerror = reject;
+            };
+            reader.onerror = reject;
+        });
+    };
+
+    // Updated handleFileChange method
+    const handleFileChange = async (event) => {
+        const file = event.currentTarget.files[0];
+        if (file) {
+            try {
+                // First compress the image
+                const compressedFile = await compressImage(file);
+
+                // Then check file size after compression
+                if (compressedFile.size > 5 * 1024 * 1024) { // 5MB in bytes
+                    toast.error('Compressed file still exceeds 5MB limit');
+                    return;
+                }
+
+                // Update Formik field and file state
+                formik.setFieldValue("GalleryImage", compressedFile);
+                setSelectedFileName(compressedFile.name);
+                setImageFileLabel('Image Prank Image uploaded');
+            } catch (error) {
+                toast.error('Error processing image');
+                console.error(error);
+            }
+        }
+    };
+
     const gallerySchema = Yup.object().shape({
         GalleryName: Yup.string().required('Image Prank Name is required'),
         GalleryImage: Yup.mixed()
@@ -217,6 +329,7 @@ const Gallery = () => {
             ),
         GalleryPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Prank Category Name is required'),
+        LanguageId: Yup.string().required('Language is required'),
         Hide: Yup.boolean(),
         isEditing: Yup.boolean()
     });
@@ -227,6 +340,7 @@ const Gallery = () => {
             GalleryImage: '',
             GalleryPremium: false,
             CategoryId: '',
+            LanguageId: '',
             Hide: false,
             isEditing: false,
             Unsafe: true
@@ -242,6 +356,7 @@ const Gallery = () => {
                 }
                 formData.append('GalleryPremium', values.GalleryPremium);
                 formData.append('CategoryId', values.CategoryId);
+                formData.append('LanguageId', values.LanguageId);
                 formData.append('Hide', values.Hide);
                 formData.append('Unsafe', "true");
 
@@ -276,6 +391,7 @@ const Gallery = () => {
             GalleryImage: gallery.GalleryImage,
             GalleryPremium: gallery.GalleryPremium,
             CategoryId: gallery.CategoryId,
+            LanguageId: gallery.LanguageId,
             Hide: gallery.Hide,
             isEditing: true
         });
@@ -428,8 +544,7 @@ const Gallery = () => {
                     />
                 </Form>
             </div>
-            <div className='d-flex justify-content-between align-items-sm-center mt-4 flex-column-reverse flex-sm-row'>
-                {/* Filters Dropdown */}
+            <div className='d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4'>
                 <Button
                     onClick={() => toggleModal('add')}
                     className='rounded-3 border-0'
@@ -437,45 +552,68 @@ const Gallery = () => {
                 >
                     Add Image Prank
                 </Button>
-                <Form.Select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
-                    style={{ width: 'auto' }}
-                >
-                    <option value="">All</option>
-                    <option value="Hide">Hide</option>
-                    <option value="Unhide">Unhide</option>
-                    <option value="Premium">Premium</option>
-                    <option value="Free">Free</option>
-                </Form.Select>
+                <div className='d-flex gap-4 flex-wrap align-items-center'>
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Status :</span>
+                        <Form.Select
+                            value={selectedFilter}
+                            onChange={(e) => setSelectedFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All Status</option>
+                            <option value="Hide">Hide</option>
+                            <option value="Unhide">Unhide</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Free">Free</option>
+                        </Form.Select>
+                    </div>
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Language :</span>
+                        <Form.Select
+                            value={selectedLanguageFilter}
+                            onChange={(e) => setSelectedLanguageFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All Languages</option>
+                            {language.map((lang) => (
+                                <option key={lang.LanguageId} value={lang.LanguageId}>
+                                    {lang.LanguageName}
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </div>
+                </div>
             </div>
 
-            {/* Category Tabs Navigation */}
-            <Nav variant="tabs" className='pt-5'>
+            <Nav variant="tabs" className='pt-5 mt-3'>
                 <Nav.Item>
                     <Nav.Link
                         active={activeTab === 'all'}
                         className={activeTab === 'all' ? 'active-tab' : ''}
-                        onClick={() => {
-                            setActiveTab('all');
-                            setCurrentPage(1);
-                        }}
+                        onClick={() => setActiveTab('all')}
                     >
-                        All ({getFilteredCount(null, selectedFilter)})
+                        All ({getFilteredCount({
+                            filterType: selectedFilter,
+                            languageId: selectedLanguageFilter
+                        })})
                     </Nav.Link>
                 </Nav.Item>
                 {category.map((cat) => (
-                    <Nav.Item key={cat._id}>
+                    <Nav.Item key={cat.CategoryId}>
                         <Nav.Link
                             active={activeTab === cat.CategoryName.toLowerCase()}
                             className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                            onClick={() => {
-                                setActiveTab(cat.CategoryName.toLowerCase());
-                                setCurrentPage(1);
-                            }}
+                            onClick={() => setActiveTab(cat.CategoryName.toLowerCase())}
                         >
                             <span className="pe-2">{cat.CategoryName}</span>
-                            ({getFilteredCount(cat.CategoryId, selectedFilter)})
+                            ({getFilteredCount({
+                                categoryId: cat.CategoryId,
+                                filterType: selectedFilter,
+                                languageId: selectedLanguageFilter,
+                                categoryTab: cat.CategoryName.toLowerCase()
+                            })})
                         </Nav.Link>
                     </Nav.Item>
                 ))}
@@ -495,12 +633,42 @@ const Gallery = () => {
                     <Form onSubmit={formik.handleSubmit}>
 
                         <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Prank Language<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Control
+                                as="select"
+                                id="LanguageId"
+                                name="LanguageId"
+                                className='py-2'
+                                value={formik.values.LanguageId}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                disabled={isSubmitting}
+                                isInvalid={formik.touched.LanguageId && !!formik.errors.LanguageId}
+                            >
+                                <option value="">Select a Prank Language</option>
+                                {language.map((language) => {
+                                    return (
+                                        <option key={language._id} value={language.LanguageId}>
+                                            {language.LanguageName}
+                                        </option>
+                                    ); 
+                                })}
+                            </Form.Control>
+                            {formik.errors.LanguageId && formik.touched.LanguageId && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.LanguageId}
+                                </div>
+                            )}
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Prank Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 as="select"
                                 id="CategoryId"
                                 name="CategoryId"
                                 className='py-2'
+                                disabled={isSubmitting}
                                 value={formik.values.CategoryId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -508,14 +676,11 @@ const Gallery = () => {
                             >
                                 <option value="">Select a Prank Category</option>
                                 {category.map((category) => {
-                                    if (category.Type === 'gallery') {
-                                        return (
-                                            <option key={category._id} value={category.CategoryId}>
-                                                {category.CategoryName}
-                                            </option>
-                                        );
-                                    }
-                                    return null; // Return null for category not in the gallery category
+                                    return (
+                                        <option key={category._id} value={category.CategoryId}>
+                                            {category.CategoryName}
+                                        </option>
+                                    );
                                 })}
                             </Form.Control>
                             {formik.errors.CategoryId && formik.touched.CategoryId && (
@@ -526,13 +691,14 @@ const Gallery = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Image Prank Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Image Prank Name ( use searching ) <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
                                 id="GalleryName"
                                 name="GalleryName"
                                 className='py-2'
                                 placeholder="Enter Image Prank Name"
+                                disabled={isSubmitting}
                                 value={formik.values.GalleryName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -547,7 +713,7 @@ const Gallery = () => {
 
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>{imageFileLabel}
-                                <span className='ps-2' style={{ fontSize: "12px" }}></span>
+                                <span className='ps-2' style={{ fontSize: "12px" }}>(5 MB)</span>
                                 <span className='text-danger fw-normal' style={{ fontSize: "17px" }}>* </span>
                             </Form.Label>
                             <div className="d-flex align-items-center">
@@ -555,12 +721,8 @@ const Gallery = () => {
                                     type="file"
                                     id="GalleryImage"
                                     name="GalleryImage"
-                                    onChange={(event) => {
-                                        let file = event.currentTarget.files[0];
-                                        formik.setFieldValue("GalleryImage", file);
-                                        setSelectedFileName(file ? file.name : '');
-                                        setImageFileLabel(file ? "Image Prank Image uploaded" : "Image Prank Image Upload");
-                                    }}
+                                    disabled={isSubmitting}
+                                    onChange={handleFileChange}
                                     onBlur={formik.handleBlur}
                                     label="Choose File"
                                     className="d-none"
@@ -590,6 +752,7 @@ const Gallery = () => {
                                     id="GalleryPremium"
                                     name="GalleryPremium"
                                     label="Premium Image Prank"
+                                    disabled={isSubmitting}
                                     checked={formik.values.GalleryPremium}
                                     onChange={formik.handleChange}
                                 />
@@ -601,6 +764,7 @@ const Gallery = () => {
                                     id="Hide"
                                     name="Hide"
                                     label="Hide Image Prank"
+                                    disabled={isSubmitting}
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
                                 />
@@ -639,6 +803,7 @@ const Gallery = () => {
                         <th>Id</th>
                         <th>Image Prank Name</th>
                         <th>Image Prank Image</th>
+                        <th>Prank Language</th>
                         <th>Prank Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
@@ -671,7 +836,8 @@ const Gallery = () => {
                                     </button>
                                 </td>
 
-                                <td>{gallery.CategoryName}</td>
+                                <td>{getLanguageName(gallery.LanguageId)}</td>
+                                <td>{getCategoryName(gallery.CategoryId)}</td>
                                 <td>
                                     <Button
                                         className='bg-transparent border-0 fs-4'
@@ -707,7 +873,7 @@ const Gallery = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={8} className="text-center">No Data Found</td>
+                            <td colSpan={9} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>

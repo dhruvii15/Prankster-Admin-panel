@@ -19,7 +19,6 @@ const UserCover = () => {
     const [isExpanded, setIsExpanded] = useState(false);
     const [formErrors, setFormErrors] = useState({});
     const [formData, setFormData] = useState({
-        Category: '',
         CoverName: '',  // Add this new state for cover name
         CoverPremium: false,
         Hide: false
@@ -49,9 +48,6 @@ const UserCover = () => {
 
     const validateForm = () => {
         const errors = {};
-        if (!formData.Category) {
-            errors.Category = 'Category is required';
-        }
         if (!formData.CoverName) {  // Add validation for cover name
             errors.CoverName = 'Cover name is required';
         }
@@ -115,7 +111,6 @@ const UserCover = () => {
         setFormData(prev => ({
             ...prev,
             CoverName: cover.CoverName || '',
-            Category: '',
             CoverPremium: false,
             Hide: false,
             Unsafe: true,
@@ -147,7 +142,6 @@ const UserCover = () => {
         }
 
         const apiFormData = new FormData();
-        apiFormData.append('Category', formData.Category);
         apiFormData.append('CoverURL', selectedCover.CoverURL);
         apiFormData.append('CoverName', formData.CoverName);  // Use the updated cover name
         apiFormData.append('CoverPremium', formData.CoverPremium);
@@ -173,7 +167,6 @@ const UserCover = () => {
 
     const resetForm = () => {
         setFormData({
-            Category: '',
             CoverName: '',  // Reset cover name
             CoverPremium: false,
             Hide: false,
@@ -362,27 +355,6 @@ const UserCover = () => {
                         )}
                     </Form.Group>
 
-                    <Form.Group className="mb-4">
-                        <Form.Label className='fw-bold'>
-                            Category
-                            <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span>
-                        </Form.Label>
-                        <Form.Control
-                            as="select"
-                            id="Category"
-                            name="Category"
-                            className={`py-2 ${formErrors.Category ? 'is-invalid' : ''}`}
-                            onChange={handleFormChange}
-                            value={formData.Category}
-                        >
-                            <option value="">Select Category</option>
-                            <option value="emoji">Emoji & Gift Cover Image</option>
-                            <option value="realistic">Realistic Cover Image</option>
-                        </Form.Control>
-                        {formErrors.Category && (
-                            <div className="invalid-feedback">{formErrors.Category}</div>
-                        )}
-                    </Form.Group>
 
                     <Form.Group className="mb-4">
                         <Form.Label className="fw-bold">

@@ -15,7 +15,8 @@ const Ads = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [adsName, setAdsName] = useState('');
-    const [adsId, setAdsId] = useState('');
+    const [iosadsId, setIosAdsId] = useState('');
+    const [androidadsId, setAndroidAdsId] = useState('');
     const [errors, setErrors] = useState({});
     const [isOn, setIsOn] = useState(false);
     const [adminId, setAdminId] = useState(null);
@@ -25,7 +26,8 @@ const Ads = () => {
         if (!isSubmitting) {
             if (mode === 'add') {
                 setAdsName('');
-                setAdsId('');
+                setIosAdsId('');
+                setAndroidAdsId('');
                 setId(undefined);
             }
             setErrors({});
@@ -67,7 +69,8 @@ const Ads = () => {
     const validate = () => {
         const newErrors = {};
         if (!adsName) newErrors.adsName = 'Ads Name is required';
-        if (!adsId) newErrors.adsId = 'Ads Id is required';
+        if (!iosadsId) newErrors.iosadsId = 'Ios Id is required';
+        if (!androidadsId) newErrors.androidadsId = 'Android Id is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -79,12 +82,13 @@ const Ads = () => {
         try {
             setIsSubmitting(true);
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/ads/update/${id}`, { AdsName: adsName, AdsId: adsId })
-                : axios.post('https://pslink.world/api/ads/create', { AdsName: adsName, AdsId: adsId });
+                ? axios.patch(`https://pslink.world/api/ads/update/${id}`, { AdsName: adsName, IosAdsId: iosadsId , AndroidAdsId: androidadsId})
+                : axios.post('https://pslink.world/api/ads/create', { AdsName: adsName, IosAdsId: iosadsId , AndroidAdsId: androidadsId});
 
             const res = await request;
             setAdsName('');
-            setAdsId('');
+            setIosAdsId('');
+            setAndroidAdsId('');
             setId(undefined);
             getData();
             toast.success(res.data.message);
@@ -100,7 +104,8 @@ const Ads = () => {
     const handleEdit = (ads) => {
         if (!isSubmitting) {
             setAdsName(ads.AdsName);
-            setAdsId(ads.AdsId);
+            setIosAdsId(ads.IosAdsId);
+            setAndroidAdsId(ads.AndroidAdsId);
             setId(ads._id);
             toggleModal('edit');
         }
@@ -222,9 +227,9 @@ const Ads = () => {
                                 <option value="banner" label="Banner" />
                                 <option value="nativesmall" label="Nativesmall" />
                                 <option value="nativebig" label="Nativebig" />
-                                <option value="nativevideo" label="Nativevideo" />
                                 <option value="intertitial" label="Intertitial" />
                                 <option value="reward" label="Reward" />
+                                <option value="appopen" label="App Open" />
                                 <option value="appid" label="AppId" />
                             </Form.Control>
                             <Form.Control.Feedback type="invalid">
@@ -233,19 +238,36 @@ const Ads = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Ads Id<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Ios AdsId<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
-                                id="adsId"
+                                id="iosadsId"
                                 className='py-2'
-                                placeholder='Enter AdsId'
-                                value={adsId}
-                                onChange={(e) => setAdsId(e.target.value)}
-                                isInvalid={!!errors.adsId}
+                                placeholder='Enter Ios AdsId'
+                                value={iosadsId}
+                                onChange={(e) => setIosAdsId(e.target.value)}
+                                isInvalid={!!errors.iosadsId}
                                 disabled={isSubmitting}
                             />
                             <Form.Control.Feedback type="invalid">
-                                {errors.adsId}
+                                {errors.iosadsId}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Android AdsId<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Control
+                                type="text"
+                                id="androidadsId"
+                                className='py-2'
+                                placeholder='Enter Ios AdsId'
+                                value={androidadsId}
+                                onChange={(e) => setAndroidAdsId(e.target.value)}
+                                isInvalid={!!errors.androidadsId}
+                                disabled={isSubmitting}
+                            />
+                            <Form.Control.Feedback type="invalid">
+                                {errors.androidadsId}
                             </Form.Control.Feedback>
                         </Form.Group>
 
@@ -280,7 +302,8 @@ const Ads = () => {
                     <tr>
                         <th>Index</th>
                         <th>AdsName</th>
-                        <th>AdsId</th>
+                        <th>Ios AdsId</th>
+                        <th>Android AdsId</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -289,7 +312,8 @@ const Ads = () => {
                         <tr key={ads._id} className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}>
                             <td>{index + 1}</td>
                             <td>{ads.AdsName}</td>
-                            <td>{ads.AdsId}</td>
+                            <td>{ads.IosAdsId}</td>
+                            <td>{ads.AndroidAdsId}</td>
                             <td>
                                 <Button
                                     className='edit-dlt-btn'

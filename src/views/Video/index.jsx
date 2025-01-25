@@ -13,9 +13,27 @@ import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import logo from "../../assets/images/logo.svg";
 
 const Video = () => {
+
+    const category = [
+        { CategoryId: 1, CategoryName: 'Trending' },
+        { CategoryId: 2, CategoryName: 'Nonveg' },
+        { CategoryId: 3, CategoryName: 'Hot' },
+        { CategoryId: 4, CategoryName: 'Funny' },
+        { CategoryId: 5, CategoryName: 'Horror' },
+        { CategoryId: 6, CategoryName: 'Celebrity' }
+    ];
+
+    const language = [
+        { LanguageId: 1, LanguageName: 'Hindi' },
+        { LanguageId: 2, LanguageName: 'English' },
+        { LanguageId: 3, LanguageName: 'Marathi' },
+        { LanguageId: 4, LanguageName: 'Gujarati' },
+        { LanguageId: 5, LanguageName: 'Tamil' },
+        { LanguageId: 6, LanguageName: 'Punjabi' }
+    ];
+
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [category, setCategory] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [videoFileLabel, setVideoFileLabel] = useState('Video Prank File Upload');
@@ -30,6 +48,18 @@ const Video = () => {
     const [isOn, setIsOn] = useState(false);
     const [isSubmitting2, setIsSubmitting2] = useState(false);
     const [adminId, setAdminId] = useState(null);
+    const [selectedLanguageFilter, setSelectedLanguageFilter] = useState('');
+
+
+    const getCategoryName = (categoryId) => {
+        const cat = category.find(c => c.CategoryId === parseInt(categoryId));
+        return cat ? cat.CategoryName : categoryId;
+    };
+
+    const getLanguageName = (languageId) => {
+        const lang = language.find(l => l.LanguageId === parseInt(languageId));
+        return lang ? lang.LanguageName : languageId;
+    };
 
     const getAdminData = () => {
         axios.get('https://pslink.world/api/admin/read')
@@ -115,71 +145,44 @@ const Video = () => {
             });
     };
 
-    const getCategory = () => {
-        axios.post('https://pslink.world/api/category/read')
-            .then((res) => {
-                setCategory(res.data.data.filter(cat => cat.Type.includes('video')));
-            })
-            .catch((err) => {
-                console.error(err);
-                toast.error("Failed to fetch category.");
-            });
-    };
 
     useEffect(() => {
         getData();
-        getCategory();
         getAdminData();
     }, []);
 
 
-    const getFilteredCount = (categoryId = null, filterType = '') => {
-        if (!data || data.length === 0) return 0;
-        
-        // First filter by safe/unsafe status
+    const getFilteredCount = (options = {}) => {
+        const {
+            categoryId = null,
+            languageId = null,
+            filterType = '',
+            categoryTab = 'all'
+        } = options;
+
+        // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Unsafe === !isOn);
 
-        // Then apply category filter if specified
+        // Apply category filter
+        if (categoryTab !== 'all') {
+            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
+            if (selectedCategory) {
+                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            }
+        }
+
+        // Apply specific category filter if provided
         if (categoryId) {
             filtered = filtered.filter(item => item.CategoryId === categoryId);
         }
 
-        // Finally apply additional filters
-        switch (filterType) {
-            case "Hide":
-                return filtered.filter(item => item.Hide).length;
-            case "Unhide":
-                return filtered.filter(item => !item.Hide).length;
-            case "Premium":
-                return filtered.filter(item => item.VideoPremium).length;
-            case "Free":
-                return filtered.filter(item => !item.VideoPremium).length;
-            default:
-                return filtered.length;
-        }
-    };
-
-    // Updated filtering function
-    const filterVideoData = (dataToFilter, categoryTab, additionalFilter) => {
-        if (!dataToFilter || dataToFilter.length === 0) return [];
-        
-        // First filter by unsafe status
-        let filtered = dataToFilter.filter(item => item.Unsafe === !isOn);
-
-        // Then filter by category
-        if (categoryTab !== 'all') {
-            const selectedCategory = category.find(cat => 
-                cat.CategoryName.toLowerCase() === categoryTab
-            );
-            if (selectedCategory) {
-                filtered = filtered.filter(item => 
-                    item.CategoryId === selectedCategory.CategoryId
-                );
-            }
+        // Apply language filter
+        if (languageId) {
+            filtered = filtered.filter(item => item.LanguageId === parseInt(languageId));
         }
 
         // Apply additional filters
-        switch (additionalFilter) {
+        switch (filterType) {
             case "Hide":
                 filtered = filtered.filter(item => item.Hide === true);
                 break;
@@ -192,20 +195,50 @@ const Video = () => {
             case "Free":
                 filtered = filtered.filter(item => item.VideoPremium === false);
                 break;
-            default:
+        }
+
+        return filtered.length;
+    };
+
+    const filterVideoData = () => {
+        // Start with base filtering by safe/unsafe
+        let filtered = data.filter(item => item.Unsafe === !isOn);
+
+        // Apply category filter
+        if (activeTab !== 'all') {
+            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === activeTab);
+            if (selectedCategory) {
+                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            }
+        }
+
+        // Apply language filter
+        if (selectedLanguageFilter) {
+            filtered = filtered.filter(item => item.LanguageId === parseInt(selectedLanguageFilter));
+        }
+
+        // Apply additional filters
+        switch (selectedFilter) {
+            case "Hide":
+                filtered = filtered.filter(item => item.Hide === true);
+                break;
+            case "Unhide":
+                filtered = filtered.filter(item => item.Hide === false);
+                break;
+            case "Premium":
+                filtered = filtered.filter(item => item.VideoPremium === true);
+                break;
+            case "Free":
+                filtered = filtered.filter(item => item.VideoPremium === false);
                 break;
         }
 
-        return filtered;
+        setFilteredData(filtered);
     };
 
-    // Update useEffect to handle filtering
     useEffect(() => {
-        if (data.length > 0) {
-            const filtered = filterVideoData(data, activeTab, selectedFilter);
-            setFilteredData(filtered);
-        }
-    }, [data, activeTab, selectedFilter, isOn, category]);
+        filterVideoData();
+    }, [activeTab, selectedFilter, selectedLanguageFilter, data, isOn]);
 
 
     const videoSchema = Yup.object().shape({
@@ -239,6 +272,7 @@ const Video = () => {
             ),
         VideoPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Prank Category Name is required'),
+        LanguageId: Yup.string().required('Prank Language is required'),
         Hide: Yup.boolean(),
         isEditing: Yup.boolean()
     });
@@ -250,6 +284,7 @@ const Video = () => {
             Video: '',
             VideoPremium: false,
             CategoryId: '',
+            LanguageId: '',
             Hide: false,
             isEditing: false,
             Unsafe: true // Add Unsafe field
@@ -266,6 +301,7 @@ const Video = () => {
                 }
                 formData.append('VideoPremium', values.VideoPremium);
                 formData.append('CategoryId', values.CategoryId);
+                formData.append('LanguageId', values.LanguageId);
                 formData.append('Hide', values.Hide);
                 formData.append('Unsafe', "true"); // Add Unsafe field
 
@@ -285,7 +321,7 @@ const Video = () => {
                 toggleModal('add');
             } catch (err) {
                 console.error(err);
-                toast.error("An error occurred. Please try again.");
+                toast.error(err.response.data.message);
             } finally {
                 setIsSubmitting(false);
                 setSubmitting(false);
@@ -306,6 +342,7 @@ const Video = () => {
             Video: video.Video,
             VideoPremium: video.VideoPremium,
             CategoryId: video.CategoryId,
+            LanguageId: video.LanguageId,
             Hide: video.Hide,
             isEditing: true
         });
@@ -437,53 +474,76 @@ const Video = () => {
                     />
                 </Form>
             </div>
-            <div className="d-flex justify-content-between align-items-center">
+            <div className='d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4'>
                 <Button
                     onClick={() => toggleModal('add')}
-                    className='my-4 rounded-3 border-0'
+                    className='rounded-3 border-0'
                     style={{ backgroundColor: "#F9E238", color: "black" }}
                 >
                     Add Video Prank
                 </Button>
-                <Form.Select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
-                    style={{ width: 'auto' }}
-                >
-                    <option value="">All</option>
-                    <option value="Hide">Hide</option>
-                    <option value="Unhide">Unhide</option>
-                    <option value="Premium">Premium</option>
-                    <option value="Free">Free</option>
-                </Form.Select>
+                <div className='d-flex gap-4 flex-wrap align-items-center'>
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Status :</span>
+                        <Form.Select
+                            value={selectedFilter}
+                            onChange={(e) => setSelectedFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All Status</option>
+                            <option value="Hide">Hide</option>
+                            <option value="Unhide">Unhide</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Free">Free</option>
+                        </Form.Select>
+                    </div>
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Language :</span>
+                        <Form.Select
+                            value={selectedLanguageFilter}
+                            onChange={(e) => setSelectedLanguageFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All Languages</option>
+                            {language.map((lang) => (
+                                <option key={lang.LanguageId} value={lang.LanguageId}>
+                                    {lang.LanguageName}
+                                </option>
+                            ))}
+                        </Form.Select>
+                    </div>
+                </div>
             </div>
 
-            {/* Category Tabs Navigation */}
-            <Nav variant="tabs" className="pt-4">
+            <Nav variant="tabs" className='pt-5 mt-3'>
                 <Nav.Item>
                     <Nav.Link
                         active={activeTab === 'all'}
                         className={activeTab === 'all' ? 'active-tab' : ''}
-                        onClick={() => {
-                            setActiveTab('all');
-                            setCurrentPage(1);
-                        }}
+                        onClick={() => setActiveTab('all')}
                     >
-                        All ({getFilteredCount(null, selectedFilter)})
+                        All ({getFilteredCount({
+                            filterType: selectedFilter,
+                            languageId: selectedLanguageFilter
+                        })})
                     </Nav.Link>
                 </Nav.Item>
                 {category.map((cat) => (
-                    <Nav.Item key={cat._id}>
+                    <Nav.Item key={cat.CategoryId}>
                         <Nav.Link
                             active={activeTab === cat.CategoryName.toLowerCase()}
                             className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                            onClick={() => {
-                                setActiveTab(cat.CategoryName.toLowerCase());
-                                setCurrentPage(1);
-                            }}
+                            onClick={() => setActiveTab(cat.CategoryName.toLowerCase())}
                         >
                             <span className="pe-2">{cat.CategoryName}</span>
-                            ({getFilteredCount(cat.CategoryId, selectedFilter)})
+                            ({getFilteredCount({
+                                categoryId: cat.CategoryId,
+                                filterType: selectedFilter,
+                                languageId: selectedLanguageFilter,
+                                categoryTab: cat.CategoryName.toLowerCase()
+                            })})
                         </Nav.Link>
                     </Nav.Item>
                 ))}
@@ -492,7 +552,6 @@ const Video = () => {
             <Modal
                 show={visible}
                 onHide={() => !isSubmitting && toggleModal('add')}
-                centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
@@ -501,6 +560,34 @@ const Video = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Prank Language<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Control
+                                as="select"
+                                id="LanguageId"
+                                name="LanguageId"
+                                className='py-2'
+                                disabled={isSubmitting}
+                                value={formik.values.LanguageId}
+                                onChange={formik.handleChange}
+                                onBlur={formik.handleBlur}
+                                isInvalid={formik.touched.LanguageId && !!formik.errors.LanguageId}
+                            >
+                                <option value="">Select a Prank Language</option>
+                                {language.map((language) => {
+                                    return (
+                                        <option key={language._id} value={language.LanguageId}>
+                                            {language.LanguageName}
+                                        </option>
+                                    );
+                                })}
+                            </Form.Control>
+                            {formik.errors.LanguageId && formik.touched.LanguageId && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.LanguageId}
+                                </div>
+                            )}
+                        </Form.Group>
 
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Prank Category Name<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
@@ -509,6 +596,7 @@ const Video = () => {
                                 id="CategoryId"
                                 name="CategoryId"
                                 className='py-2'
+                                disabled={isSubmitting}
                                 value={formik.values.CategoryId}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
@@ -516,14 +604,11 @@ const Video = () => {
                             >
                                 <option value="">Select a Prank Category</option>
                                 {category.map((category) => {
-                                    if (category.Type === 'video') {
-                                        return (
-                                            <option key={category._id} value={category.CategoryId}>
-                                                {category.CategoryName}
-                                            </option>
-                                        );
-                                    }
-                                    return null; // Return null for category not in the video category
+                                    return (
+                                        <option key={category._id} value={category.CategoryId}>
+                                            {category.CategoryName}
+                                        </option>
+                                    );
                                 })}
                             </Form.Control>
                             {formik.errors.CategoryId && formik.touched.CategoryId && (
@@ -540,6 +625,7 @@ const Video = () => {
                                 id="VideoName"
                                 name="VideoName"
                                 className='py-2'
+                                disabled={isSubmitting}
                                 placeholder="Enter Video Prank Name"
                                 value={formik.values.VideoName}
                                 onChange={formik.handleChange}
@@ -560,6 +646,7 @@ const Video = () => {
                                 id="ArtistName"
                                 name="ArtistName"
                                 className='py-2'
+                                disabled={isSubmitting}
                                 placeholder="Enter ArtistName"
                                 value={formik.values.ArtistName}
                                 onChange={formik.handleChange}
@@ -574,13 +661,14 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{videoFileLabel}<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>{videoFileLabel}<span style={{ fontSize: "12px" }}> (15 MB)</span><span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <div className="d-flex flex-column">
                                 <div className="d-flex align-items-center">
                                     <Form.Control
                                         type="file"
                                         id="Video"
                                         name="Video"
+                                        disabled={isSubmitting}
                                         onChange={(event) => {
                                             let file = event.currentTarget.files[0];
                                             formik.setFieldValue("Video", file);
@@ -620,6 +708,7 @@ const Video = () => {
                                     type="checkbox"
                                     id="VideoPremium"
                                     name="VideoPremium"
+                                    disabled={isSubmitting}
                                     label="Premium Video Prank"
                                     checked={formik.values.VideoPremium}
                                     onChange={formik.handleChange}
@@ -631,6 +720,7 @@ const Video = () => {
                                     type="checkbox"
                                     id="Hide"
                                     name="Hide"
+                                    disabled={isSubmitting}
                                     label="Hide Video Prank"
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
@@ -672,6 +762,7 @@ const Video = () => {
                         <th>Video Prank Name</th>
                         <th>Artist Name</th>
                         <th>Video Prank File</th>
+                        <th>Prank Language</th>
                         <th>Prank Category</th>
                         <th>Premium</th>
                         <th>Hidden</th>
@@ -700,7 +791,8 @@ const Video = () => {
                                         Your browser does not support the video element.
                                     </video>
                                 </td>
-                                <td>{video.CategoryName}</td>
+                                <td>{getLanguageName(video.LanguageId)}</td>
+                                <td>{getCategoryName(video.CategoryId)}</td>
                                 <td>
                                     <Button
                                         className='bg-transparent border-0 fs-4'
@@ -736,7 +828,7 @@ const Video = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={8} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
+                            <td colSpan={9} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
                         </tr>
                     )}
 

@@ -1,5 +1,5 @@
 import { faImage } from "@fortawesome/free-regular-svg-icons";
-import {faBell, faDharmachakra, faFileAudio, faHome, faLayerGroup, faPhotoFilm, faRectangleAd, faVideo} from "@fortawesome/free-solid-svg-icons";
+import {faBell, faFileAudio, faHome, faLayerGroup, faPhotoFilm, faRectangleAd, faVideo} from "@fortawesome/free-solid-svg-icons";
 
 const menuItems = {
   items: [
@@ -75,21 +75,6 @@ const menuItems = {
           url: '/type/image',
           icon: faPhotoFilm
         },
-      ]
-    },
-    {
-      id: 'Spinner',
-      title: 'Spinner',
-      type: 'group',
-      icon: 'icon-ui',
-      children: [
-        {
-          id: 'Ready Prank',
-          title: 'Ready Prank',
-          type: 'item',
-          url: '/spin/prank',
-          icon: faDharmachakra
-        }
       ]
     },
     {

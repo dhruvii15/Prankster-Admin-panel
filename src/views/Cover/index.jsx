@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination, Nav, Spinner, Row, Col } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
 import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
@@ -20,8 +20,8 @@ const CoverURL = () => {
     const [fileLabel, setFileLabel] = useState('Cover Image Upload');
     const [selectedFile, setSelectedFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState(null);
+
     const [isEditing, setIsEditing] = useState(false);
-    const [activeTab, setActiveTab] = useState('emoji');
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 15;
     const [selectedFilter, setSelectedFilter] = useState("");
@@ -37,7 +37,6 @@ const CoverURL = () => {
     const [isSubmitting2, setIsSubmitting2] = useState(false);
     const [adminId, setAdminId] = useState(null);
     console.log(previewUrl);
-
 
 
     const renderPaginationItems = () => {
@@ -74,10 +73,9 @@ const CoverURL = () => {
                 setFileLabel('Cover Image Upload');
                 setSelectedFile(null);
                 setPreviewUrl(null);
-                setCurrentFileName(''); // Reset current filename
+                setCurrentFileName('');
             }
             setVisible(!visible);
-            // Fetch subcategories when modal opens
             if (!visible) {
                 getTagName();
             }
@@ -92,18 +90,79 @@ const CoverURL = () => {
             setCurrentImage(null);
             setFileLabel('Cover Image Upload');
             setIsEditing(false);
-            setCurrentFileName(''); // Reset current filename when modal closes
+            setCurrentFileName('');
         }
     }, [visible]);
 
-    const handleFileChange = (event) => {
+    const handleFileChange = async (event) => {
         const file = event.currentTarget.files[0];
         if (file) {
-            formik.setFieldValue("CoverURL", file);
-            setSelectedFile(file);
-            setFileLabel('Cover Image Uploaded');
-            setCurrentFileName(file.name);
+            try {
+                // First compress the image
+                const compressedFile = await compressImage(file);
+    
+                // Then check file size after compression
+                if (compressedFile.size > 5 * 1024 * 1024) { // 5MB in bytes
+                    toast.error('Compressed file still exceeds 5MB limit');
+                    return;
+                }
+    
+                // Update Formik field and file state
+                formik.setFieldValue("CoverURL", compressedFile);
+                setSelectedFile(compressedFile);
+                setFileLabel(compressedFile.name);
+                setPreviewUrl(URL.createObjectURL(compressedFile));
+            } catch (error) {
+                toast.error('Error processing image');
+                console.error(error);
+            }
         }
+    };
+    
+    // Image compression function (same as previous implementation)
+    const compressImage = (file) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+    
+                    // Reduce image quality and size
+                    const maxWidth = 1920;
+                    const maxHeight = 1080;
+                    let width = img.width;
+                    let height = img.height;
+    
+                    // Scale down if larger than max dimensions
+                    if (width > maxWidth || height > maxHeight) {
+                        const ratio = Math.min(maxWidth / width, maxHeight / height);
+                        width *= ratio;
+                        height *= ratio;
+                    }
+    
+                    canvas.width = width;
+                    canvas.height = height;
+    
+                    ctx.drawImage(img, 0, 0, width, height);
+    
+                    // Convert to blob with reduced quality
+                    canvas.toBlob((blob) => {
+                        // Create a new file from the compressed blob
+                        const compressedFile = new File([blob], file.name, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now()
+                        });
+                        resolve(compressedFile);
+                    }, 'image/jpeg', 0.7); // 0.7 quality (70%)
+                };
+                img.onerror = reject;
+            };
+            reader.onerror = reject;
+        });
     };
 
     const getData = () => {
@@ -180,52 +239,22 @@ const CoverURL = () => {
         // First filter by unsafe status based on isOn state
         const safetyFilteredData = covers.filter(cover => cover.Unsafe === !isOn);
 
-        // Then filter by category
-        const categoryData = safetyFilteredData.filter(cover => cover.Category === activeTab);
-
-        // Finally apply the selected filter
+        // Apply the selected filter
         switch (selectedFilter) {
             case "Hide":
-                return categoryData.filter(cover => cover.Hide === true);
+                return safetyFilteredData.filter(cover => cover.Hide === true);
             case "Unhide":
-                return categoryData.filter(cover => cover.Hide === false);
+                return safetyFilteredData.filter(cover => cover.Hide === false);
             case "Premium":
-                return categoryData.filter(cover => cover.CoverPremium === true);
+                return safetyFilteredData.filter(cover => cover.CoverPremium === true);
             case "Free":
-                return categoryData.filter(cover => cover.CoverPremium === false);
+                return safetyFilteredData.filter(cover => cover.CoverPremium === false);
             default:
-                return categoryData;
+                return safetyFilteredData;
         }
-    };
-
-    const getTabCount = (category) => {
-        // First filter by unsafe status
-        const safetyFilteredData = data.filter(cover => cover.Unsafe === !isOn);
-
-        // Then filter by category
-        const categoryData = safetyFilteredData.filter(cover => cover.Category === category);
-
-        switch (selectedFilter) {
-            case "Hide":
-                return categoryData.filter(cover => cover.Hide === true).length;
-            case "Unhide":
-                return categoryData.filter(cover => cover.Hide === false).length;
-            case "Premium":
-                return categoryData.filter(cover => cover.CoverPremium === true).length;
-            case "Free":
-                return categoryData.filter(cover => cover.CoverPremium === false).length;
-            default:
-                return categoryData.length;
-        }
-    };
-
-    const handleTabSelect = (tab) => {
-        setActiveTab(tab);
-        setCurrentPage(1);
     };
 
     const coverSchema = Yup.object().shape({
-        Category: Yup.string().required('Category is required'),
         TagName: Yup.array()
             .min(1, 'At least one TagName is required')
             .max(7, 'Maximum 7 SubCategories allowed')
@@ -244,17 +273,15 @@ const CoverURL = () => {
                         const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
                         return allowedExtensions.includes(value.type);
                     }
-                    return true; // Allow if no value (handled by `fileRequired`)
+                    return true;
                 }
             ),
         CoverPremium: Yup.boolean(),
         Hide: Yup.boolean(),
     });
 
-
     const formik = useFormik({
         initialValues: {
-            Category: '',
             TagName: [],
             CoverName: '',
             CoverURL: '',
@@ -269,12 +296,10 @@ const CoverURL = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
 
-                // Only append file if it exists (new upload or update with new file)
                 if (selectedFile) {
                     formData.append('CoverURL', selectedFile);
                 }
 
-                formData.append('Category', values.Category);
                 formData.append('TagName', JSON.stringify(values.TagName));
                 formData.append('CoverName', values.CoverName);
                 formData.append('CoverPremium', values.CoverPremium);
@@ -313,7 +338,7 @@ const CoverURL = () => {
                 setId(undefined);
                 setIsEditing(false);
                 setFileLabel('Cover Image Upload');
-                setCurrentFileName(''); // Reset current filename after successful submission
+                setCurrentFileName('');
                 getData();
                 toggleModal();
             } catch (error) {
@@ -353,9 +378,7 @@ const CoverURL = () => {
     };
 
     const handleCustomTagNameAdd = () => {
-        if (customTagName.trim() === '') {
-            return;
-        }
+        if (customTagName.trim() === '') return;
 
         if (formik.values.TagName.length < 7) {
             const updatedTagName = [...formik.values.TagName];
@@ -372,7 +395,6 @@ const CoverURL = () => {
         }
     };
 
-
     const removeTagName = (TagName) => {
         const updatedTagName = formik.values.TagName.filter(
             (item) => item !== TagName
@@ -381,12 +403,11 @@ const CoverURL = () => {
     };
 
     const handleEdit = (cover) => {
-        const fileName = cover.CoverURL.split('/').pop(); // Get filename from URL
+        const fileName = cover.CoverURL.split('/').pop();
         setCurrentFileName(fileName);
         setFileLabel('Current Cover Image');
 
         formik.setValues({
-            Category: cover.Category || '',
             TagName: Array.isArray(cover.TagName) ? cover.TagName : cover.TagName ? [cover.TagName] : [],
             CoverName: cover.CoverName || '',
             CoverURL: '',
@@ -435,16 +456,15 @@ const CoverURL = () => {
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
                 const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "4" });
 
-                // Reset to first page when toggling safe mode
                 setCurrentPage(1);
                 getData();
-                getAdminData(); // Refresh admin data after toggle
+                getAdminData();
 
                 toast.success(response.data.message);
             } catch (error) {
                 console.error('Error updating safe status:', error);
                 toast.error("Failed to update safe status.");
-                setIsOn(!newState);  // Revert to previous state on error
+                setIsOn(!newState);
             } finally {
                 setIsSubmitting2(false);
             }
@@ -520,27 +540,6 @@ const CoverURL = () => {
                 </Form.Select>
             </div>
 
-            <Nav variant="tabs" className="mt-3">
-                <Nav.Item>
-                    <Nav.Link
-                        active={activeTab === 'emoji'}
-                        onClick={() => handleTabSelect('emoji')}
-                        className={activeTab === 'emoji' ? 'active-tab' : ''}
-                    >
-                        Emoji & Gift Cover Image ({getTabCount('emoji')})
-                    </Nav.Link>
-                </Nav.Item>
-                <Nav.Item>
-                    <Nav.Link
-                        active={activeTab === 'realistic'}
-                        onClick={() => handleTabSelect('realistic')}
-                        className={activeTab === 'realistic' ? 'active-tab' : ''}
-                    >
-                        Realistic Cover Image ({getTabCount('realistic')})
-                    </Nav.Link>
-                </Nav.Item>
-            </Nav>
-
             <Table striped bordered hover responsive className='text-center fs-6'>
                 <thead>
                     <tr>
@@ -570,7 +569,6 @@ const CoverURL = () => {
                                             cursor: 'pointer',
                                         }}
                                         onClick={() => {
-                                            // Use global index instead of local index
                                             setPreviewIndex(getGlobalIndex(index));
                                             setShowPreview(true);
                                         }}
@@ -588,7 +586,7 @@ const CoverURL = () => {
                                 </td>
 
                                 <td>
-                                    {cover.TagName?.filter(Boolean).slice(0, 7).join(', ') || 'No Tags'} {/* Fallback text */}
+                                    {cover.TagName?.filter(Boolean).slice(0, 7).join(', ') || 'No Tags'}
                                 </td>
                                 <td>
                                     <Button
@@ -617,7 +615,7 @@ const CoverURL = () => {
                                 <td>
                                     <Button
                                         className="edit-dlt-btn text-black"
-                                        onClick={() => handleCopyToClipboard(cover)} // Use an arrow function to pass the parameter
+                                        onClick={() => handleCopyToClipboard(cover)}
                                     >
                                         <FontAwesomeIcon icon={faCopy} />
                                     </Button>
@@ -643,7 +641,6 @@ const CoverURL = () => {
                             <td colSpan={7} className="text-center">No Data Found</td>
                         </tr>
                     )}
-
                 </tbody>
             </Table>
 
@@ -667,29 +664,6 @@ const CoverURL = () => {
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={formik.handleSubmit}>
-                        <Form.Group className="mb-4">
-                            <Form.Label className='fw-bold'>Category<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                as="select"
-                                id="Category"
-                                name="Category"
-                                className='py-2'
-                                onChange={formik.handleChange}
-                                onBlur={formik.handleBlur}
-                                value={formik.values.Category}
-                                isInvalid={formik.touched.Category && !!formik.errors.Category}
-                            >
-                                <option value="">Select Category</option>
-                                <option value="emoji">Emoji & Gift Cover Image</option>
-                                <option value="realistic">Realistic Cover Image</option>
-                            </Form.Control>
-                            {formik.errors.Category && formik.touched.Category && (
-                                <div className="invalid-feedback d-block">
-                                    {formik.errors.Category}
-                                </div>
-                            )}
-                        </Form.Group>
-
                         <Form.Group className="mb-3">
                             <Form.Label className='fw-bold'>Cover Name ( use searching )<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
@@ -701,6 +675,7 @@ const CoverURL = () => {
                                 value={formik.values.CoverName}
                                 onChange={formik.handleChange}
                                 onBlur={formik.handleBlur}
+                                disabled={isSubmitting}
                                 isInvalid={formik.touched.CoverName && !!formik.errors.CoverName}
                             />
                             {formik.errors.CoverName && formik.touched.CoverName && (
@@ -721,6 +696,7 @@ const CoverURL = () => {
                                 setShowCustomInput={setShowCustomInput}
                                 customTagName={customTagName}
                                 setCustomTagName={setCustomTagName}
+                                disabled={isSubmitting}
                                 handleCustomTagAdd={handleCustomTagNameAdd}
                                 touched={formik.touched.TagName}
                                 errors={formik.errors.TagName}
@@ -735,7 +711,7 @@ const CoverURL = () => {
                         <hr className='bg-black' />
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel} <span style={{ fontSize: "12px" }}></span>
+                            <Form.Label className='fw-bold'>{fileLabel} <span style={{ fontSize: "12px" }}>(5 MB)</span>
                                 <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span>
                             </Form.Label>
                             <div className="d-flex flex-column">
@@ -746,6 +722,7 @@ const CoverURL = () => {
                                         name="CoverURL"
                                         onChange={handleFileChange}
                                         onBlur={formik.handleBlur}
+                                        disabled={isSubmitting}
                                         className="d-none"
                                         accept="image/*"
                                     />
@@ -796,6 +773,7 @@ const CoverURL = () => {
                                     id="CoverPremium"
                                     name="CoverPremium"
                                     label="Premium Cover"
+                                    disabled={isSubmitting}
                                     checked={formik.values.CoverPremium}
                                     onChange={formik.handleChange}
                                 />
@@ -807,6 +785,7 @@ const CoverURL = () => {
                                     id="Hide"
                                     name="Hide"
                                     label="Hide Cover"
+                                    disabled={isSubmitting}
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
                                 />

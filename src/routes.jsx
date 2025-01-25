@@ -19,7 +19,6 @@ import UserGallery from 'views/UserGallery';
 import UserAudio from 'views/UserAudio';
 import UserVideo from 'views/UserVideo';
 import UserCover from 'views/UserCover';
-import Spin from 'views/Spin';
 import Notification from 'views/Notification';
 import PushNotification from 'views/Push-Notification';
 
@@ -97,11 +96,6 @@ export const routes = [
         path: '/type/image',
         element: () => <AdminProtect><Gallery /></AdminProtect>
       },//==================================
-      {
-        exact: true,
-        path: '/spin/prank',
-        element: () => <AdminProtect><Spin /></AdminProtect>
-      },
       {
         exact: true,
         path: '/user/audio',

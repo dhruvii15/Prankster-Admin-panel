@@ -10,15 +10,33 @@ import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons'
 import logo from "../../assets/images/logo.svg";
 
 const UserVideo = () => {
+    const category = [
+        { CategoryId: 1, CategoryName: 'Trending' },
+        { CategoryId: 2, CategoryName: 'Nonveg' },
+        { CategoryId: 3, CategoryName: 'Hot' },
+        { CategoryId: 4, CategoryName: 'Funny' },
+        { CategoryId: 5, CategoryName: 'Horror' },
+        { CategoryId: 6, CategoryName: 'Celebrity' }
+    ];
+
+    const language = [
+        { LanguageId: 1, LanguageName: 'Hindi' },
+        { LanguageId: 2, LanguageName: 'English' },
+        { LanguageId: 3, LanguageName: 'Marathi' },
+        { LanguageId: 4, LanguageName: 'Gujarati' },
+        { LanguageId: 5, LanguageName: 'Tamil' },
+        { LanguageId: 6, LanguageName: 'Punjabi' }
+    ];
+
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
-    const [category, setCategory] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedVideo, setSelectedVideo] = useState(null);
     const [formErrors, setFormErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
     const [formData, setFormData] = useState({
         categoryId: '',
+        languageId: '',
         artistName: '',
         videoName: '',
         videoPremium: false,
@@ -45,20 +63,9 @@ const UserVideo = () => {
             });
     };
 
-    const getCategory = () => {
-        axios.post('https://pslink.world/api/category/read')
-            .then((res) => {
-                setCategory(res.data.data);
-            })
-            .catch((err) => {
-                console.error(err);
-                toast.error("Failed to fetch category.");
-            });
-    };
 
     useEffect(() => {
         getData();
-        getCategory();
     }, []);
 
     const handleModalClose = () => {
@@ -66,6 +73,7 @@ const UserVideo = () => {
         setSelectedVideo(null);
         setFormData({
             categoryId: '',
+            languageId: '',
             artistName: '',
             videoName: '',
             videoPremium: false,
@@ -79,6 +87,7 @@ const UserVideo = () => {
         setSelectedVideo(video);
         setFormData({
             categoryId: '',
+            languageId: '',
             artistName: '',
             videoName: video.VideoName,
             videoPremium: false,
@@ -94,6 +103,9 @@ const UserVideo = () => {
 
         if (!formData.categoryId) {
             errors.categoryId = "Please select a Prank Category.";
+        }
+        if (!formData.languageId) {
+            errors.languageId = "Please select a Prank Category.";
         }
         if (!formData.videoName.trim()) {
             errors.videoName = "Video name is required.";
@@ -113,6 +125,7 @@ const UserVideo = () => {
         submitFormData.append('Hide', formData.hide);
         submitFormData.append('role', selectedVideo._id);
         submitFormData.append('CategoryId', formData.categoryId);
+        submitFormData.append('LanguageId', formData.languageId);
         submitFormData.append('ArtistName', formData.artistName);
         submitFormData.append('Unsafe', 'true');
 
@@ -331,18 +344,45 @@ const UserVideo = () => {
                             >
                                 <option value="">Select a Prank Category</option>
                                 {category.map((cat) => {
-                                    if (cat.Type === 'video') {
-                                        return (
-                                            <option key={cat._id} value={cat.CategoryId}>
-                                                {cat.CategoryName}
-                                            </option>
-                                        );
-                                    }
-                                    return null;
+                                    return (
+                                        <option key={cat._id} value={cat.CategoryId}>
+                                            {cat.CategoryName}
+                                        </option>
+                                    );
                                 })}
                             </Form.Control>
                             <Form.Control.Feedback type="invalid">
                                 {formErrors.categoryId}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Select Prank Category<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
+                            <Form.Control
+                                as="select"
+                                value={formData.languageId}
+                                className='py-2'
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, languageId: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        languageId: value ? '' : prevErrors.languageId,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.languageId}
+                            >
+                                <option value="">Select a Prank Language</option>
+                                {language.map((cat) => {
+                                    return (
+                                        <option key={cat._id} value={cat.LanguageId}>
+                                            {cat.LanguageName}
+                                        </option>
+                                    );
+                                })}
+                            </Form.Control>
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.languageId}
                             </Form.Control.Feedback>
                         </Form.Group>
 

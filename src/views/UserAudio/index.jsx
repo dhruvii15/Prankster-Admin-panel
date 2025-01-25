@@ -10,15 +10,33 @@ import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons'
 import logo from "../../assets/images/logo.svg";
 
 const UserAudio = () => {
+    const category = [
+        { CategoryId: 1, CategoryName: 'Trending' },
+        { CategoryId: 2, CategoryName: 'Nonveg' },
+        { CategoryId: 3, CategoryName: 'Hot' },
+        { CategoryId: 4, CategoryName: 'Funny' },
+        { CategoryId: 5, CategoryName: 'Horror' },
+        { CategoryId: 6, CategoryName: 'Celebrity' }
+    ];
+
+    const language = [
+        { LanguageId: 1, LanguageName: 'Hindi' },
+        { LanguageId: 2, LanguageName: 'English' },
+        { LanguageId: 3, LanguageName: 'Marathi' },
+        { LanguageId: 4, LanguageName: 'Gujarati' },
+        { LanguageId: 5, LanguageName: 'Tamil' },
+        { LanguageId: 6, LanguageName: 'Punjabi' }
+    ];
+
     const [loading, setLoading] = useState(true);
     const [filteredData, setFilteredData] = useState([]);
-    const [category, setCategory] = useState([]);
     const [showModal, setShowModal] = useState(false);
     const [selectedAudio, setSelectedAudio] = useState(null);
     const [formErrors, setFormErrors] = useState({});
     const [formLoading, setFormLoading] = useState(false);
     const [formData, setFormData] = useState({
         categoryId: '',
+        languageId: '',
         artistName: '',
         audioName: '',
         audioPremium: false,
@@ -45,20 +63,8 @@ const UserAudio = () => {
             });
     };
 
-    const getCategory = () => {
-        axios.post('https://pslink.world/api/category/read')
-            .then((res) => {
-                setCategory(res.data.data);
-            })
-            .catch((err) => {
-                console.error(err);
-                toast.error("Failed to fetch category.");
-            });
-    };
-
     useEffect(() => {
         getData();
-        getCategory();
     }, []);
 
     const handleModalClose = () => {
@@ -66,6 +72,7 @@ const UserAudio = () => {
         setSelectedAudio(null);
         setFormData({
             categoryId: '',
+            languageId: '',
             artistName: '',
             audioName: '',
             audioPremium: false,
@@ -78,6 +85,7 @@ const UserAudio = () => {
         setSelectedAudio(audio);
         setFormData({
             categoryId: '',
+            languageId: '',
             artistName: '',
             audioName: audio.AudioName,
             audioPremium: false,
@@ -94,6 +102,11 @@ const UserAudio = () => {
         if (!formData.categoryId) {
             errors.categoryId = "Please select a Prank Category.";
         }
+
+        if (!formData.languageId) {
+            errors.languageId = "Please select a Prank Language.";
+        }
+
         if (!formData.audioName.trim()) {
             errors.audioName = "Audio name is required.";
         }
@@ -112,6 +125,7 @@ const UserAudio = () => {
         submitFormData.append('Hide', formData.hide);
         submitFormData.append('role', selectedAudio._id);
         submitFormData.append('CategoryId', formData.categoryId);
+        submitFormData.append('LanguageId', formData.languageId);
         submitFormData.append('ArtistName', formData.artistName);
         submitFormData.append('Unsafe', 'true');
 
@@ -330,18 +344,45 @@ const UserAudio = () => {
                             >
                                 <option value="">Select a Prank Category</option>
                                 {category.map((cat) => {
-                                    if (cat.Type === 'audio') {
                                         return (
                                             <option key={cat._id} value={cat.CategoryId}>
                                                 {cat.CategoryName}
                                             </option>
                                         );
-                                    }
-                                    return null;
                                 })}
                             </Form.Control>
                             <Form.Control.Feedback type="invalid">
                                 {formErrors.categoryId}
+                            </Form.Control.Feedback>
+                        </Form.Group>
+
+                        <Form.Group className="mb-3">
+                            <Form.Label className='fw-bold'>Select Prank Language<span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span></Form.Label>
+                            <Form.Control
+                                as="select"
+                                value={formData.languageId}
+                                className='py-2'
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setFormData({ ...formData, languageId: value });
+                                    setFormErrors((prevErrors) => ({
+                                        ...prevErrors,
+                                        languageId: value ? '' : prevErrors.languageId,
+                                    }));
+                                }}
+                                isInvalid={!!formErrors.languageId}
+                            >
+                                <option value="">Select a Prank Language</option>
+                                {language.map((cat) => {
+                                        return (
+                                            <option key={cat._id} value={cat.LanguageId}>
+                                                {cat.LanguageName}
+                                            </option>
+                                        );
+                                })}
+                            </Form.Control>
+                            <Form.Control.Feedback type="invalid">
+                                {formErrors.languageId}
                             </Form.Control.Feedback>
                         </Form.Group>
 
