@@ -98,30 +98,46 @@ const CoverURL = () => {
         const file = event.currentTarget.files[0];
         if (file) {
             try {
-                // First compress the image
-                const compressedFile = await compressImage(file);
-    
-                // Then check file size after compression
-                if (compressedFile.size > 5 * 1024 * 1024) { // 5MB in bytes
-                    toast.error('Compressed file still exceeds 5MB limit');
-                    return;
+                // Check if file is a GIF
+                const isGif = file.type === 'image/gif';
+                
+                let processedFile;
+                if (isGif) {
+                    // For GIFs, check size directly without compression
+                    if (file.size > 5 * 1024 * 1024) {
+                        toast.error('GIF file size must be under 5MB');
+                        return;
+                    }
+                    processedFile = file;
+                } else {
+                    // For other image types, compress them
+                    processedFile = await compressImage(file);
+                    if (processedFile.size > 5 * 1024 * 1024) {
+                        toast.error('Compressed file still exceeds 5MB limit');
+                        return;
+                    }
                 }
-    
+
                 // Update Formik field and file state
-                formik.setFieldValue("CoverURL", compressedFile);
-                setSelectedFile(compressedFile);
-                setFileLabel(compressedFile.name);
-                setPreviewUrl(URL.createObjectURL(compressedFile));
+                formik.setFieldValue("CoverURL", processedFile);
+                setSelectedFile(processedFile);
+                setFileLabel(processedFile.name);
+                setPreviewUrl(URL.createObjectURL(processedFile));
             } catch (error) {
                 toast.error('Error processing image');
                 console.error(error);
             }
         }
     };
-    
-    // Image compression function (same as previous implementation)
+
+    // Image compression function (only for non-GIF images)
     const compressImage = (file) => {
         return new Promise((resolve, reject) => {
+            if (file.type === 'image/gif') {
+                resolve(file); // Return GIF as-is
+                return;
+            }
+
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (event) => {
@@ -151,7 +167,6 @@ const CoverURL = () => {
     
                     // Convert to blob with reduced quality
                     canvas.toBlob((blob) => {
-                        // Create a new file from the compressed blob
                         const compressedFile = new File([blob], file.name, {
                             type: 'image/jpeg',
                             lastModified: Date.now()
@@ -267,11 +282,21 @@ const CoverURL = () => {
             })
             .test(
                 'fileType',
-                'Only image files are allowed (e.g., .jpg, .png, .jpeg)',
+                'Only image files are allowed (jpg, png, gif)',
                 function (value) {
                     if (value instanceof File) {
-                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
                         return allowedExtensions.includes(value.type);
+                    }
+                    return true;
+                }
+            )
+            .test(
+                'fileSize',
+                'File size must be less than 5MB',
+                function (value) {
+                    if (value instanceof File) {
+                        return value.size <= 5 * 1024 * 1024; // 5MB in bytes
                     }
                     return true;
                 }
@@ -518,7 +543,7 @@ const CoverURL = () => {
                 </Form>
             </div>
 
-            <div className="d-flex justify-content-between align-items-center">
+            <div className="d-flex justify-content-between align-items-center mt-3">
                 <Button
                     onClick={() => toggleModal('add')}
                     className='my-4 rounded-3 border-0'

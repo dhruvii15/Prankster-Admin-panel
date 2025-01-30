@@ -47,10 +47,10 @@ const Gallery = () => {
     const [isSubmitting2, setIsSubmitting2] = useState(false);
     const [adminId, setAdminId] = useState(null);
 
-    // New state for category and additional filters
+    // New state for language and additional filters
     const [activeTab, setActiveTab] = useState('all');
     const [selectedFilter, setSelectedFilter] = useState('');
-    const [selectedLanguageFilter, setSelectedLanguageFilter] = useState('');
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
 
 
     const getCategoryName = (categoryId) => {
@@ -117,28 +117,28 @@ const Gallery = () => {
             categoryId = null,
             languageId = null,
             filterType = '',
-            categoryTab = 'all'
+            languageTab = 'all'
         } = options;
 
         // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Unsafe === !isOn);
 
-        // Apply category filter
-        if (categoryTab !== 'all') {
-            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
-            if (selectedCategory) {
-                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+        // Apply language filter
+        if (languageTab !== 'all') {
+            const selectedLanguage = language.find(cat => cat.LanguageName.toLowerCase() === languageTab);
+            if (selectedLanguage) {
+                filtered = filtered.filter(item => item.LanguageId === selectedLanguage.LanguageId);
             }
         }
 
-        // Apply specific category filter if provided
-        if (categoryId) {
-            filtered = filtered.filter(item => item.CategoryId === categoryId);
+        // Apply specific language filter if provided
+        if (languageId) {
+            filtered = filtered.filter(item => item.LanguageId === languageId);
         }
 
         // Apply language filter
-        if (languageId) {
-            filtered = filtered.filter(item => item.LanguageId === parseInt(languageId));
+        if (categoryId) {
+            filtered = filtered.filter(item => item.CategoryId === parseInt(categoryId));
         }
 
         // Apply additional filters
@@ -164,17 +164,17 @@ const Gallery = () => {
         // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Unsafe === !isOn);
 
-        // Apply category filter
+        // Apply language filter
         if (activeTab !== 'all') {
-            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === activeTab);
-            if (selectedCategory) {
-                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            const selectedLanguage = language.find(cat => cat.LanguageName.toLowerCase() === activeTab);
+            if (selectedLanguage) {
+                filtered = filtered.filter(item => item.LanguageId === selectedLanguage.LanguageId);
             }
         }
 
-        // Apply language filter
-        if (selectedLanguageFilter) {
-            filtered = filtered.filter(item => item.LanguageId === parseInt(selectedLanguageFilter));
+        // Apply category filter
+        if (selectedCategoryFilter) {
+            filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
         }
 
         // Apply additional filters
@@ -198,7 +198,7 @@ const Gallery = () => {
 
     useEffect(() => {
         filterGalleryData();
-    }, [activeTab, selectedFilter, selectedLanguageFilter, data, isOn]);
+    }, [activeTab, selectedFilter, selectedCategoryFilter, data, isOn]);
 
     const handleToggle = async () => {
         if (!isSubmitting2) {
@@ -234,6 +234,11 @@ const Gallery = () => {
 
     const compressImage = (file) => {
         return new Promise((resolve, reject) => {
+            if (file.type === 'image/gif') {
+                resolve(file); // Return GIF as-is
+                return;
+            }
+
             const reader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = (event) => {
@@ -282,18 +287,29 @@ const Gallery = () => {
         const file = event.currentTarget.files[0];
         if (file) {
             try {
-                // First compress the image
-                const compressedFile = await compressImage(file);
+                // Check if file is a GIF
+                const isGif = file.type === 'image/gif';
 
-                // Then check file size after compression
-                if (compressedFile.size > 5 * 1024 * 1024) { // 5MB in bytes
-                    toast.error('Compressed file still exceeds 5MB limit');
-                    return;
+                let processedFile;
+                if (isGif) {
+                    // For GIFs, check size directly without compression
+                    if (file.size > 5 * 1024 * 1024) {
+                        toast.error('GIF file size must be under 5MB');
+                        return;
+                    }
+                    processedFile = file;
+                } else {
+                    // For other image types, compress them
+                    processedFile = await compressImage(file);
+                    if (processedFile.size > 5 * 1024 * 1024) {
+                        toast.error('Compressed file still exceeds 5MB limit');
+                        return;
+                    }
                 }
 
                 // Update Formik field and file state
-                formik.setFieldValue("GalleryImage", compressedFile);
-                setSelectedFileName(compressedFile.name);
+                formik.setFieldValue("GalleryImage", processedFile);
+                setSelectedFileName(processedFile.name);
                 setImageFileLabel('Image Prank Image uploaded');
             } catch (error) {
                 toast.error('Error processing image');
@@ -307,7 +323,7 @@ const Gallery = () => {
         GalleryImage: Yup.mixed()
             .test(
                 'fileValidation',
-                'Only image files are allowed (e.g., .jpg, .png, .jpeg)',
+                'Only image files are allowed (jpg, png, gif)',
                 function (value) {
                     // If editing and no new file is selected, skip validation
                     if (typeof value === 'string') return true;
@@ -320,11 +336,21 @@ const Gallery = () => {
 
                     // Validate file type if a file is provided
                     if (value instanceof File) {
-                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
+                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
                         return allowedExtensions.includes(value.type);
                     }
 
                     return false;
+                }
+            )
+            .test(
+                'fileSize',
+                'File size must be less than 5MB',
+                function (value) {
+                    if (value instanceof File) {
+                        return value.size <= 5 * 1024 * 1024; // 5MB in bytes
+                    }
+                    return true;
                 }
             ),
         GalleryPremium: Yup.boolean(),
@@ -552,72 +578,76 @@ const Gallery = () => {
                 >
                     Add Image Prank
                 </Button>
-                <div className='d-flex gap-4 flex-wrap align-items-center'>
-                    <div className='d-flex gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Status :</span>
-                        <Form.Select
-                            value={selectedFilter}
-                            onChange={(e) => setSelectedFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All Status</option>
-                            <option value="Hide">Hide</option>
-                            <option value="Unhide">Unhide</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Free">Free</option>
-                        </Form.Select>
-                    </div>
-                    <div className='d-flex gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Language :</span>
-                        <Form.Select
-                            value={selectedLanguageFilter}
-                            onChange={(e) => setSelectedLanguageFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All Languages</option>
-                            {language.map((lang) => (
-                                <option key={lang.LanguageId} value={lang.LanguageId}>
-                                    {lang.LanguageName}
-                                </option>
-                            ))}
-                        </Form.Select>
-                    </div>
+
+                <div className='d-flex gap-2 align-items-center'>
+                    <span className='mb-0 fw-bold fs-6'>Status :</span>
+                    <Form.Select
+                        value={selectedFilter}
+                        onChange={(e) => setSelectedFilter(e.target.value)}
+                        style={{ width: 'auto' }}
+                        className='bg-white fs-6'
+                    >
+                        <option value="">All Status</option>
+                        <option value="Hide">Hide</option>
+                        <option value="Unhide">Unhide</option>
+                        <option value="Premium">Premium</option>
+                        <option value="Free">Free</option>
+                    </Form.Select>
                 </div>
             </div>
 
-            <Nav variant="tabs" className='pt-5 mt-3'>
-                <Nav.Item>
-                    <Nav.Link
-                        active={activeTab === 'all'}
-                        className={activeTab === 'all' ? 'active-tab' : ''}
-                        onClick={() => setActiveTab('all')}
+
+            <div className='d-flex gap-4 flex-wrap align-items-end mb-3 justify-content-between'>
+                <div className='d-inline-block '>
+                    <Nav variant="tabs" className='pt-5 mt-3'>
+                        <Nav.Item>
+                            <Nav.Link
+                                active={activeTab === 'all'}
+                                className={activeTab === 'all' ? 'active-tab' : ''}
+                                onClick={() => setActiveTab('all')}
+                            >
+                                All ({getFilteredCount({
+                                    filterType: selectedFilter,
+                                    categoryId: selectedCategoryFilter
+                                })})
+                            </Nav.Link>
+                        </Nav.Item>
+                        {language.map((cat) => (
+                            <Nav.Item key={cat.LanguageId}>
+                                <Nav.Link
+                                    active={activeTab === cat.LanguageName.toLowerCase()}
+                                    className={activeTab === cat.LanguageName.toLowerCase() ? 'active-tab' : ''}
+                                    onClick={() => setActiveTab(cat.LanguageName.toLowerCase())}
+                                >
+                                    <span className="pe-2">{cat.LanguageName}</span>
+                                    ({getFilteredCount({
+                                        languageId: cat.LanguageId,
+                                        filterType: selectedFilter,
+                                        categoryId: selectedCategoryFilter,
+                                        languageTab: cat.LanguageName.toLowerCase()
+                                    })})
+                                </Nav.Link>
+                            </Nav.Item>
+                        ))}
+                    </Nav>
+                </div>
+                <div className='d-flex gap-2 align-items-center'>
+                    <span className='mb-0 fw-bold fs-6'>Category :</span>
+                    <Form.Select
+                        value={selectedCategoryFilter}
+                        onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                        style={{ width: 'auto' }}
+                        className='bg-white fs-6'
                     >
-                        All ({getFilteredCount({
-                            filterType: selectedFilter,
-                            languageId: selectedLanguageFilter
-                        })})
-                    </Nav.Link>
-                </Nav.Item>
-                {category.map((cat) => (
-                    <Nav.Item key={cat.CategoryId}>
-                        <Nav.Link
-                            active={activeTab === cat.CategoryName.toLowerCase()}
-                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                            onClick={() => setActiveTab(cat.CategoryName.toLowerCase())}
-                        >
-                            <span className="pe-2">{cat.CategoryName}</span>
-                            ({getFilteredCount({
-                                categoryId: cat.CategoryId,
-                                filterType: selectedFilter,
-                                languageId: selectedLanguageFilter,
-                                categoryTab: cat.CategoryName.toLowerCase()
-                            })})
-                        </Nav.Link>
-                    </Nav.Item>
-                ))}
-            </Nav>
+                        <option value="">All Categories</option>
+                        {category.map((lang) => (
+                            <option key={lang.CategoryId} value={lang.CategoryId}>
+                                {lang.CategoryName}
+                            </option>
+                        ))}
+                    </Form.Select>
+                </div>
+            </div>
 
             <Modal
                 show={visible}
@@ -651,7 +681,7 @@ const Gallery = () => {
                                         <option key={language._id} value={language.LanguageId}>
                                             {language.LanguageName}
                                         </option>
-                                    ); 
+                                    );
                                 })}
                             </Form.Control>
                             {formik.errors.LanguageId && formik.touched.LanguageId && (

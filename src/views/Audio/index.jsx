@@ -49,7 +49,7 @@ const Audio = () => {
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
     const [selectedFilter, setSelectedFilter] = useState('');
-    const [selectedLanguageFilter, setSelectedLanguageFilter] = useState('');
+    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
 
 
     const getCategoryName = (categoryId) => {
@@ -151,28 +151,28 @@ const Audio = () => {
             categoryId = null,
             languageId = null,
             filterType = '',
-            categoryTab = 'all'
+            languageTab = 'all'
         } = options;
 
         // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Unsafe === !isOn);
 
-        // Apply category filter
-        if (categoryTab !== 'all') {
-            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === categoryTab);
-            if (selectedCategory) {
-                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+        // Apply language filter
+        if (languageTab !== 'all') {
+            const selectedLanguage = language.find(cat => cat.LanguageName.toLowerCase() === languageTab);
+            if (selectedLanguage) {
+                filtered = filtered.filter(item => item.LanguageId === selectedLanguage.LanguageId);
             }
         }
 
-        // Apply specific category filter if provided
-        if (categoryId) {
-            filtered = filtered.filter(item => item.CategoryId === categoryId);
+        // Apply specific language filter if provided
+        if (languageId) {
+            filtered = filtered.filter(item => item.LanguageId === languageId);
         }
 
         // Apply language filter
-        if (languageId) {
-            filtered = filtered.filter(item => item.LanguageId === parseInt(languageId));
+        if (categoryId) {
+            filtered = filtered.filter(item => item.CategoryId === parseInt(categoryId));
         }
 
         // Apply additional filters
@@ -198,17 +198,17 @@ const Audio = () => {
         // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Unsafe === !isOn);
 
-        // Apply category filter
+        // Apply language filter
         if (activeTab !== 'all') {
-            const selectedCategory = category.find(cat => cat.CategoryName.toLowerCase() === activeTab);
-            if (selectedCategory) {
-                filtered = filtered.filter(item => item.CategoryId === selectedCategory.CategoryId);
+            const selectedLanguage = language.find(cat => cat.LanguageName.toLowerCase() === activeTab);
+            if (selectedLanguage) {
+                filtered = filtered.filter(item => item.LanguageId === selectedLanguage.LanguageId);
             }
         }
 
-        // Apply language filter
-        if (selectedLanguageFilter) {
-            filtered = filtered.filter(item => item.LanguageId === parseInt(selectedLanguageFilter));
+        // Apply category filter
+        if (selectedCategoryFilter) {
+            filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
         }
 
         // Apply additional filters
@@ -230,11 +230,10 @@ const Audio = () => {
         setFilteredData(filtered);
     };
 
-
-    // Update useEffect to handle filtering
     useEffect(() => {
         filterAudioData();
-    }, [activeTab, selectedFilter, selectedLanguageFilter, data, isOn]);
+    }, [activeTab, selectedFilter, selectedCategoryFilter, data, isOn]);
+
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Prank Name is required'),
@@ -559,72 +558,75 @@ const Audio = () => {
                 >
                     Add Audio Prank
                 </Button>
-                <div className='d-flex gap-4 flex-wrap align-items-center'>
-                    <div className='d-flex gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Status :</span>
-                        <Form.Select
-                            value={selectedFilter}
-                            onChange={(e) => setSelectedFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All Status</option>
-                            <option value="Hide">Hide</option>
-                            <option value="Unhide">Unhide</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Free">Free</option>
-                        </Form.Select>
-                    </div>
-                    <div className='d-flex gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Language :</span>
-                        <Form.Select
-                            value={selectedLanguageFilter}
-                            onChange={(e) => setSelectedLanguageFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All Languages</option>
-                            {language.map((lang) => (
-                                <option key={lang.LanguageId} value={lang.LanguageId}>
-                                    {lang.LanguageName}
-                                </option>
-                            ))}
-                        </Form.Select>
-                    </div>
+                <div className='d-flex gap-2 align-items-center'>
+                    <span className='mb-0 fw-bold fs-6'>Status :</span>
+                    <Form.Select
+                        value={selectedFilter}
+                        onChange={(e) => setSelectedFilter(e.target.value)}
+                        style={{ width: 'auto' }}
+                        className='bg-white fs-6'
+                    >
+                        <option value="">All Status</option>
+                        <option value="Hide">Hide</option>
+                        <option value="Unhide">Unhide</option>
+                        <option value="Premium">Premium</option>
+                        <option value="Free">Free</option>
+                    </Form.Select>
                 </div>
             </div>
 
-            <Nav variant="tabs" className='pt-5 mt-3'>
-                <Nav.Item>
-                    <Nav.Link
-                        active={activeTab === 'all'}
-                        className={activeTab === 'all' ? 'active-tab' : ''}
-                        onClick={() => setActiveTab('all')}
+
+            <div className='d-flex gap-4 flex-wrap align-items-end mb-3 justify-content-between'>
+                <div className='d-inline-block '>
+                    <Nav variant="tabs" className='pt-5 mt-3'>
+                        <Nav.Item>
+                            <Nav.Link
+                                active={activeTab === 'all'}
+                                className={activeTab === 'all' ? 'active-tab' : ''}
+                                onClick={() => setActiveTab('all')}
+                            >
+                                All ({getFilteredCount({
+                                    filterType: selectedFilter,
+                                    categoryId: selectedCategoryFilter
+                                })})
+                            </Nav.Link>
+                        </Nav.Item>
+                        {language.map((cat) => (
+                            <Nav.Item key={cat.LanguageId}>
+                                <Nav.Link
+                                    active={activeTab === cat.LanguageName.toLowerCase()}
+                                    className={activeTab === cat.LanguageName.toLowerCase() ? 'active-tab' : ''}
+                                    onClick={() => setActiveTab(cat.LanguageName.toLowerCase())}
+                                >
+                                    <span className="pe-2">{cat.LanguageName}</span>
+                                    ({getFilteredCount({
+                                        languageId: cat.LanguageId,
+                                        filterType: selectedFilter,
+                                        categoryId: selectedCategoryFilter,
+                                        languageTab: cat.LanguageName.toLowerCase()
+                                    })})
+                                </Nav.Link>
+                            </Nav.Item>
+                        ))}
+                    </Nav>
+                </div>
+                <div className='d-flex gap-2 align-items-center'>
+                    <span className='mb-0 fw-bold fs-6'>Category :</span>
+                    <Form.Select
+                        value={selectedCategoryFilter}
+                        onChange={(e) => setSelectedCategoryFilter(e.target.value)}
+                        style={{ width: 'auto' }}
+                        className='bg-white fs-6'
                     >
-                        All ({getFilteredCount({
-                            filterType: selectedFilter,
-                            languageId: selectedLanguageFilter
-                        })})
-                    </Nav.Link>
-                </Nav.Item>
-                {category.map((cat) => (
-                    <Nav.Item key={cat.CategoryId}>
-                        <Nav.Link
-                            active={activeTab === cat.CategoryName.toLowerCase()}
-                            className={activeTab === cat.CategoryName.toLowerCase() ? 'active-tab' : ''}
-                            onClick={() => setActiveTab(cat.CategoryName.toLowerCase())}
-                        >
-                            <span className="pe-2">{cat.CategoryName}</span>
-                            ({getFilteredCount({
-                                categoryId: cat.CategoryId,
-                                filterType: selectedFilter,
-                                languageId: selectedLanguageFilter,
-                                categoryTab: cat.CategoryName.toLowerCase()
-                            })})
-                        </Nav.Link>
-                    </Nav.Item>
-                ))}
-            </Nav>
+                        <option value="">All Categories</option>
+                        {category.map((lang) => (
+                            <option key={lang.CategoryId} value={lang.CategoryId}>
+                                {lang.CategoryName}
+                            </option>
+                        ))}
+                    </Form.Select>
+                </div>
+            </div>
 
             <Modal
                 show={visible}
