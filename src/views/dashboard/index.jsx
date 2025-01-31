@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card } from 'react-bootstrap';
+import { Row, Col, Card, Table } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAudio, faPhotoFilm, faVideo } from '@fortawesome/free-solid-svg-icons';
 import { faImage } from '@fortawesome/free-regular-svg-icons';
 import { Chart as ChartJS, LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend, ArcElement } from 'chart.js';
 import axios from 'axios';
+import { Doughnut } from 'react-chartjs-2';
+
 
 import logo from "../../assets/images/logo.svg";
 import { Link } from 'react-router-dom';
+import StatusChart from 'components/statusChart';
 
 // Registering necessary components for Chart.js
 ChartJS.register(LineElement, CategoryScale, LinearScale, PointElement, Tooltip, Legend, ArcElement);
@@ -19,26 +22,25 @@ const DashAnalytics = () => {
     audio: [],
     video: [],
     gallery: [],
-    category: [],
     userAudio: [],
     userVideo: [],
     userGallery: [],
     userCover: []
   });
   const [loading, setLoading] = useState(true);
+  const [notification, setnotification] = useState([]);
 
   const fetchData = async () => {
     try {
-      const [cover, audio, video, gallery, category, userAudio, userVideo, userGallery, userCover] = await Promise.all([
-        axios.post('https://pslink.world/api/cover/read'),
-        axios.post('https://pslink.world/api/audio/read'),
-        axios.post('https://pslink.world/api/video/read'),
-        axios.post('https://pslink.world/api/gallery/read'),
-        axios.post('https://pslink.world/api/category/read'),
-        axios.post('https://pslink.world/api/users/read', { TypeId: "1" }),
-        axios.post('https://pslink.world/api/users/read', { TypeId: "2" }),
-        axios.post('https://pslink.world/api/users/read', { TypeId: "3" }),
-        axios.post('https://pslink.world/api/users/read', { TypeId: "4" })
+      const [cover, audio, video, gallery, userAudio, userVideo, userGallery, userCover] = await Promise.all([
+        axios.post('http://localhost:5001/api/cover/read'),
+        axios.post('http://localhost:5001/api/audio/read'),
+        axios.post('http://localhost:5001/api/video/read'),
+        axios.post('http://localhost:5001/api/gallery/read'),
+        axios.post('http://localhost:5001/api/users/read', { TypeId: "1" }),
+        axios.post('http://localhost:5001/api/users/read', { TypeId: "2" }),
+        axios.post('http://localhost:5001/api/users/read', { TypeId: "3" }),
+        axios.post('http://localhost:5001/api/users/read', { TypeId: "4" })
       ]);
 
       setData({
@@ -46,7 +48,6 @@ const DashAnalytics = () => {
         audio: audio.data.data,
         video: video.data.data,
         gallery: gallery.data.data,
-        category: category.data.data,
         userAudio: userAudio.data.data,
         userVideo: userVideo.data.data,
         userGallery: userGallery.data.data,
@@ -59,76 +60,62 @@ const DashAnalytics = () => {
     }
   };
 
+  // Filtering trending items
+  const trendingCover = data.cover.filter(item => item.trending === true).length;
+  const trendingAudio = data.audio.filter(item => item.trending === true).length;
+  const trendingVideo = data.video.filter(item => item.trending === true).length;
+  const trendingGallery = data.gallery.filter(item => item.trending === true).length;
+
+  // Doughnut Chart Data
+  const doughnutData = {
+    labels: ["Cover", "Audio", "Video", "Gallery"],
+    datasets: [
+      {
+        label: "Trending Items",
+        data: [trendingCover, trendingAudio, trendingVideo, trendingGallery],
+        backgroundColor: [
+          "#C7CEFF",
+          "#8593ED",
+          "#5A6ACF",
+          "rgb(105, 123, 240)"
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+
+  const doughnutOptions = {
+    responsive: true,
+    cutout: "60%", // Adjust the percentage to control the inner circle size
+    plugins: {
+      legend: {
+        position: "top",
+      },
+      tooltip: {
+        enabled: true,
+      },
+    },
+  };
+
+  const getData = () => {
+    setLoading(true);
+    axios.post('https://pslink.world/api/notification/read', { type: 'push' })
+      .then((res) => {
+        setnotification(res.data.data);
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error(err);
+        setLoading(false);
+        toast.error("Failed to fetch data.");
+      });
+  };
+
+
   useEffect(() => {
     fetchData();
+    getData();
   }, []);
-
-  // const processData = useMemo(() => {
-  //   const userCountByDate = {};
-  //   data.users.forEach(user => {
-  //     const date = new Date(user.createdAt);
-  //     if (!isNaN(date.getTime())) {
-  //       const formattedDate = `${date.getUTCMonth() + 1}/${date.getUTCDate()}/${date.getUTCFullYear()}`;
-  //       userCountByDate[formattedDate] = (userCountByDate[formattedDate] || 0) + 1;
-  //     }
-  //   });
-  //   return {
-  //     labels: Object.keys(userCountByDate),
-  //     data: Object.values(userCountByDate),
-  //   };
-  // }, [data.users]);
-
-  // Data for the line chart (User Creation Trend)
-  // const chartData = {
-  //   labels: processData.labels,
-  //   datasets: [{
-  //     label: 'Users Created per Day',
-  //     data: processData.data,
-  //     borderColor: 'rgba(75, 192, 192, 1)',
-  //     backgroundColor: 'rgba(75, 192, 192, 0.2)',
-  //     fill: true,
-  //     tension: 0.1,
-  //   }],
-  // };
-
-  // Data for the doughnut chart (Category Distribution)
-  // const doughnutData = {
-  //   labels: ["Audio", "Video", "Gallery"],
-  //   datasets: [
-  //     {
-  //       label: "# of Items",
-  //       data: [
-  //         data.category.filter(item => item.Category === "audio").length,
-  //         data.category.filter(item => item.Category === "video").length,
-  //         data.category.filter(item => item.Category === "gallery").length
-  //       ],
-  //       backgroundColor: [
-  //         "rgba(255, 99, 132, 0.2)",
-  //         "rgba(54, 162, 235, 0.2)",
-  //         "rgba(1,197,1, 0.2)",
-  //       ],
-  //       borderColor: [
-  //         "rgba(255, 99, 132, 1)",
-  //         "rgba(54, 162, 235, 1)",
-  //         "rgba(75, 192, 192, 1)",
-  //       ],
-  //       borderWidth: 1,
-  //     },
-  //   ],
-  // };
-
-  // // Options for the doughnut chart
-  // const doughnutOptions = {
-  //   responsive: true,
-  //   plugins: {
-  //     legend: {
-  //       position: "top",
-  //     },
-  //     tooltip: {
-  //       enabled: true,
-  //     },
-  //   },
-  // };
 
   if (loading) {
     return (
@@ -150,8 +137,8 @@ const DashAnalytics = () => {
   // Card data for displaying count of items in each category
   const cardData = [
     { title: 'Cover-Image', icon: faImage, count: data.cover.length, className: 'dash-color-5', path: '/cover' },
-    { title: 'Audio Prank', icon: faFileAudio, count: data.audio.length, className: 'bg-c-yellow', path: '/type/audio' },
-    { title: 'Video Prank', icon: faVideo, count: data.video.length, className: 'bg-c-green', path: '/type/video' },
+    { title: 'Audio Prank', icon: faFileAudio, count: data.audio.length, className: 'bg-c-green', path: '/type/audio' },
+    { title: 'Video Prank', icon: faVideo, count: data.video.length, className: 'dash-color-1', path: '/type/video' },
     { title: 'Image Prank', icon: faPhotoFilm, count: data.gallery.length, className: 'bg-c-purple', path: '/type/image' },
   ];
 
@@ -164,6 +151,11 @@ const DashAnalytics = () => {
 
   return (
     <>
+
+      <div>
+        <h4>Dashboard</h4>
+      </div>
+
       <Row className='p-3'>
         <h4>Prank :</h4>
         {cardData.map((card, index) => (
@@ -181,18 +173,6 @@ const DashAnalytics = () => {
             </Link>
           </Col>
         ))}
-        {/* <Col md={4} className='my-4'>
-        <div className='bg-white h-100 p-3'>
-          <h3>Category</h3>
-          <Doughnut data={doughnutData} options={doughnutOptions} />
-        </div>
-      </Col> */}
-        {/* <Col md={8} className='my-4'>
-        <div className='bg-white rounded-3 p-3'>
-          <h3>User Creation Trend:</h3>
-          <Line data={chartData} />
-        </div>
-      </Col> */}
       </Row>
 
       <Row className='p-3'>
@@ -213,6 +193,52 @@ const DashAnalytics = () => {
           </Col>
         ))}
       </Row>
+
+      <Row className='py-5 px-4 mt-3 d-flex align-items-start'>
+        <Col md={6} lg={4} className='mx-auto'>
+          <h5 className="mb-4 pt-3">Trending Prank </h5>
+          <Card className="p-2">
+            <Doughnut data={doughnutData} options={doughnutOptions} />
+          </Card>
+        </Col>
+        <Col md={12} lg={8} className='mx-auto mt-3'>
+          <StatusChart />
+        </Col>
+      </Row>
+
+      <h5 className="mb-4 pt-3">Push Notification : </h5>
+
+      <Table striped hover bordered responsive className="text-center fs-6">
+        <thead>
+          <tr>
+            <th>Index</th>
+            <th>Notification Title</th>
+            <th>Notification Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          {notification.length > 0 ? (
+            notification.slice(-7).map((notification, index) => (
+              <tr
+                key={notification._id}
+                className={index % 2 === 1 ? 'bg-transparnet' : 'bg-transparnet'}
+              >
+                <td>{index + 1}</td>
+                <td>{notification.Title}</td>
+                <td>{notification.Description}</td>
+              </tr>
+            ))
+          ) : (
+            <tr>
+              <td colSpan="3" className="text-center">
+                No notifications to display.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </Table>
+
+
     </>
   );
 };

@@ -645,7 +645,7 @@ const CoverURL = () => {
             <div className="search-bar-container my-3">
                 <input
                     type="text"
-                    placeholder="Search by department or position name"
+                    placeholder="Search by Tagname"
                     className="search-input"
                     value={searchTerm}
                     onChange={handleSearch}
