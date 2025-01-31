@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -49,6 +49,13 @@ const Video = () => {
     const [isSubmitting2, setIsSubmitting2] = useState(false);
     const [adminId, setAdminId] = useState(null);
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
+    const [inputType, setInputType] = useState('file');
+    const [videoUrlText, setVideoUrlText] = useState('');
+
+    const inputTypes = [
+        { id: 'file', label: 'File Upload' },
+        { id: 'text', label: 'URL' }
+    ];
 
 
     const getCategoryName = (categoryId) => {
@@ -62,7 +69,7 @@ const Video = () => {
     };
 
     const getAdminData = () => {
-        axios.get('https://pslink.world/api/admin/read')
+        axios.get('http://localhost:5001/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].VideoSafe);
                 setAdminId(res.data.data[0]._id);
@@ -83,7 +90,7 @@ const Video = () => {
 
                 // Call the appropriate API based on the state
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
-                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "2" });
+                const response = await axios.post(`http://localhost:5001/api/${apiEndpoint}/${adminId}`, { type: "2" });
 
                 // Reset to first page when toggling safe mode
                 setCurrentPage(1);
@@ -131,9 +138,9 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/video/read')
+        axios.post('http://localhost:5001/api/video/read')
             .then((res) => {
-                const newData = res.data.data.reverse();
+                const newData = res.data.data
                 setData(newData);
                 // Remove the filterVideoData call here
                 setLoading(false);
@@ -244,30 +251,25 @@ const Video = () => {
     const videoSchema = Yup.object().shape({
         VideoName: Yup.string().required('Video Prank Name is required'),
         Video: Yup.mixed()
+            .test('fileOrText', 'Either file upload or URL is required', function (value) {
+                if (formik.values.isEditing && !value && currentVideoFileName) return true;
+                if (inputType === 'text') return !!videoUrlText;
+                return value instanceof File;
+            })
             .test(
                 'fileValidation',
                 'Only video files are allowed (e.g., .mp4, .mkv, .avi)',
                 function (value) {
-                    // If editing and no new file is selected, skip validation
-                    if (typeof value === 'string') return true;
-
-                    // For new entries or when a new file is selected during edit
-                    if (!value) {
-                        // Required only for new entries
-                        return this.parent.isEditing ? true : false;
-                    }
-
-                    // Validate file type if a file is provided
+                    if (inputType === 'text') return true;
                     if (value instanceof File) {
                         const allowedExtensions = [
                             'video/mp4',
-                            'video/x-matroska', // for .mkv
-                            'video/x-msvideo', // for .avi
+                            'video/x-matroska',
+                            'video/x-msvideo',
                         ];
                         return allowedExtensions.includes(value.type);
                     }
-
-                    return false;
+                    return true;
                 }
             ),
         VideoPremium: Yup.boolean(),
@@ -287,27 +289,33 @@ const Video = () => {
             LanguageId: '',
             Hide: false,
             isEditing: false,
-            Unsafe: true // Add Unsafe field
+            Unsafe: false
         },
         validationSchema: videoSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 setIsSubmitting(true);
                 const formData = new FormData();
+
+                // Handle video input based on input type
+                if (inputType === 'file' && values.Video instanceof File) {
+                    formData.append('Video', values.Video);
+                } else if (inputType === 'text') {
+                    formData.append('Video', videoUrlText);
+                }
+
                 formData.append('VideoName', values.VideoName);
                 formData.append('ArtistName', values.ArtistName);
-                if (values.Video instanceof File) {
-                    formData.append('Video', values.Video);
-                }
                 formData.append('VideoPremium', values.VideoPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('LanguageId', values.LanguageId);
                 formData.append('Hide', values.Hide);
-                formData.append('Unsafe', "true"); // Add Unsafe field
+                formData.append('Unsafe', "false");
+                formData.append('inputType', inputType);
 
                 const request = id !== undefined
-                    ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
-                    : axios.post('https://pslink.world/api/video/create', formData);
+                    ? axios.patch(`http://localhost:5001/api/video/update/${id}`, formData)
+                    : axios.post('http://localhost:5001/api/video/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -316,6 +324,8 @@ const Video = () => {
                 setVideoFileLabel('Video Prank File Upload');
                 setSelectedVideoFileName('');
                 setCurrentVideoFileName('');
+                setVideoUrlText('');
+                setInputType('file');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -335,6 +345,11 @@ const Video = () => {
         setCurrentVideoFileName(videoFileName);
         setSelectedVideoFileName('');
         setVideoFileLabel('Video Prank File Upload');
+        setVideoUrlText(video.Video);
+
+        // Determine input type based on video URL format
+        const isUrl = video.Video.startsWith('http');
+        setInputType(isUrl ? 'text' : 'file');
 
         formik.setValues({
             VideoName: video.VideoName,
@@ -351,7 +366,7 @@ const Video = () => {
     };
 
     const handleHideToggle = (videoId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5001/api/video/update/${videoId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -363,7 +378,7 @@ const Video = () => {
     };
 
     const handlePremiumToggle = (videoId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5001/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -376,7 +391,7 @@ const Video = () => {
 
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video Prank?")) {
-            axios.delete(`https://pslink.world/api/video/delete/${videoId}`)
+            axios.delete(`http://localhost:5001/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -491,8 +506,8 @@ const Video = () => {
                         className='bg-white fs-6'
                     >
                         <option value="">All Status</option>
-                        <option value="Hide">Hide</option>
-                        <option value="Unhide">Unhide</option>
+                        <option value="Unhide">Safe</option>
+                        <option value="Hide">Unsafe</option>
                         <option value="Premium">Premium</option>
                         <option value="Free">Free</option>
                     </Form.Select>
@@ -664,41 +679,83 @@ const Video = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{videoFileLabel}<span style={{ fontSize: "12px" }}> (15 MB)</span><span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <div className="d-flex flex-column">
-                                <div className="d-flex align-items-center">
-                                    <Form.Control
-                                        type="file"
-                                        id="Video"
-                                        name="Video"
-                                        disabled={isSubmitting}
-                                        onChange={(event) => {
-                                            let file = event.currentTarget.files[0];
-                                            formik.setFieldValue("Video", file);
-                                            if (file) {
-                                                setVideoFileLabel("Audio Prank Image uploaded");
-                                                setCurrentVideoFileName(file.name);
-                                            } else {
-                                                setVideoFileLabel("Audio Prank Image Upload");
-                                                setCurrentVideoFileName('');
-                                            }
-                                            setSelectedVideoFileName(file ? file.name : "");
+                            <Form.Label className='fw-bold'>
+                                Video Input Type
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                            </Form.Label>
+                            <div className="d-flex gap-3 mb-3">
+                                {inputTypes.map((type) => (
+                                    <div
+                                        key={type.id}
+                                        onClick={() => !isSubmitting && setInputType(type.id)}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'submit' : 'bg-light'}`}
+                                        style={{
+                                            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`
                                         }}
-                                        onBlur={formik.handleBlur}
-                                        label="Choose File"
-                                        className="d-none"
-                                        custom
-                                    />
-                                    <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                        <div style={{ color: "#c1c1c1" }}>Select Video Prank File</div>
-                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                            {currentVideoFileName ? currentVideoFileName : selectedVideoFileName}
-                                        </span>
-                                    </label>
-                                </div>
+                                    >
+                                        {type.label}
+                                    </div>
+                                ))}
                             </div>
-                            {formik.errors.Video && formik.touched.Video && (
+
+                            {inputType === 'file' ? (
+                                <>
+                                    <Form.Label className='fw-bold'>
+                                        {videoFileLabel}<span style={{ fontSize: "12px" }}> (15 MB)</span>
+                                        <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                                    </Form.Label>
+                                    <div className="d-flex flex-column">
+                                        <div className="d-flex align-items-center">
+                                            <Form.Control
+                                                type="file"
+                                                id="Video"
+                                                name="Video"
+                                                disabled={isSubmitting}
+                                                onChange={(event) => {
+                                                    const file = event.currentTarget.files[0];
+                                                    formik.setFieldValue("Video", file);
+                                                    // setSelectedFile(file);
+                                                    if (file) {
+                                                        setVideoFileLabel("Video Prank File uploaded");
+                                                        setCurrentVideoFileName(file.name);
+                                                    } else {
+                                                        setVideoFileLabel("Video Prank File Upload");
+                                                        setCurrentVideoFileName('');
+                                                    }
+                                                    setSelectedVideoFileName(file ? file.name : "");
+                                                }}
+                                                onBlur={formik.handleBlur}
+                                                className="d-none"
+                                            />
+                                            <label htmlFor="Video" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                                <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                                <div style={{ color: "#c1c1c1" }}>Select Video Prank File</div>
+                                                <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                                    {currentVideoFileName ? currentVideoFileName : selectedVideoFileName}
+                                                </span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <Form.Group>
+                                    <Form.Label className='fw-bold'>
+                                        Video URL
+                                        <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Enter video URL"
+                                        value={videoUrlText}
+                                        onChange={(e) => setVideoUrlText(e.target.value)}
+                                        disabled={isSubmitting}
+                                    />
+                                </Form.Group>
+                            )}
+
+                            {formik.touched.Video && formik.errors.Video && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.Video}
                                 </div>
@@ -724,7 +781,7 @@ const Video = () => {
                                     id="Hide"
                                     name="Hide"
                                     disabled={isSubmitting}
-                                    label="Hide Video Prank"
+                                    label="Safe Video Prank"
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
                                 />
@@ -768,7 +825,8 @@ const Video = () => {
                         <th>Prank Language</th>
                         <th>Prank Category</th>
                         <th>Premium</th>
-                        <th>Hidden</th>
+                        <th>Safe</th>
+                        <th>Trending</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -814,6 +872,14 @@ const Video = () => {
                                     </Button>
                                 </td>
                                 <td>
+                                    <FontAwesomeIcon
+                                        icon={video.trending ? faArrowTrendUp : faArrowTrendDown}
+                                        title={video.trending ? "up" : "down"}
+                                        className='fs-5'
+                                        style={{ color: video.trending ? 'green' : 'red' }}
+                                    />
+                                </td>
+                                <td>
                                     <Button
                                         className="edit-dlt-btn text-black"
                                         onClick={() => handleCopyToClipboard(video)} // Use an arrow function to pass the parameter
@@ -831,7 +897,7 @@ const Video = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={9} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
+                            <td colSpan={10} className="text-center">No Data Found</td> {/* Ensure the colSpan matches your table structure */}
                         </tr>
                     )}
 

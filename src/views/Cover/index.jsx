@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown } from '@fortawesome/free-solid-svg-icons';
 import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
@@ -36,7 +36,14 @@ const CoverURL = () => {
     const [isOn, setIsOn] = useState(false);
     const [isSubmitting2, setIsSubmitting2] = useState(false);
     const [adminId, setAdminId] = useState(null);
+    const [inputType, setInputType] = useState('file'); // 'file' or 'text'
+    const [coverUrlText, setCoverUrlText] = useState('');
     console.log(previewUrl);
+
+    const inputTypes = [
+        { id: 'file', label: 'File Upload' },
+        { id: 'text', label: 'URL' }
+    ];
 
 
     const renderPaginationItems = () => {
@@ -100,7 +107,7 @@ const CoverURL = () => {
             try {
                 // Check if file is a GIF
                 const isGif = file.type === 'image/gif';
-                
+
                 let processedFile;
                 if (isGif) {
                     // For GIFs, check size directly without compression
@@ -146,25 +153,25 @@ const CoverURL = () => {
                 img.onload = () => {
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
-    
+
                     // Reduce image quality and size
                     const maxWidth = 1920;
                     const maxHeight = 1080;
                     let width = img.width;
                     let height = img.height;
-    
+
                     // Scale down if larger than max dimensions
                     if (width > maxWidth || height > maxHeight) {
                         const ratio = Math.min(maxWidth / width, maxHeight / height);
                         width *= ratio;
                         height *= ratio;
                     }
-    
+
                     canvas.width = width;
                     canvas.height = height;
-    
+
                     ctx.drawImage(img, 0, 0, width, height);
-    
+
                     // Convert to blob with reduced quality
                     canvas.toBlob((blob) => {
                         const compressedFile = new File([blob], file.name, {
@@ -182,9 +189,9 @@ const CoverURL = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/cover/read')
+        axios.post('http://localhost:5001/api/cover/read')
             .then((res) => {
-                const reversedData = res.data.data.reverse();
+                const reversedData = res.data.data;
                 setData(reversedData);
                 setLoading(false);
             })
@@ -196,7 +203,7 @@ const CoverURL = () => {
     };
 
     const getTagName = () => {
-        axios.post('https://pslink.world/api/cover/TagName/read')
+        axios.post('http://localhost:5001/api/cover/TagName/read')
             .then((res) => {
                 setTagName(res.data.data);
             })
@@ -207,7 +214,7 @@ const CoverURL = () => {
     };
 
     const getAdminData = () => {
-        axios.get('https://pslink.world/api/admin/read')
+        axios.get('http://localhost:5001/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].CoverSafe);
                 setAdminId(res.data.data[0]._id);
@@ -276,14 +283,16 @@ const CoverURL = () => {
             .required('At least one TagName is required'),
         CoverName: Yup.string().required('CoverName is required'),
         CoverURL: Yup.mixed()
-            .test('fileRequired', 'Cover Image is required', function (value) {
+            .test('fileOrText', 'Either file upload or URL is required', function (value) {
                 if (isEditing && !value && currentImage) return true;
+                if (inputType === 'text') return !!coverUrlText;
                 return value instanceof File;
             })
             .test(
                 'fileType',
                 'Only image files are allowed (jpg, png, gif)',
                 function (value) {
+                    if (inputType === 'text') return true;
                     if (value instanceof File) {
                         const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
                         return allowedExtensions.includes(value.type);
@@ -295,8 +304,9 @@ const CoverURL = () => {
                 'fileSize',
                 'File size must be less than 5MB',
                 function (value) {
+                    if (inputType === 'text') return true;
                     if (value instanceof File) {
-                        return value.size <= 5 * 1024 * 1024; // 5MB in bytes
+                        return value.size <= 5 * 1024 * 1024;
                     }
                     return true;
                 }
@@ -312,7 +322,7 @@ const CoverURL = () => {
             CoverURL: '',
             CoverPremium: false,
             Hide: false,
-            Unsafe: true,
+            Unsafe: false,
             isEditing: false,
         },
         validationSchema: coverSchema,
@@ -321,20 +331,23 @@ const CoverURL = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
 
-                if (selectedFile) {
+                if (inputType === 'file' && selectedFile) {
                     formData.append('CoverURL', selectedFile);
+                } else if (inputType === 'text') {
+                    formData.append('CoverURL', coverUrlText);
                 }
 
                 formData.append('TagName', JSON.stringify(values.TagName));
                 formData.append('CoverName', values.CoverName);
                 formData.append('CoverPremium', values.CoverPremium);
                 formData.append('Hide', values.Hide);
-                formData.append('Unsafe', "true");
+                formData.append('Unsafe', "false");
+                formData.append('inputType', inputType);
 
                 let response;
                 if (isEditing) {
                     response = await axios.patch(
-                        `https://pslink.world/api/cover/update/${id}`,
+                        `http://localhost:5001/api/cover/update/${id}`,
                         formData,
                         {
                             headers: {
@@ -344,7 +357,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'https://pslink.world/api/cover/create',
+                        'http://localhost:5001/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -360,6 +373,7 @@ const CoverURL = () => {
                 setShowCustomInput(false);
                 setSelectedFile(null);
                 setPreviewUrl(null);
+                setCoverUrlText('');
                 setId(undefined);
                 setIsEditing(false);
                 setFileLabel('Cover Image Upload');
@@ -378,7 +392,7 @@ const CoverURL = () => {
 
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
-            axios.delete(`https://pslink.world/api/cover/delete/${coverId}`)
+            axios.delete(`http://localhost:5001/api/cover/delete/${coverId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -428,27 +442,47 @@ const CoverURL = () => {
     };
 
     const handleEdit = (cover) => {
+        // Get filename from URL and set current file info
         const fileName = cover.CoverURL.split('/').pop();
         setCurrentFileName(fileName);
         setFileLabel('Current Cover Image');
-
+        
+        // Determine if the current image is a URL (starts with http/https)
+        const isUrl = cover.CoverURL.startsWith('http');
+        setInputType(isUrl ? 'text' : 'file');
+        
+        // If it's a URL, set the URL text field
+        if (isUrl) {
+            setCoverUrlText(cover.CoverURL);
+        } else {
+            setCoverUrlText('');
+        }
+    
+        // Set form values
         formik.setValues({
-            TagName: Array.isArray(cover.TagName) ? cover.TagName : cover.TagName ? [cover.TagName] : [],
+            TagName: Array.isArray(cover.TagName) 
+                ? cover.TagName 
+                : cover.TagName 
+                    ? [cover.TagName] 
+                    : [],
             CoverName: cover.CoverName || '',
-            CoverURL: '',
+            CoverURL: '', // Clear the form field as we're handling the image separately
             CoverPremium: cover.CoverPremium || false,
             Hide: cover.Hide || false,
             isEditing: true,
         });
-
+    
+        // Set other state
         setIsEditing(true);
         setId(cover._id);
         setCurrentImage(cover.CoverURL);
+        setSelectedFile(null); // Reset any selected file
+        
         toggleModal('edit');
     };
 
     const handlePremiumToggle = (coverId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5001/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -460,7 +494,7 @@ const CoverURL = () => {
     };
 
     const handleHideToggle = (coverId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+        axios.patch(`http://localhost:5001/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -479,7 +513,7 @@ const CoverURL = () => {
                 setIsOn(newState);
 
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
-                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "4" });
+                const response = await axios.post(`http://localhost:5001/api/${apiEndpoint}/${adminId}`, { type: "4" });
 
                 setCurrentPage(1);
                 getData();
@@ -557,11 +591,11 @@ const CoverURL = () => {
                     style={{ width: 'auto' }}
                     className='my-4'
                 >
-                    <option value="">All</option>
-                    <option value="Hide">Hide</option>
-                    <option value="Unhide">Unhide</option>
-                    <option value="Premium">Premium</option>
-                    <option value="Free">Free</option>
+                    <option value="">All Status</option>
+                        <option value="Unhide">Safe</option>
+                        <option value="Hide">Unsafe</option>
+                        <option value="Premium">Premium</option>
+                        <option value="Free">Free</option>
                 </Form.Select>
             </div>
 
@@ -573,7 +607,8 @@ const CoverURL = () => {
                         <th>Cover Image</th>
                         <th>TagName</th>
                         <th>Premium</th>
-                        <th>Hidden</th>
+                        <th>Safe</th>
+                        <th>Trending</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -638,6 +673,14 @@ const CoverURL = () => {
                                     </Button>
                                 </td>
                                 <td>
+                                    <FontAwesomeIcon
+                                        icon={cover.trending ? faArrowTrendUp : faArrowTrendDown}
+                                        title={cover.trending ? "up" : "down"}
+                                        className='fs-5'
+                                        style={{ color: cover.trending ? 'green' : 'red' }}
+                                    />
+                                </td>
+                                <td>
                                     <Button
                                         className="edit-dlt-btn text-black"
                                         onClick={() => handleCopyToClipboard(cover)}
@@ -663,7 +706,7 @@ const CoverURL = () => {
                         ))
                     ) : (
                         <tr>
-                            <td colSpan={7} className="text-center">No Data Found</td>
+                            <td colSpan={8} className="text-center">No Data Found</td>
                         </tr>
                     )}
                 </tbody>
@@ -736,57 +779,87 @@ const CoverURL = () => {
                         <hr className='bg-black' />
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{fileLabel} <span style={{ fontSize: "12px" }}>(5 MB)</span>
-                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span>
+                            <Form.Label className='fw-bold'>
+                                Cover Image Type
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
                             </Form.Label>
-                            <div className="d-flex flex-column">
-                                <div className="d-flex align-items-center">
-                                    <Form.Control
-                                        type="file"
-                                        id="CoverURL"
-                                        name="CoverURL"
-                                        onChange={handleFileChange}
-                                        onBlur={formik.handleBlur}
-                                        disabled={isSubmitting}
-                                        className="d-none"
-                                        accept="image/*"
-                                    />
-                                    <label
-                                        htmlFor="CoverURL"
-                                        className="btn mb-0 p-4 bg-white w-100 rounded-2 position-relative"
-                                        style={{ border: "1px dotted #c1c1c1" }}
+                            <div className="d-flex gap-3 mb-3">
+                                {inputTypes.map((type) => (
+                                    <div
+                                        key={type.id}
+                                        onClick={() => !isSubmitting && setInputType(type.id)}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'
+                                            }`}
+                                        style={{
+                                            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`
+                                        }}
                                     >
-                                        <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                        <div className="d-flex flex-column align-items-center gap-1">
-                                            <span style={{ color: "#c1c1c1" }}>
-                                                {isEditing ? "Select New Image" : "Select Image"}
-                                            </span>
-                                            {(selectedFile || currentFileName) && (
-                                                <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                                    {selectedFile ? selectedFile.name : currentFileName}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </label>
-                                </div>
-
-                                {/* Image Preview */}
-                                {/* {(currentImage || selectedFile) && (
-                                    <div className="mt-3 text-center">
-                                        <img
-                                            src={selectedFile ? URL.createObjectURL(selectedFile) : currentImage}
-                                            alt="Cover Preview"
-                                            style={{ maxWidth: '200px', maxHeight: '150px', objectFit: 'contain' }}
-                                        />
+                                        {type.label}
                                     </div>
-                                )} */}
-
-                                {formik.touched.CoverURL && formik.errors.CoverURL && (
-                                    <div className="invalid-feedback d-block">
-                                        {formik.errors.CoverURL}
-                                    </div>
-                                )}
+                                ))}
                             </div>
+
+                            {inputType === 'file' ? (
+                                <>
+                                    <Form.Label className='fw-bold'>
+                                        {fileLabel} <span style={{ fontSize: "12px" }}>(5 MB)</span>
+                                        <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                                    </Form.Label>
+                                    <div className="d-flex flex-column">
+                                        <div className="d-flex align-items-center">
+                                            <Form.Control
+                                                type="file"
+                                                id="CoverURL"
+                                                name="CoverURL"
+                                                onChange={handleFileChange}
+                                                onBlur={formik.handleBlur}
+                                                disabled={isSubmitting}
+                                                className="d-none"
+                                                accept="image/*"
+                                            />
+                                            <label
+                                                htmlFor="CoverURL"
+                                                className="btn mb-0 p-4 bg-white w-100 rounded-2 position-relative"
+                                                style={{ border: "1px dotted #c1c1c1" }}
+                                            >
+                                                <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                                <div className="d-flex flex-column align-items-center gap-1">
+                                                    <span style={{ color: "#c1c1c1" }}>
+                                                        {isEditing ? "Select New Image" : "Select Image"}
+                                                    </span>
+                                                    {(selectedFile || currentFileName) && (
+                                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                                            {selectedFile ? selectedFile.name : currentFileName}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </>
+                            ) : (
+                                <Form.Group>
+                                    <Form.Label className='fw-bold'>
+                                        Cover Image URL
+                                        <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Enter image URL"
+                                        value={coverUrlText}
+                                        onChange={(e) => setCoverUrlText(e.target.value)}
+                                        disabled={isSubmitting}
+                                    />
+                                </Form.Group>
+                            )}
+
+                            {formik.touched.CoverURL && formik.errors.CoverURL && (
+                                <div className="invalid-feedback d-block">
+                                    {formik.errors.CoverURL}
+                                </div>
+                            )}
                         </Form.Group>
 
 
@@ -809,7 +882,7 @@ const CoverURL = () => {
                                     type="checkbox"
                                     id="Hide"
                                     name="Hide"
-                                    label="Hide Cover"
+                                    label="Safe Cover"
                                     disabled={isSubmitting}
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}

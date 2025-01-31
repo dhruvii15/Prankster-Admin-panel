@@ -12,15 +12,20 @@ const PushNotification = () => {
     const [data, setData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [title, settitle] = useState('');
+    const [selectedType, setSelectedType] = useState('');
     const [description, setdescription] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const notificationTypes = [
+        { id: 'Prankster😆', label: 'English' },
+        { id: 'प्रेंकस्टर😆', label: 'Hindi' }
+    ];
+
     const toggleModal = (mode) => {
         if (!isSubmitting) {
             if (mode === 'add') {
-                settitle('');
+                setSelectedType('');
                 setdescription('');
                 setId(undefined);
             }
@@ -43,15 +48,14 @@ const PushNotification = () => {
             });
     };
 
-
     useEffect(() => {
         getData();
     }, []);
 
     const validate = () => {
         const newErrors = {};
-        if (!title) newErrors.title = 'Notification Title is required';
-        if (!description) newErrors.description = 'Notification Desc is required';
+        if (!selectedType) newErrors.type = 'Please select a notification type';
+        if (!description) newErrors.description = 'Notification Description is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -63,11 +67,11 @@ const PushNotification = () => {
         try {
             setIsSubmitting(true);
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/notification/update/${id}`, { Title: title, Description: description })
-                : axios.post('https://pslink.world/api/notification/create', { Title: title, Description: description, type: 'push' });
+                ? axios.patch(`https://pslink.world/api/notification/update/${id}`, { Title: selectedType, Description: description })
+                : axios.post('https://pslink.world/api/notification/create', { Title: selectedType, Description: description, type: 'push' });
 
             const res = await request;
-            settitle('');
+            setSelectedType('');
             setdescription('');
             getData();
             toast.success(res.data.message);
@@ -80,19 +84,17 @@ const PushNotification = () => {
         }
     };
 
-
     if (loading) return (
-        <div
-            style={{
-                height: '100vh',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                overflow: "hidden"
-            }}
-        >
+        <div style={{
+            height: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            overflow: "hidden"
+        }}>
             <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
+                animation: "1.2s ease-out infinite zoom-in-zoom-out2",
+                width: "200px"
             }} />
         </div>
     );
@@ -111,7 +113,7 @@ const PushNotification = () => {
                 style={{ backgroundColor: "#F9E238" }}
                 disabled={isSubmitting}
             >
-                 Push Notification
+                Push Notification
             </Button>
 
             <Modal
@@ -121,27 +123,37 @@ const PushNotification = () => {
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header >
+                <Modal.Header>
                     <Modal.Title>{id ? "Edit Push Notification" : "Push Notification"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
-
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Push Notification Title<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="title"
-                                className='py-2'
-                                placeholder='Enter title'
-                                value={title}
-                                onChange={(e) => settitle(e.target.value)}
-                                isInvalid={!!errors.title}
-                                disabled={isSubmitting}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                                {errors.title}
-                            </Form.Control.Feedback>
+                            <Form.Label className='fw-bold'>
+                                Notification Type
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                            </Form.Label>
+                            <div className="d-flex gap-3">
+                                {notificationTypes.map((type) => (
+                                    <div
+                                        key={type.id}
+                                        onClick={() => !isSubmitting && setSelectedType(type.id)}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${
+                                            selectedType === type.id ? 'bg-primary' : 'bg-light'
+                                        }`}
+                                        style={{
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            border: `1px solid ${selectedType === type.id ? '' : '#dee2e6'}`
+                                        }}
+                                    >
+                                        {type.label}
+                                    </div>
+                                ))}
+                            </div>
+                            {errors.type && (
+                                <div className="text-danger mt-1 small">{errors.type}</div>
+                            )}
                         </Form.Group>
 
                         <Form.Group className="mb-3">
@@ -158,7 +170,7 @@ const PushNotification = () => {
                                 onChange={(e) => setdescription(e.target.value)}
                                 isInvalid={!!errors.description}
                                 disabled={isSubmitting}
-                                rows={3} // Adjust the number of rows as needed
+                                rows={3}
                             />
                             <Form.Control.Feedback type="invalid">
                                 {errors.description}

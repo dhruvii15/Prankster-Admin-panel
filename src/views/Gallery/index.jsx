@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -51,6 +51,13 @@ const Gallery = () => {
     const [activeTab, setActiveTab] = useState('all');
     const [selectedFilter, setSelectedFilter] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
+    const [inputType, setInputType] = useState('file');
+    const [imageUrlText, setImageUrlText] = useState('');
+
+    const inputTypes = [
+        { id: 'file', label: 'File Upload' },
+        { id: 'text', label: 'URL' }
+    ];
 
 
     const getCategoryName = (categoryId) => {
@@ -93,9 +100,9 @@ const Gallery = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/gallery/read')
+        axios.post('http://localhost:5001/api/gallery/read')
             .then((res) => {
-                const newData = res.data.data.reverse();
+                const newData = res.data.data
                 setData(newData);
                 filterGalleryData(newData, activeTab, selectedFilter);
                 setLoading(false);
@@ -321,34 +328,30 @@ const Gallery = () => {
     const gallerySchema = Yup.object().shape({
         GalleryName: Yup.string().required('Image Prank Name is required'),
         GalleryImage: Yup.mixed()
+            .test('fileOrText', 'Either file upload or URL is required', function (value) {
+                if (formik.values.isEditing && !value && formik.initialValues.GalleryImage) return true;
+                if (inputType === 'text') return !!imageUrlText;
+                return value instanceof File;
+            })
             .test(
-                'fileValidation',
+                'fileType',
                 'Only image files are allowed (jpg, png, gif)',
                 function (value) {
-                    // If editing and no new file is selected, skip validation
-                    if (typeof value === 'string') return true;
-
-                    // For new entries or when a new file is selected during edit
-                    if (!value) {
-                        // Required only for new entries
-                        return this.parent.isEditing ? true : false;
-                    }
-
-                    // Validate file type if a file is provided
+                    if (inputType === 'text') return true;
                     if (value instanceof File) {
                         const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
                         return allowedExtensions.includes(value.type);
                     }
-
-                    return false;
+                    return true;
                 }
             )
             .test(
                 'fileSize',
                 'File size must be less than 5MB',
                 function (value) {
+                    if (inputType === 'text') return true;
                     if (value instanceof File) {
-                        return value.size <= 5 * 1024 * 1024; // 5MB in bytes
+                        return value.size <= 5 * 1024 * 1024;
                     }
                     return true;
                 }
@@ -369,22 +372,27 @@ const Gallery = () => {
             LanguageId: '',
             Hide: false,
             isEditing: false,
-            Unsafe: true
+            Unsafe: false
         },
         validationSchema: gallerySchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 setIsSubmitting(true);
                 const formData = new FormData();
-                formData.append('GalleryName', values.GalleryName);
-                if (values.GalleryImage instanceof File) {
+
+                if (inputType === 'file' && values.GalleryImage instanceof File) {
                     formData.append('GalleryImage', values.GalleryImage);
+                } else if (inputType === 'text') {
+                    formData.append('GalleryImage', imageUrlText);
                 }
+
+                formData.append('GalleryName', values.GalleryName);
                 formData.append('GalleryPremium', values.GalleryPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('LanguageId', values.LanguageId);
                 formData.append('Hide', values.Hide);
-                formData.append('Unsafe', "true");
+                formData.append('Unsafe', "false");
+                formData.append('inputType', inputType);
 
                 const request = id !== undefined
                     ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
@@ -395,6 +403,8 @@ const Gallery = () => {
                 resetForm();
                 setId(undefined);
                 setImageFileLabel('Image Prank Image Upload');
+                setImageUrlText('');
+                setSelectedFileName('');
                 getData();
                 toast.success(res.data.message);
                 toggleModal('add');
@@ -411,6 +421,8 @@ const Gallery = () => {
     const handleEdit = (gallery) => {
         const fileName = gallery.GalleryImage.split('/').pop();
         setSelectedFileName(fileName);
+        setImageUrlText(gallery.GalleryImage);
+        setInputType(gallery.GalleryImage.startsWith('http') ? 'text' : 'file');
 
         formik.setValues({
             GalleryName: gallery.GalleryName,
@@ -588,8 +600,8 @@ const Gallery = () => {
                         className='bg-white fs-6'
                     >
                         <option value="">All Status</option>
-                        <option value="Hide">Hide</option>
-                        <option value="Unhide">Unhide</option>
+                        <option value="Unhide">Safe</option>
+                        <option value="Hide">Unsafe</option>
                         <option value="Premium">Premium</option>
                         <option value="Free">Free</option>
                     </Form.Select>
@@ -742,33 +754,75 @@ const Gallery = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>{imageFileLabel}
-                                <span className='ps-2' style={{ fontSize: "12px" }}>(5 MB)</span>
-                                <span className='text-danger fw-normal' style={{ fontSize: "17px" }}>* </span>
+                            <Form.Label className='fw-bold'>
+                                Image Input Type
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
                             </Form.Label>
-                            <div className="d-flex align-items-center">
-                                <Form.Control
-                                    type="file"
-                                    id="GalleryImage"
-                                    name="GalleryImage"
-                                    disabled={isSubmitting}
-                                    onChange={handleFileChange}
-                                    onBlur={formik.handleBlur}
-                                    label="Choose File"
-                                    className="d-none"
-                                    custom
-                                />
-                                <label htmlFor="GalleryImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
-                                    <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
-                                    <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Image Prank Image</div>
-                                    {selectedFileName && (
-                                        <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
-                                            {selectedFileName}
-                                        </span>
-                                    )}
-                                </label>
+                            <div className="d-flex gap-3 mb-3">
+                                {inputTypes.map((type) => (
+                                    <div
+                                        key={type.id}
+                                        onClick={() => !isSubmitting && setInputType(type.id)}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
+                                        style={{
+                                            cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`
+                                        }}
+                                    >
+                                        {type.label}
+                                    </div>
+                                ))}
                             </div>
-                            {formik.errors.GalleryImage && formik.touched.GalleryImage && (
+
+                            {inputType === 'file' ? (
+                                <>
+                                    <Form.Label className='fw-bold'>
+                                        {imageFileLabel}
+                                        <span className='ps-2' style={{ fontSize: "12px" }}>(5 MB)</span>
+                                        <span className='text-danger fw-normal' style={{ fontSize: "17px" }}>*</span>
+                                    </Form.Label>
+                                    <div className="d-flex align-items-center">
+                                        <Form.Control
+                                            type="file"
+                                            id="GalleryImage"
+                                            name="GalleryImage"
+                                            disabled={isSubmitting}
+                                            onChange={handleFileChange}
+                                            onBlur={formik.handleBlur}
+                                            className="d-none"
+                                        />
+                                        <label htmlFor="GalleryImage" className="btn mb-0 p-4 bg-white w-100 rounded-2" style={{ border: "1px dotted #c1c1c1" }}>
+                                            <FontAwesomeIcon icon={faArrowUpFromBracket} style={{ fontSize: "15px" }} />
+                                            <div style={{ color: "#c1c1c1" }} className='pt-1'>Select Image Prank Image</div>
+                                            {selectedFileName && (
+                                                <span style={{ fontSize: "0.8rem", color: "#5E95FE" }}>
+                                                    {selectedFileName}
+                                                </span>
+                                            )}
+                                        </label>
+                                    </div>
+                                </>
+                            ) : (
+                                <Form.Group>
+                                    <Form.Label className='fw-bold'>
+                                        Image URL
+                                        <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                                    </Form.Label>
+                                    <Form.Control
+                                        type="text"
+                                        placeholder="Enter image URL"
+                                        value={imageUrlText}
+                                        onChange={(e) => {
+                                            setImageUrlText(e.target.value);
+                                            formik.setFieldValue('GalleryImage', e.target.value);
+                                        }}
+                                        disabled={isSubmitting}
+                                    />
+                                </Form.Group>
+                            )}
+
+                            {formik.touched.GalleryImage && formik.errors.GalleryImage && (
                                 <div className="invalid-feedback d-block">
                                     {formik.errors.GalleryImage}
                                 </div>
@@ -793,7 +847,7 @@ const Gallery = () => {
                                     type="checkbox"
                                     id="Hide"
                                     name="Hide"
-                                    label="Hide Image Prank"
+                                    label="Safe Image Prank"
                                     disabled={isSubmitting}
                                     checked={formik.values.Hide}
                                     onChange={formik.handleChange}
@@ -836,7 +890,8 @@ const Gallery = () => {
                         <th>Prank Language</th>
                         <th>Prank Category</th>
                         <th>Premium</th>
-                        <th>Hidden</th>
+                        <th>Safe</th>
+                        <th>Trending</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -884,6 +939,14 @@ const Gallery = () => {
                                     <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(gallery._id, gallery.Hide)}>
                                         <FontAwesomeIcon icon={gallery.Hide ? faEyeSlash : faEye} />
                                     </Button>
+                                </td>
+                                <td>
+                                    <FontAwesomeIcon
+                                        icon={gallery.trending ? faArrowTrendUp : faArrowTrendDown}
+                                        title={gallery.trending ? "up" : "down"}
+                                        className='fs-5'
+                                        style={{ color: gallery.trending ? 'green' : 'red' }}
+                                    />
                                 </td>
                                 <td>
                                     <Button

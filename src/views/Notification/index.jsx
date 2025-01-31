@@ -14,15 +14,20 @@ const Notification = () => {
     const [data, setData] = useState([]);
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
-    const [title, settitle] = useState('');
+    const [selectedType, setSelectedType] = useState('');
     const [description, setdescription] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const notificationTypes = [
+        { id: 'Prankster😆', label: 'English' },
+        { id: 'प्रेंकस्टर😆', label: 'Hindi' }
+    ];
+
     const toggleModal = (mode) => {
         if (!isSubmitting) {
             if (mode === 'add') {
-                settitle('');
+                setSelectedType('');
                 setdescription('');
                 setId(undefined);
             }
@@ -45,15 +50,14 @@ const Notification = () => {
             });
     };
 
-
     useEffect(() => {
         getData();
     }, []);
 
     const validate = () => {
         const newErrors = {};
-        if (!title) newErrors.title = 'Notification Title is required';
-        if (!description) newErrors.description = 'Notification Desc is required';
+        if (!selectedType) newErrors.type = 'Please select a notification type';
+        if (!description) newErrors.description = 'Notification Description is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -65,11 +69,11 @@ const Notification = () => {
         try {
             setIsSubmitting(true);
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/notification/update/${id}`, { Title: title, Description: description })
-                : axios.post('https://pslink.world/api/notification/create', { Title: title, Description: description });
+                ? axios.patch(`https://pslink.world/api/notification/update/${id}`, { Title: selectedType, Description: description })
+                : axios.post('https://pslink.world/api/notification/create', { Title: selectedType, Description: description });
 
             const res = await request;
-            settitle('');
+            setSelectedType('');
             setdescription('');
             setId(undefined);
             getData();
@@ -85,7 +89,7 @@ const Notification = () => {
 
     const handleEdit = (notification) => {
         if (!isSubmitting) {
-            settitle(notification.Title);
+            setSelectedType(notification.Title);
             setdescription(notification.Description);
             setId(notification._id);
             toggleModal('edit');
@@ -108,19 +112,17 @@ const Notification = () => {
         }
     };
 
-
     if (loading) return (
-        <div
-            style={{
-                height: '100vh',
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                overflow: "hidden"
-            }}
-        >
+        <div style={{
+            height: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            overflow: "hidden"
+        }}>
             <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
+                animation: "1.2s ease-out infinite zoom-in-zoom-out2",
+                width: "200px"
             }} />
         </div>
     );
@@ -149,27 +151,36 @@ const Notification = () => {
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header >
+                <Modal.Header>
                     <Modal.Title>{id ? "Edit Auto Notification" : "Add Auto Notification"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
-
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Auto Notification Title<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="title"
-                                className='py-2'
-                                placeholder='Enter title'
-                                value={title}
-                                onChange={(e) => settitle(e.target.value)}
-                                isInvalid={!!errors.title}
-                                disabled={isSubmitting}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                                {errors.title}
-                            </Form.Control.Feedback>
+                            <Form.Label className='fw-bold'>
+                                Notification Type
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                            </Form.Label>
+                            <div className="d-flex gap-3">
+                                {notificationTypes.map((type) => (
+                                    <div
+                                        key={type.id}
+                                        onClick={() => !isSubmitting && setSelectedType(type.id)}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${selectedType === type.id ? 'bg-primary' : 'bg-light'
+                                            }`}
+                                        style={{
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            border: `1px solid ${selectedType === type.id ? '' : '#dee2e6'}`
+                                        }}
+                                    >
+                                        {type.label}
+                                    </div>
+                                ))}
+                            </div>
+                            {errors.type && (
+                                <div className="text-danger mt-1 small">{errors.type}</div>
+                            )}
                         </Form.Group>
 
                         <Form.Group className="mb-3">
@@ -186,7 +197,7 @@ const Notification = () => {
                                 onChange={(e) => setdescription(e.target.value)}
                                 isInvalid={!!errors.description}
                                 disabled={isSubmitting}
-                                rows={3} // Adjust the number of rows as needed
+                                rows={3}
                             />
                             <Form.Control.Feedback type="invalid">
                                 {errors.description}

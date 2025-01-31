@@ -15,19 +15,24 @@ const Ads = () => {
     const [id, setId] = useState();
     const [loading, setLoading] = useState(true);
     const [adsName, setAdsName] = useState('');
-    const [iosadsId, setIosAdsId] = useState('');
-    const [androidadsId, setAndroidAdsId] = useState('');
+    const [adsId, setAdsId] = useState('');
+    const [platform, setPlatform] = useState('');
     const [errors, setErrors] = useState({});
     const [isOn, setIsOn] = useState(false);
     const [adminId, setAdminId] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    const platformTypes = [
+        { id: 'ios', label: 'iOS' },
+        { id: 'android', label: 'Android' }
+    ];
+
     const toggleModal = (mode) => {
         if (!isSubmitting) {
             if (mode === 'add') {
                 setAdsName('');
-                setIosAdsId('');
-                setAndroidAdsId('');
+                setAdsId('');
+                setPlatform('');
                 setId(undefined);
             }
             setErrors({});
@@ -37,7 +42,7 @@ const Ads = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('https://pslink.world/api/ads/read')
+        axios.post('http://localhost:5001/api/ads/read')
             .then((res) => {
                 setData(res.data.data);
                 setLoading(false);
@@ -50,7 +55,7 @@ const Ads = () => {
     };
 
     const getAdminData = () => {
-        axios.get('https://pslink.world/api/admin/read')
+        axios.get('http://localhost:5001/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].AdsStatus);
                 setAdminId(res.data.data[0]._id);
@@ -69,8 +74,8 @@ const Ads = () => {
     const validate = () => {
         const newErrors = {};
         if (!adsName) newErrors.adsName = 'Ads Name is required';
-        if (!iosadsId) newErrors.iosadsId = 'Ios Id is required';
-        if (!androidadsId) newErrors.androidadsId = 'Android Id is required';
+        if (!adsId) newErrors.adsId = 'Ads ID is required';
+        if (!platform) newErrors.platform = 'Platform is required';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
@@ -79,16 +84,22 @@ const Ads = () => {
         e.preventDefault();
         if (!validate()) return;
 
+        const payload = {
+            AdsName: adsName,
+            Platform: platform,
+            AdsId: adsId
+        };
+
         try {
             setIsSubmitting(true);
             const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/ads/update/${id}`, { AdsName: adsName, IosAdsId: iosadsId , AndroidAdsId: androidadsId})
-                : axios.post('https://pslink.world/api/ads/create', { AdsName: adsName, IosAdsId: iosadsId , AndroidAdsId: androidadsId});
+                ? axios.patch(`http://localhost:5001/api/ads/update/${id}`, payload)
+                : axios.post('http://localhost:5001/api/ads/create', payload);
 
             const res = await request;
             setAdsName('');
-            setIosAdsId('');
-            setAndroidAdsId('');
+            setAdsId('');
+            setPlatform('');
             setId(undefined);
             getData();
             toast.success(res.data.message);
@@ -104,8 +115,8 @@ const Ads = () => {
     const handleEdit = (ads) => {
         if (!isSubmitting) {
             setAdsName(ads.AdsName);
-            setIosAdsId(ads.IosAdsId);
-            setAndroidAdsId(ads.AndroidAdsId);
+            setPlatform(ads.Platform);
+            setAdsId(ads.AdsId);
             setId(ads._id);
             toggleModal('edit');
         }
@@ -115,7 +126,7 @@ const Ads = () => {
         if (!isSubmitting && window.confirm("Are you sure you want to delete this ad?")) {
             try {
                 setIsSubmitting(true);
-                const res = await axios.delete(`https://pslink.world/api/ads/delete/${adsId}`);
+                const res = await axios.delete(`http://localhost:5001/api/ads/delete/${adsId}`);
                 getData();
                 toast.success(res.data.message);
             } catch (err) {
@@ -135,7 +146,7 @@ const Ads = () => {
                 setIsOn(newState);
 
                 if (adminId) {
-                    const response = await axios.patch(`https://pslink.world/api/admin/update/${adminId}`, {
+                    const response = await axios.patch(`http://localhost:5001/api/admin/update/${adminId}`, {
                         AdsStatus: newState
                     });
                     toast.success(response.data.message);
@@ -207,7 +218,7 @@ const Ads = () => {
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
             >
-                <Modal.Header >
+                <Modal.Header>
                     <Modal.Title>{id ? "Edit Ads" : "Add New Ads"}</Modal.Title>
                 </Modal.Header>
                 <Modal.Body>
@@ -238,36 +249,45 @@ const Ads = () => {
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Ios AdsId<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
-                            <Form.Control
-                                type="text"
-                                id="iosadsId"
-                                className='py-2'
-                                placeholder='Enter Ios AdsId'
-                                value={iosadsId}
-                                onChange={(e) => setIosAdsId(e.target.value)}
-                                isInvalid={!!errors.iosadsId}
-                                disabled={isSubmitting}
-                            />
-                            <Form.Control.Feedback type="invalid">
-                                {errors.iosadsId}
-                            </Form.Control.Feedback>
+                            <Form.Label className='fw-bold'>
+                                Platform
+                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                            </Form.Label>
+                            <div className="d-flex gap-3">
+                                {platformTypes.map((type) => (
+                                    <div
+                                        key={type.id}
+                                        onClick={() => !isSubmitting && setPlatform(type.id)}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${platform === type.id ? 'bg-primary' : 'bg-light'}`}
+                                        style={{
+                                            cursor: 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            border: `1px solid ${platform === type.id ? '' : '#dee2e6'}`
+                                        }}
+                                    >
+                                        {type.label}
+                                    </div>
+                                ))}
+                            </div>
+                            {errors.platform && (
+                                <div className="text-danger mt-1 small">{errors.platform}</div>
+                            )}
                         </Form.Group>
 
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>Android AdsId<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
+                            <Form.Label className='fw-bold'>Ads ID<span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>* </span></Form.Label>
                             <Form.Control
                                 type="text"
-                                id="androidadsId"
+                                id="adsId"
                                 className='py-2'
-                                placeholder='Enter Ios AdsId'
-                                value={androidadsId}
-                                onChange={(e) => setAndroidAdsId(e.target.value)}
-                                isInvalid={!!errors.androidadsId}
+                                placeholder='Enter Ads ID'
+                                value={adsId}
+                                onChange={(e) => setAdsId(e.target.value)}
+                                isInvalid={!!errors.adsId}
                                 disabled={isSubmitting}
                             />
                             <Form.Control.Feedback type="invalid">
-                                {errors.androidadsId}
+                                {errors.adsId}
                             </Form.Control.Feedback>
                         </Form.Group>
 
@@ -302,8 +322,8 @@ const Ads = () => {
                     <tr>
                         <th>Index</th>
                         <th>AdsName</th>
-                        <th>Ios AdsId</th>
-                        <th>Android AdsId</th>
+                        <th>Platform</th>
+                        <th>Ads ID</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -312,8 +332,8 @@ const Ads = () => {
                         <tr key={ads._id} className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}>
                             <td>{index + 1}</td>
                             <td>{ads.AdsName}</td>
-                            <td>{ads.IosAdsId}</td>
-                            <td>{ads.AndroidAdsId}</td>
+                            <td>{ads.Platform}</td>
+                            <td>{ads.AdsId}</td>
                             <td>
                                 <Button
                                     className='edit-dlt-btn'
