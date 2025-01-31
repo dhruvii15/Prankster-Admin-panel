@@ -51,6 +51,8 @@ const Video = () => {
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
     const [inputType, setInputType] = useState('file');
     const [videoUrlText, setVideoUrlText] = useState('');
+    const [safetyFilter, setSafetyFilter] = useState('');
+    const [premiumFilter, setPremiumFilter] = useState('');
 
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
@@ -189,19 +191,17 @@ const Video = () => {
         }
 
         // Apply additional filters
-        switch (filterType) {
-            case "Hide":
-                filtered = filtered.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = filtered.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = filtered.filter(item => item.GalleryPremium === true);
-                break;
-            case "Free":
-                filtered = filtered.filter(item => item.GalleryPremium === false);
-                break;
+        if (safetyFilter === 'safe') {
+            filtered = filtered.filter(item => !item.Hide);
+        } else if (safetyFilter === 'unsafe') {
+            filtered = filtered.filter(item => item.Hide);
+        }
+
+        // Apply premium filter
+        if (premiumFilter === 'premium') {
+            filtered = filtered.filter(item => item.VideoPremium);
+        } else if (premiumFilter === 'free') {
+            filtered = filtered.filter(item => !item.VideoPremium);
         }
 
         return filtered.length;
@@ -224,20 +224,18 @@ const Video = () => {
             filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
         }
 
-        // Apply additional filters
-        switch (selectedFilter) {
-            case "Hide":
-                filtered = filtered.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = filtered.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = filtered.filter(item => item.GalleryPremium === true);
-                break;
-            case "Free":
-                filtered = filtered.filter(item => item.GalleryPremium === false);
-                break;
+        // Apply safety filter
+        if (safetyFilter === 'safe') {
+            filtered = filtered.filter(item => !item.Hide);
+        } else if (safetyFilter === 'unsafe') {
+            filtered = filtered.filter(item => item.Hide);
+        }
+
+        // Apply premium filter
+        if (premiumFilter === 'premium') {
+            filtered = filtered.filter(item => item.VideoPremium);
+        } else if (premiumFilter === 'free') {
+            filtered = filtered.filter(item => !item.VideoPremium);
         }
 
         setFilteredData(filtered);
@@ -245,7 +243,7 @@ const Video = () => {
 
     useEffect(() => {
         filterGalleryData();
-    }, [activeTab, selectedFilter, selectedCategoryFilter, data, isOn]);
+    }, [activeTab, safetyFilter, premiumFilter, selectedCategoryFilter, data, isOn]);
 
 
     const videoSchema = Yup.object().shape({
@@ -497,20 +495,36 @@ const Video = () => {
                 >
                     Add Video Prank
                 </Button>
-                <div className='d-flex gap-2 align-items-center'>
-                    <span className='mb-0 fw-bold fs-6'>Status :</span>
-                    <Form.Select
-                        value={selectedFilter}
-                        onChange={(e) => setSelectedFilter(e.target.value)}
-                        style={{ width: 'auto' }}
-                        className='bg-white fs-6'
-                    >
-                        <option value="">All Status</option>
-                        <option value="Unhide">Safe</option>
-                        <option value="Hide">Unsafe</option>
-                        <option value="Premium">Premium</option>
-                        <option value="Free">Free</option>
-                    </Form.Select>
+                <div className='d-flex gap-3 align-items-center'>
+                    {/* Safety Filter */}
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Safety :</span>
+                        <Form.Select
+                            value={safetyFilter}
+                            onChange={(e) => setSafetyFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All</option>
+                            <option value="safe">Safe</option>
+                            <option value="unsafe">Unsafe</option>
+                        </Form.Select>
+                    </div>
+
+                    {/* Premium Filter */}
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Access :</span>
+                        <Form.Select
+                            value={premiumFilter}
+                            onChange={(e) => setPremiumFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All</option>
+                            <option value="premium">Premium</option>
+                            <option value="free">Free</option>
+                        </Form.Select>
+                    </div>
                 </div>
             </div>
 

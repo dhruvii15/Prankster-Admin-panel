@@ -38,6 +38,8 @@ const CoverURL = () => {
     const [adminId, setAdminId] = useState(null);
     const [inputType, setInputType] = useState('file'); // 'file' or 'text'
     const [coverUrlText, setCoverUrlText] = useState('');
+    const [safetyFilter, setSafetyFilter] = useState("");
+    const [premiumFilter, setPremiumFilter] = useState("");
     console.log(previewUrl);
 
     const inputTypes = [
@@ -259,21 +261,23 @@ const CoverURL = () => {
 
     const filterData = (covers) => {
         // First filter by unsafe status based on isOn state
-        const safetyFilteredData = covers.filter(cover => cover.Unsafe === !isOn);
+        let filteredData = covers.filter(cover => cover.Unsafe === !isOn);
 
-        // Apply the selected filter
-        switch (selectedFilter) {
-            case "Hide":
-                return safetyFilteredData.filter(cover => cover.Hide === true);
-            case "Unhide":
-                return safetyFilteredData.filter(cover => cover.Hide === false);
-            case "Premium":
-                return safetyFilteredData.filter(cover => cover.CoverPremium === true);
-            case "Free":
-                return safetyFilteredData.filter(cover => cover.CoverPremium === false);
-            default:
-                return safetyFilteredData;
+        // Apply safety filter
+        if (safetyFilter === "Safe") {
+            filteredData = filteredData.filter(cover => !cover.Hide);
+        } else if (safetyFilter === "Unsafe") {
+            filteredData = filteredData.filter(cover => cover.Hide);
         }
+
+        // Apply premium filter
+        if (premiumFilter === "Premium") {
+            filteredData = filteredData.filter(cover => cover.CoverPremium);
+        } else if (premiumFilter === "Free") {
+            filteredData = filteredData.filter(cover => !cover.CoverPremium);
+        }
+
+        return filteredData;
     };
 
     const coverSchema = Yup.object().shape({
@@ -446,24 +450,24 @@ const CoverURL = () => {
         const fileName = cover.CoverURL.split('/').pop();
         setCurrentFileName(fileName);
         setFileLabel('Current Cover Image');
-        
+
         // Determine if the current image is a URL (starts with http/https)
         const isUrl = cover.CoverURL.startsWith('http');
         setInputType(isUrl ? 'text' : 'file');
-        
+
         // If it's a URL, set the URL text field
         if (isUrl) {
             setCoverUrlText(cover.CoverURL);
         } else {
             setCoverUrlText('');
         }
-    
+
         // Set form values
         formik.setValues({
-            TagName: Array.isArray(cover.TagName) 
-                ? cover.TagName 
-                : cover.TagName 
-                    ? [cover.TagName] 
+            TagName: Array.isArray(cover.TagName)
+                ? cover.TagName
+                : cover.TagName
+                    ? [cover.TagName]
                     : [],
             CoverName: cover.CoverName || '',
             CoverURL: '', // Clear the form field as we're handling the image separately
@@ -471,13 +475,13 @@ const CoverURL = () => {
             Hide: cover.Hide || false,
             isEditing: true,
         });
-    
+
         // Set other state
         setIsEditing(true);
         setId(cover._id);
         setCurrentImage(cover.CoverURL);
         setSelectedFile(null); // Reset any selected file
-        
+
         toggleModal('edit');
     };
 
@@ -585,18 +589,35 @@ const CoverURL = () => {
                 >
                     Add CoverImage
                 </Button>
-                <Form.Select
-                    value={selectedFilter}
-                    onChange={(e) => setSelectedFilter(e.target.value)}
-                    style={{ width: 'auto' }}
-                    className='my-4'
-                >
-                    <option value="">All Status</option>
-                        <option value="Unhide">Safe</option>
-                        <option value="Hide">Unsafe</option>
-                        <option value="Premium">Premium</option>
-                        <option value="Free">Free</option>
-                </Form.Select>
+                <div className='d-flex gap-3'>
+                    <div className='d-flex align-items-center'>
+                        <span className='mb-0 fw-bold fs-6 pe-2'>Safe :</span>
+                        <Form.Select
+                            value={safetyFilter}
+                            onChange={(e) => setSafetyFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='my-4 bg-white'
+                        >
+                            <option value="">All</option>
+                            <option value="Safe">Safe</option>
+                            <option value="Unsafe">Unsafe</option>
+                        </Form.Select>
+                    </div>
+
+                    <div className='d-flex align-items-center'>
+                        <span className='mb-0 fw-bold fs-6 pe-2'>Access :</span>
+                        <Form.Select
+                            value={premiumFilter}
+                            onChange={(e) => setPremiumFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='my-4 bg-white'
+                        >
+                            <option value="">All</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Free">Free</option>
+                        </Form.Select>
+                    </div>
+                </div>
             </div>
 
             <Table striped bordered hover responsive className='text-center fs-6'>

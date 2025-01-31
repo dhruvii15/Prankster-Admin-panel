@@ -53,6 +53,8 @@ const Gallery = () => {
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
     const [inputType, setInputType] = useState('file');
     const [imageUrlText, setImageUrlText] = useState('');
+    const [safeFilter, setSafeFilter] = useState('');
+    const [premiumFilter, setPremiumFilter] = useState('');
 
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
@@ -148,20 +150,26 @@ const Gallery = () => {
             filtered = filtered.filter(item => item.CategoryId === parseInt(categoryId));
         }
 
+        if (selectedCategoryFilter) {
+            filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
+        }
+
         // Apply additional filters
-        switch (filterType) {
-            case "Hide":
-                filtered = filtered.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = filtered.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = filtered.filter(item => item.GalleryPremium === true);
-                break;
-            case "Free":
-                filtered = filtered.filter(item => item.GalleryPremium === false);
-                break;
+        if (safeFilter) {
+            filtered = filtered.filter(item => {
+                if (safeFilter === 'Safe') return !item.Hide;
+                if (safeFilter === 'Unsafe') return item.Hide;
+                return true;
+            });
+        }
+
+        // Apply premium/free filter
+        if (premiumFilter) {
+            filtered = filtered.filter(item => {
+                if (premiumFilter === 'Premium') return item.GalleryPremium;
+                if (premiumFilter === 'Free') return !item.GalleryPremium;
+                return true;
+            });
         }
 
         return filtered.length;
@@ -184,20 +192,22 @@ const Gallery = () => {
             filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
         }
 
-        // Apply additional filters
-        switch (selectedFilter) {
-            case "Hide":
-                filtered = filtered.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = filtered.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = filtered.filter(item => item.GalleryPremium === true);
-                break;
-            case "Free":
-                filtered = filtered.filter(item => item.GalleryPremium === false);
-                break;
+        // Apply safe/unsafe filter
+        if (safeFilter) {
+            filtered = filtered.filter(item => {
+                if (safeFilter === 'Safe') return !item.Hide;
+                if (safeFilter === 'Unsafe') return item.Hide;
+                return true;
+            });
+        }
+
+        // Apply premium/free filter
+        if (premiumFilter) {
+            filtered = filtered.filter(item => {
+                if (premiumFilter === 'Premium') return item.GalleryPremium;
+                if (premiumFilter === 'Free') return !item.GalleryPremium;
+                return true;
+            });
         }
 
         setFilteredData(filtered);
@@ -205,7 +215,7 @@ const Gallery = () => {
 
     useEffect(() => {
         filterGalleryData();
-    }, [activeTab, selectedFilter, selectedCategoryFilter, data, isOn]);
+    }, [activeTab, safeFilter, premiumFilter, selectedCategoryFilter, data, isOn]);
 
     const handleToggle = async () => {
         if (!isSubmitting2) {
@@ -591,20 +601,34 @@ const Gallery = () => {
                     Add Image Prank
                 </Button>
 
-                <div className='d-flex gap-2 align-items-center'>
-                    <span className='mb-0 fw-bold fs-6'>Status :</span>
-                    <Form.Select
-                        value={selectedFilter}
-                        onChange={(e) => setSelectedFilter(e.target.value)}
-                        style={{ width: 'auto' }}
-                        className='bg-white fs-6'
-                    >
-                        <option value="">All Status</option>
-                        <option value="Unhide">Safe</option>
-                        <option value="Hide">Unsafe</option>
-                        <option value="Premium">Premium</option>
-                        <option value="Free">Free</option>
-                    </Form.Select>
+                <div className='d-flex gap-3 align-items-center'>
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Safety :</span>
+                        <Form.Select
+                            value={safeFilter}
+                            onChange={(e) => setSafeFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All</option>
+                            <option value="Safe">Safe</option>
+                            <option value="Unsafe">Unsafe</option>
+                        </Form.Select>
+                    </div>
+
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Access :</span>
+                        <Form.Select
+                            value={premiumFilter}
+                            onChange={(e) => setPremiumFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Free">Free</option>
+                        </Form.Select>
+                    </div>
                 </div>
             </div>
 

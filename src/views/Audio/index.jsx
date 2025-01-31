@@ -43,6 +43,8 @@ const Audio = () => {
     const [isOn, setIsOn] = useState(false);
     const [isSubmitting2, setIsSubmitting2] = useState(false);
     const [adminId, setAdminId] = useState(null);
+    const [safeFilter, setSafeFilter] = useState('');
+    const [premiumFilter, setPremiumFilter] = useState('');
 
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
@@ -179,19 +181,26 @@ const Audio = () => {
         }
 
         // Apply additional filters
-        switch (filterType) {
-            case "Hide":
-                filtered = filtered.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = filtered.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = filtered.filter(item => item.AudioPremium === true);
-                break;
-            case "Free":
-                filtered = filtered.filter(item => item.AudioPremium === false);
-                break;
+        if (selectedCategoryFilter) {
+            filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
+        }
+
+        // Apply safe/unsafe filter
+        if (safeFilter) {
+            filtered = filtered.filter(item => {
+                if (safeFilter === 'Safe') return !item.Hide;
+                if (safeFilter === 'Unsafe') return item.Hide;
+                return true;
+            });
+        }
+
+        // Apply premium/free filter
+        if (premiumFilter) {
+            filtered = filtered.filter(item => {
+                if (premiumFilter === 'Premium') return item.AudioPremium;
+                if (premiumFilter === 'Free') return !item.AudioPremium;
+                return true;
+            });
         }
 
         return filtered.length;
@@ -214,20 +223,22 @@ const Audio = () => {
             filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
         }
 
-        // Apply additional filters
-        switch (selectedFilter) {
-            case "Hide":
-                filtered = filtered.filter(item => item.Hide === true);
-                break;
-            case "Unhide":
-                filtered = filtered.filter(item => item.Hide === false);
-                break;
-            case "Premium":
-                filtered = filtered.filter(item => item.AudioPremium === true);
-                break;
-            case "Free":
-                filtered = filtered.filter(item => item.AudioPremium === false);
-                break;
+        // Apply safe/unsafe filter
+        if (safeFilter) {
+            filtered = filtered.filter(item => {
+                if (safeFilter === 'Safe') return !item.Hide;
+                if (safeFilter === 'Unsafe') return item.Hide;
+                return true;
+            });
+        }
+
+        // Apply premium/free filter
+        if (premiumFilter) {
+            filtered = filtered.filter(item => {
+                if (premiumFilter === 'Premium') return item.AudioPremium;
+                if (premiumFilter === 'Free') return !item.AudioPremium;
+                return true;
+            });
         }
 
         setFilteredData(filtered);
@@ -235,7 +246,7 @@ const Audio = () => {
 
     useEffect(() => {
         filterAudioData();
-    }, [activeTab, selectedFilter, selectedCategoryFilter, data, isOn]);
+    }, [activeTab, safeFilter, premiumFilter, selectedCategoryFilter, data, isOn]);
 
 
     const audioSchema = Yup.object().shape({
@@ -691,20 +702,34 @@ const Audio = () => {
                 >
                     Add Audio Prank
                 </Button>
-                <div className='d-flex gap-2 align-items-center'>
-                    <span className='mb-0 fw-bold fs-6'>Status :</span>
-                    <Form.Select
-                        value={selectedFilter}
-                        onChange={(e) => setSelectedFilter(e.target.value)}
-                        style={{ width: 'auto' }}
-                        className='bg-white fs-6'
-                    >
-                        <option value="">All Status</option>
-                        <option value="Unhide">Safe</option>
-                        <option value="Hide">Unsafe</option>
-                        <option value="Premium">Premium</option>
-                        <option value="Free">Free</option>
-                    </Form.Select>
+                <div className='d-flex gap-3 align-items-center'>
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Safety :</span>
+                        <Form.Select
+                            value={safeFilter}
+                            onChange={(e) => setSafeFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All</option>
+                            <option value="Safe">Safe</option>
+                            <option value="Unsafe">Unsafe</option>
+                        </Form.Select>
+                    </div>
+                    
+                    <div className='d-flex gap-2 align-items-center'>
+                        <span className='mb-0 fw-bold fs-6'>Access :</span>
+                        <Form.Select
+                            value={premiumFilter}
+                            onChange={(e) => setPremiumFilter(e.target.value)}
+                            style={{ width: 'auto' }}
+                            className='bg-white fs-6'
+                        >
+                            <option value="">All</option>
+                            <option value="Premium">Premium</option>
+                            <option value="Free">Free</option>
+                        </Form.Select>
+                    </div>
                 </div>
             </div>
 

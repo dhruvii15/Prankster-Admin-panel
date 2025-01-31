@@ -150,9 +150,9 @@ const DashAnalytics = () => {
   // Card data for displaying count of items in each category
   const cardData = [
     { title: 'Cover-Image', icon: faImage, count: data.cover.length, className: 'dash-color-5', path: '/cover' },
-    { title: 'Audio Prank', icon: faFileAudio, count: data.audio.length, className: 'bg-c-purple', path: '/type/audio' },
-    { title: 'Video Prank', icon: faVideo, count: data.video.length, className: 'bg-c-yellow', path: '/type/video' },
-    { title: 'Image Prank', icon: faPhotoFilm, count: data.gallery.length, className: 'bg-c-green', path: '/type/image' },
+    { title: 'Audio Prank', icon: faFileAudio, count: data.audio.length, className: 'bg-c-yellow', path: '/type/audio' },
+    { title: 'Video Prank', icon: faVideo, count: data.video.length, className: 'bg-c-green', path: '/type/video' },
+    { title: 'Image Prank', icon: faPhotoFilm, count: data.gallery.length, className: 'bg-c-purple', path: '/type/image' },
   ];
 
   const userData = [
