@@ -305,3 +305,34 @@ File: style.css
     line-height: 45px !important;
     border-radius: 100%;
   }
+
+
+//   ======================== Sreach bar =================
+.search-bar-container {
+    display: flex;
+    align-items: center;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 5px 10px;
+    width: 320px;
+    background-color: #fff;
+  }
+  
+  .search-input {
+    border: none;
+    outline: none;
+    flex: 1;
+    padding: 5px;
+    font-size: 14px;
+  }
+  
+  .search-button {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  
+  .search-button span {
+    color: #555;
+  }

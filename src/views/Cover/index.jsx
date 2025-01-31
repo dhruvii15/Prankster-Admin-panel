@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
 import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
@@ -40,6 +40,8 @@ const CoverURL = () => {
     const [coverUrlText, setCoverUrlText] = useState('');
     const [safetyFilter, setSafetyFilter] = useState("");
     const [premiumFilter, setPremiumFilter] = useState("");
+    const [searchTerm, setSearchTerm] = useState('');
+
     console.log(previewUrl);
 
     const inputTypes = [
@@ -259,6 +261,10 @@ const CoverURL = () => {
         }
     };
 
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
     const filterData = (covers) => {
         // First filter by unsafe status based on isOn state
         let filteredData = covers.filter(cover => cover.Unsafe === !isOn);
@@ -275,6 +281,21 @@ const CoverURL = () => {
             filteredData = filteredData.filter(cover => cover.CoverPremium);
         } else if (premiumFilter === "Free") {
             filteredData = filteredData.filter(cover => !cover.CoverPremium);
+        }
+
+        // Apply search filter if search term exists
+        if (searchTerm.trim()) {
+            const searchLower = searchTerm.toLowerCase();
+            filteredData = filteredData.filter(item => {
+                // Check if TagName is an array and any tag includes the search term
+                if (Array.isArray(item.TagName)) {
+                    return item.TagName.some(tag =>
+                        tag.toLowerCase().includes(searchLower)
+                    );
+                }
+                // If TagName is a string, check if it includes the search term
+                return item.TagName.toLowerCase().includes(searchLower);
+            });
         }
 
         return filteredData;
@@ -581,22 +602,22 @@ const CoverURL = () => {
                 </Form>
             </div>
 
-            <div className="d-flex justify-content-between align-items-center mt-3">
+            <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap">
                 <Button
                     onClick={() => toggleModal('add')}
-                    className='my-4 rounded-3 border-0'
+                    className='rounded-3 border-0'
                     style={{ backgroundColor: "#F9E238" }}
                 >
                     Add CoverImage
                 </Button>
                 <div className='d-flex gap-3'>
-                    <div className='d-flex align-items-center'>
+                    <div className='d-flex flex-wrap align-items-center'>
                         <span className='mb-0 fw-bold fs-6 pe-2'>Safe :</span>
                         <Form.Select
                             value={safetyFilter}
                             onChange={(e) => setSafetyFilter(e.target.value)}
                             style={{ width: 'auto' }}
-                            className='my-4 bg-white'
+                            className='my-3 bg-white'
                         >
                             <option value="">All</option>
                             <option value="Safe">Safe</option>
@@ -604,13 +625,13 @@ const CoverURL = () => {
                         </Form.Select>
                     </div>
 
-                    <div className='d-flex align-items-center'>
+                    <div className='d-flex flex-wrap align-items-center'>
                         <span className='mb-0 fw-bold fs-6 pe-2'>Access :</span>
                         <Form.Select
                             value={premiumFilter}
                             onChange={(e) => setPremiumFilter(e.target.value)}
                             style={{ width: 'auto' }}
-                            className='my-4 bg-white'
+                            className='my-3 bg-white'
                         >
                             <option value="">All</option>
                             <option value="Premium">Premium</option>
@@ -618,6 +639,22 @@ const CoverURL = () => {
                         </Form.Select>
                     </div>
                 </div>
+            </div>
+
+
+            <div className="search-bar-container my-3">
+                <input
+                    type="text"
+                    placeholder="Search by department or position name"
+                    className="search-input"
+                    value={searchTerm}
+                    onChange={handleSearch}
+                />
+                <button className="search-button">
+                    <span role="img" aria-label="search-icon">
+                        <FontAwesomeIcon icon={faMagnifyingGlass} />
+                    </span>
+                </button>
             </div>
 
             <Table striped bordered hover responsive className='text-center fs-6'>

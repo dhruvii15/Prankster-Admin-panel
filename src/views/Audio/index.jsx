@@ -702,8 +702,8 @@ const Audio = () => {
                 >
                     Add Audio Prank
                 </Button>
-                <div className='d-flex gap-3 align-items-center'>
-                    <div className='d-flex gap-2 align-items-center'>
+                <div className='d-flex flex-wrap gap-3 align-items-center'>
+                    <div className='d-flex flex-wrap gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Safety :</span>
                         <Form.Select
                             value={safeFilter}
@@ -717,7 +717,7 @@ const Audio = () => {
                         </Form.Select>
                     </div>
                     
-                    <div className='d-flex gap-2 align-items-center'>
+                    <div className='d-flex flex-wrap gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Access :</span>
                         <Form.Select
                             value={premiumFilter}

@@ -495,9 +495,9 @@ const Video = () => {
                 >
                     Add Video Prank
                 </Button>
-                <div className='d-flex gap-3 align-items-center'>
+                <div className='d-flex flex-wrap gap-3 align-items-center'>
                     {/* Safety Filter */}
-                    <div className='d-flex gap-2 align-items-center'>
+                    <div className='d-flex flex-wrap gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Safety :</span>
                         <Form.Select
                             value={safetyFilter}
@@ -512,7 +512,7 @@ const Video = () => {
                     </div>
 
                     {/* Premium Filter */}
-                    <div className='d-flex gap-2 align-items-center'>
+                    <div className='d-flex flex-wrap gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Access :</span>
                         <Form.Select
                             value={premiumFilter}
