@@ -43,12 +43,11 @@ const Audio = () => {
     const [isOn, setIsOn] = useState(false);
     const [isSubmitting2, setIsSubmitting2] = useState(false);
     const [adminId, setAdminId] = useState(null);
-    const [safeFilter, setSafeFilter] = useState('');
+    // const [safeFilter, setSafeFilter] = useState('');
     const [premiumFilter, setPremiumFilter] = useState('');
 
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
-    const [selectedFilter, setSelectedFilter] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
     const [imageInputType, setImageInputType] = useState('file');
     const [audioInputType, setAudioInputType] = useState('file');
@@ -134,7 +133,7 @@ const Audio = () => {
             .then((res) => {
                 const newData = res.data.data;
                 setData(newData);
-                filterAudioData(newData, activeTab, selectedFilter);
+                filterAudioData(newData, activeTab);
                 setLoading(false);
             })
             .catch((err) => {
@@ -155,12 +154,11 @@ const Audio = () => {
         const {
             categoryId = null,
             languageId = null,
-            filterType = '',
             languageTab = 'all'
         } = options;
 
         // Start with base filtering by safe/unsafe
-        let filtered = data.filter(item => item.Unsafe === !isOn);
+        let filtered = data.filter(item => item.Safe === isOn);
 
         // Apply language filter
         if (languageTab !== 'all') {
@@ -186,13 +184,13 @@ const Audio = () => {
         }
 
         // Apply safe/unsafe filter
-        if (safeFilter) {
-            filtered = filtered.filter(item => {
-                if (safeFilter === 'Safe') return !item.Hide;
-                if (safeFilter === 'Unsafe') return item.Hide;
-                return true;
-            });
-        }
+        // if (safeFilter) {
+        //     filtered = filtered.filter(item => {
+        //         if (safeFilter === 'Safe') return !item.Hide;
+        //         if (safeFilter === 'Unsafe') return item.Hide;
+        //         return true;
+        //     });
+        // }
 
         // Apply premium/free filter
         if (premiumFilter) {
@@ -208,7 +206,7 @@ const Audio = () => {
 
     const filterAudioData = () => {
         // Start with base filtering by safe/unsafe
-        let filtered = data.filter(item => item.Unsafe === !isOn);
+        let filtered = data.filter(item => item.Safe === isOn);
 
         // Apply language filter
         if (activeTab !== 'all') {
@@ -224,13 +222,13 @@ const Audio = () => {
         }
 
         // Apply safe/unsafe filter
-        if (safeFilter) {
-            filtered = filtered.filter(item => {
-                if (safeFilter === 'Safe') return !item.Hide;
-                if (safeFilter === 'Unsafe') return item.Hide;
-                return true;
-            });
-        }
+        // if (safeFilter) {
+        //     filtered = filtered.filter(item => {
+        //         if (safeFilter === 'Safe') return !item.Hide;
+        //         if (safeFilter === 'Unsafe') return item.Hide;
+        //         return true;
+        //     });
+        // }
 
         // Apply premium/free filter
         if (premiumFilter) {
@@ -246,7 +244,7 @@ const Audio = () => {
 
     useEffect(() => {
         filterAudioData();
-    }, [activeTab, safeFilter, premiumFilter, selectedCategoryFilter, data, isOn]);
+    }, [activeTab, premiumFilter, selectedCategoryFilter, data, isOn]); // safeFilter
 
 
     const audioSchema = Yup.object().shape({
@@ -292,6 +290,7 @@ const Audio = () => {
         CategoryId: Yup.string().required('Prank Category Name is required'),
         LanguageId: Yup.string().required('Prank Language is required'),
         Hide: Yup.boolean(),
+        Safe: Yup.boolean(),
         isEditing: Yup.boolean()
     });
 
@@ -307,7 +306,7 @@ const Audio = () => {
             LanguageId: '',
             Hide: false,
             isEditing: false,
-            Unsafe: false
+            Safe: false
         },
         validationSchema: audioSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -334,8 +333,8 @@ const Audio = () => {
                 formData.append('AudioPremium', values.AudioPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('LanguageId', values.LanguageId);
-                formData.append('Hide', values.Hide);
-                formData.append('Unsafe', "false");
+                formData.append('Hide', values.isEditing ? !values.Safe : values.Safe);
+                formData.append('Safe', values.Safe);
                 formData.append('imageInputType', imageInputType);
                 formData.append('audioInputType', audioInputType);
 
@@ -367,32 +366,32 @@ const Audio = () => {
         // Get filenames from URLs
         const imageFileName = audio.AudioImage.split('/').pop();
         const audioFileName = audio.Audio.split('/').pop();
-        
+
         // Detect if current files are URLs
         const isImageUrl = audio.AudioImage.startsWith('http');
         const isAudioUrl = audio.Audio.startsWith('http');
-        
+
         // Set input types for both fields
         setImageInputType(isImageUrl ? 'text' : 'file');
         setAudioInputType(isAudioUrl ? 'text' : 'file');
-        
+
         // Set file names for display
         setSelectedImageFileName(imageFileName);
         setSelectedAudioFileName(audioFileName);
-        
+
         // Set URL fields if applicable
         if (isImageUrl) {
             setImageUrlText(audio.AudioImage);
         } else {
             setImageUrlText('');
         }
-        
+
         if (isAudioUrl) {
             setAudioUrlText(audio.Audio);
         } else {
             setAudioUrlText('');
         }
-    
+
         // Set form values
         formik.setValues({
             AudioName: audio.AudioName,
@@ -402,11 +401,12 @@ const Audio = () => {
             AudioPremium: audio.AudioPremium,
             CategoryId: audio.CategoryId,
             LanguageId: audio.LanguageId,
-            Hide: audio.Hide,
+            Hide: audio.Safe,
+            Safe: audio.Safe,
             isEditing: true
         });
         setId(audio._id);
-        
+
         toggleModal('edit');
     };
 
@@ -491,8 +491,8 @@ const Audio = () => {
             });
     };
 
-    const handleHideToggle = (audioId, currentHideStatus) => {
-        axios.patch(`http://localhost:5001/api/audio/update/${audioId}`, { Hide: !currentHideStatus })
+    const handleSafeToggle = (audioId, currentSafeStatus) => {
+        axios.patch(`http://localhost:5001/api/audio/update/${audioId}`, { Safe: !currentSafeStatus, Hide: currentSafeStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -587,7 +587,7 @@ const Audio = () => {
                 </Form.Label>
                 <div className="d-flex gap-3 mb-3">
                     {inputTypes.map((type) => (
-                        <div
+                        <button
                             key={type.id}
                             onClick={() => !isSubmitting && setInputType(type.id)}
                             className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
@@ -598,7 +598,7 @@ const Audio = () => {
                             }}
                         >
                             {type.label}
-                        </div>
+                        </button>
                     ))}
                 </div>
 
@@ -703,7 +703,7 @@ const Audio = () => {
                     Add Audio Prank
                 </Button>
                 <div className='d-flex flex-wrap gap-3 align-items-center'>
-                    <div className='d-flex flex-wrap gap-2 align-items-center'>
+                    {/* <div className='d-flex flex-wrap gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Safety :</span>
                         <Form.Select
                             value={safeFilter}
@@ -715,8 +715,8 @@ const Audio = () => {
                             <option value="Safe">Safe</option>
                             <option value="Unsafe">Unsafe</option>
                         </Form.Select>
-                    </div>
-                    
+                    </div> */}
+
                     <div className='d-flex flex-wrap gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Access :</span>
                         <Form.Select
@@ -744,7 +744,6 @@ const Audio = () => {
                                 onClick={() => setActiveTab('all')}
                             >
                                 All ({getFilteredCount({
-                                    filterType: selectedFilter,
                                     categoryId: selectedCategoryFilter
                                 })})
                             </Nav.Link>
@@ -759,7 +758,6 @@ const Audio = () => {
                                     <span className="pe-2">{cat.LanguageName}</span>
                                     ({getFilteredCount({
                                         languageId: cat.LanguageId,
-                                        filterType: selectedFilter,
                                         categoryId: selectedCategoryFilter,
                                         languageTab: cat.LanguageName.toLowerCase()
                                     })})
@@ -919,10 +917,10 @@ const Audio = () => {
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
-                                    id="Hide"
-                                    name="Hide"
+                                    id="Safe"
+                                    name="Safe"
                                     label="Safe Audio Prank"
-                                    checked={formik.values.Hide}
+                                    checked={formik.values.Safe}
                                     onChange={formik.handleChange}
                                     disabled={isSubmitting}
                                 />
@@ -1011,8 +1009,8 @@ const Audio = () => {
                                     </Button>
                                 </td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(audio._id, audio.Hide)}>
-                                        <FontAwesomeIcon icon={audio.Hide ? faEyeSlash : faEye} />
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(audio._id, audio.Safe)}>
+                                        <FontAwesomeIcon icon={audio.Safe ? faEye : faEyeSlash} />
                                     </Button></td>
                                 <td>
                                     <FontAwesomeIcon

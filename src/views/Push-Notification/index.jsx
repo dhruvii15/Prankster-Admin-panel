@@ -135,7 +135,7 @@ const PushNotification = () => {
                             </Form.Label>
                             <div className="d-flex gap-3">
                                 {notificationTypes.map((type) => (
-                                    <div
+                                    <button
                                         key={type.id}
                                         onClick={() => !isSubmitting && setSelectedType(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${
@@ -148,7 +148,7 @@ const PushNotification = () => {
                                         }}
                                     >
                                         {type.label}
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                             {errors.type && (

@@ -24,7 +24,6 @@ const CoverURL = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 15;
-    const [selectedFilter, setSelectedFilter] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [TagName, setTagName] = useState([]);
     const [customTagName, setCustomTagName] = useState('');
@@ -38,7 +37,7 @@ const CoverURL = () => {
     const [adminId, setAdminId] = useState(null);
     const [inputType, setInputType] = useState('file'); // 'file' or 'text'
     const [coverUrlText, setCoverUrlText] = useState('');
-    const [safetyFilter, setSafetyFilter] = useState("");
+    // const [safetyFilter, setSafetyFilter] = useState("");
     const [premiumFilter, setPremiumFilter] = useState("");
     const [searchTerm, setSearchTerm] = useState('');
 
@@ -267,14 +266,14 @@ const CoverURL = () => {
 
     const filterData = (covers) => {
         // First filter by unsafe status based on isOn state
-        let filteredData = covers.filter(cover => cover.Unsafe === !isOn);
+        let filteredData = covers.filter(cover => cover.Safe === isOn);
 
         // Apply safety filter
-        if (safetyFilter === "Safe") {
-            filteredData = filteredData.filter(cover => !cover.Hide);
-        } else if (safetyFilter === "Unsafe") {
-            filteredData = filteredData.filter(cover => cover.Hide);
-        }
+        // if (safetyFilter === "Safe") {
+        //     filteredData = filteredData.filter(cover => !cover.Hide);
+        // } else if (safetyFilter === "Unsafe") {
+        //     filteredData = filteredData.filter(cover => cover.Hide);
+        // }
 
         // Apply premium filter
         if (premiumFilter === "Premium") {
@@ -338,6 +337,7 @@ const CoverURL = () => {
             ),
         CoverPremium: Yup.boolean(),
         Hide: Yup.boolean(),
+        Safe: Yup.boolean(),
     });
 
     const formik = useFormik({
@@ -347,7 +347,7 @@ const CoverURL = () => {
             CoverURL: '',
             CoverPremium: false,
             Hide: false,
-            Unsafe: false,
+            Safe: false,
             isEditing: false,
         },
         validationSchema: coverSchema,
@@ -365,8 +365,8 @@ const CoverURL = () => {
                 formData.append('TagName', JSON.stringify(values.TagName));
                 formData.append('CoverName', values.CoverName);
                 formData.append('CoverPremium', values.CoverPremium);
-                formData.append('Hide', values.Hide);
-                formData.append('Unsafe', "false");
+                formData.append('Hide', values.isEditing ? !values.Safe : values.Safe);
+                formData.append('Safe', values.Safe);
                 formData.append('inputType', inputType);
 
                 let response;
@@ -494,6 +494,7 @@ const CoverURL = () => {
             CoverURL: '', // Clear the form field as we're handling the image separately
             CoverPremium: cover.CoverPremium || false,
             Hide: cover.Hide || false,
+            Safe: cover.Safe || false,
             isEditing: true,
         });
 
@@ -518,8 +519,8 @@ const CoverURL = () => {
             });
     };
 
-    const handleHideToggle = (coverId, currentHideStatus) => {
-        axios.patch(`http://localhost:5001/api/cover/update/${coverId}`, { Hide: !currentHideStatus })
+    const handleSafeToggle = (coverId, currentSafeStatus) => {
+        axios.patch(`http://localhost:5001/api/cover/update/${coverId}`, { Safe: !currentSafeStatus, Hide: currentSafeStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -611,7 +612,7 @@ const CoverURL = () => {
                     Add CoverImage
                 </Button>
                 <div className='d-flex gap-3'>
-                    <div className='d-flex flex-wrap align-items-center'>
+                    {/* <div className='d-flex flex-wrap align-items-center'>
                         <span className='mb-0 fw-bold fs-6 pe-2'>Safe :</span>
                         <Form.Select
                             value={safetyFilter}
@@ -623,6 +624,21 @@ const CoverURL = () => {
                             <option value="Safe">Safe</option>
                             <option value="Unsafe">Unsafe</option>
                         </Form.Select>
+                    </div> */}
+
+                    <div className="search-bar-container my-3">
+                        <input
+                            type="text"
+                            placeholder="Search by Tagname"
+                            className="search-input"
+                            value={searchTerm}
+                            onChange={handleSearch}
+                        />
+                        <button className="search-button">
+                            <span role="img" aria-label="search-icon">
+                                <FontAwesomeIcon icon={faMagnifyingGlass} />
+                            </span>
+                        </button>
                     </div>
 
                     <div className='d-flex flex-wrap align-items-center'>
@@ -642,22 +658,7 @@ const CoverURL = () => {
             </div>
 
 
-            <div className="search-bar-container my-3">
-                <input
-                    type="text"
-                    placeholder="Search by Tagname"
-                    className="search-input"
-                    value={searchTerm}
-                    onChange={handleSearch}
-                />
-                <button className="search-button">
-                    <span role="img" aria-label="search-icon">
-                        <FontAwesomeIcon icon={faMagnifyingGlass} />
-                    </span>
-                </button>
-            </div>
-
-            <Table striped bordered hover responsive className='text-center fs-6'>
+            <Table striped bordered hover responsive className='text-center fs-6 mt-4'>
                 <thead>
                     <tr>
                         <th>Id</th>
@@ -722,11 +723,11 @@ const CoverURL = () => {
                                     <Button
                                         className="bg-transparent border-0 fs-5"
                                         style={{ color: "#0385C3" }}
-                                        onClick={() => handleHideToggle(cover._id, cover.Hide)}
+                                        onClick={() => handleSafeToggle(cover._id, cover.Safe)}
                                     >
                                         <FontAwesomeIcon
-                                            icon={cover.Hide ? faEyeSlash : faEye}
-                                            title={cover.Hide ? "Hidden" : "Visible"}
+                                            icon={cover.Safe ? faEyeSlash : faEye}
+                                            title={cover.Safe ? "Hidden" : "Visible"}
                                         />
                                     </Button>
                                 </td>
@@ -843,7 +844,7 @@ const CoverURL = () => {
                             </Form.Label>
                             <div className="d-flex gap-3 mb-3">
                                 {inputTypes.map((type) => (
-                                    <div
+                                    <button
                                         key={type.id}
                                         onClick={() => !isSubmitting && setInputType(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'
@@ -855,7 +856,7 @@ const CoverURL = () => {
                                         }}
                                     >
                                         {type.label}
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
 
@@ -938,11 +939,11 @@ const CoverURL = () => {
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
-                                    id="Hide"
-                                    name="Hide"
+                                    id="Safe"
+                                    name="Safe"
                                     label="Safe Cover"
                                     disabled={isSubmitting}
-                                    checked={formik.values.Hide}
+                                    checked={formik.values.Safe}
                                     onChange={formik.handleChange}
                                 />
                             </Form.Group>

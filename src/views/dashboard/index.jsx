@@ -33,14 +33,14 @@ const DashAnalytics = () => {
   const fetchData = async () => {
     try {
       const [cover, audio, video, gallery, userAudio, userVideo, userGallery, userCover] = await Promise.all([
-        axios.post('http://localhost:5001/api/cover/read'),
-        axios.post('http://localhost:5001/api/audio/read'),
-        axios.post('http://localhost:5001/api/video/read'),
-        axios.post('http://localhost:5001/api/gallery/read'),
-        axios.post('http://localhost:5001/api/users/read', { TypeId: "1" }),
-        axios.post('http://localhost:5001/api/users/read', { TypeId: "2" }),
-        axios.post('http://localhost:5001/api/users/read', { TypeId: "3" }),
-        axios.post('http://localhost:5001/api/users/read', { TypeId: "4" })
+        axios.post('https://pslink.world/api/cover/read'),
+        axios.post('https://pslink.world/api/audio/read'),
+        axios.post('https://pslink.world/api/video/read'),
+        axios.post('https://pslink.world/api/gallery/read'),
+        axios.post('https://pslink.world/api/users/read', { TypeId: "1" }),
+        axios.post('https://pslink.world/api/users/read', { TypeId: "2" }),
+        axios.post('https://pslink.world/api/users/read', { TypeId: "3" }),
+        axios.post('https://pslink.world/api/users/read', { TypeId: "4" })
       ]);
 
       setData({

@@ -11,7 +11,7 @@ const StatusChart = () => {
 
   useEffect(() => {
     // Call the API to get the status data
-    axios.get('http://localhost:5001/api/admin/read')
+    axios.get('https://pslink.world/api/admin/read')
       .then(response => {
         // Assuming the response is an array with a single object
         const statusData = response.data.data[0]; // Get the first item in the array

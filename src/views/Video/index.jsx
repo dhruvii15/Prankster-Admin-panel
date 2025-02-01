@@ -42,7 +42,6 @@ const Video = () => {
     const [selectedVideoFileName, setSelectedVideoFileName] = useState("");
     const [currentVideoFileName, setCurrentVideoFileName] = useState('');
     const [activeTab, setActiveTab] = useState('all');
-    const [selectedFilter, setSelectedFilter] = useState('');
 
     // New state variables for safe/unsafe functionality
     const [isOn, setIsOn] = useState(false);
@@ -51,7 +50,7 @@ const Video = () => {
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
     const [inputType, setInputType] = useState('file');
     const [videoUrlText, setVideoUrlText] = useState('');
-    const [safetyFilter, setSafetyFilter] = useState('');
+    // const [safetyFilter, setSafetyFilter] = useState('');
     const [premiumFilter, setPremiumFilter] = useState('');
 
     const inputTypes = [
@@ -165,12 +164,11 @@ const Video = () => {
         const {
             categoryId = null,
             languageId = null,
-            filterType = '',
             languageTab = 'all'
         } = options;
 
         // Start with base filtering by safe/unsafe
-        let filtered = data.filter(item => item.Unsafe === !isOn);
+        let filtered = data.filter(item => item.Safe === isOn);
 
         // Apply language filter
         if (languageTab !== 'all') {
@@ -191,11 +189,11 @@ const Video = () => {
         }
 
         // Apply additional filters
-        if (safetyFilter === 'safe') {
-            filtered = filtered.filter(item => !item.Hide);
-        } else if (safetyFilter === 'unsafe') {
-            filtered = filtered.filter(item => item.Hide);
-        }
+        // if (safetyFilter === 'safe') {
+        //     filtered = filtered.filter(item => !item.Hide);
+        // } else if (safetyFilter === 'unsafe') {
+        //     filtered = filtered.filter(item => item.Hide);
+        // }
 
         // Apply premium filter
         if (premiumFilter === 'premium') {
@@ -209,7 +207,7 @@ const Video = () => {
 
     const filterGalleryData = () => {
         // Start with base filtering by safe/unsafe
-        let filtered = data.filter(item => item.Unsafe === !isOn);
+        let filtered = data.filter(item => item.Safe === isOn);
 
         // Apply language filter
         if (activeTab !== 'all') {
@@ -225,11 +223,11 @@ const Video = () => {
         }
 
         // Apply safety filter
-        if (safetyFilter === 'safe') {
-            filtered = filtered.filter(item => !item.Hide);
-        } else if (safetyFilter === 'unsafe') {
-            filtered = filtered.filter(item => item.Hide);
-        }
+        // if (safetyFilter === 'safe') {
+        //     filtered = filtered.filter(item => !item.Hide);
+        // } else if (safetyFilter === 'unsafe') {
+        //     filtered = filtered.filter(item => item.Hide);
+        // }
 
         // Apply premium filter
         if (premiumFilter === 'premium') {
@@ -243,7 +241,7 @@ const Video = () => {
 
     useEffect(() => {
         filterGalleryData();
-    }, [activeTab, safetyFilter, premiumFilter, selectedCategoryFilter, data, isOn]);
+    }, [activeTab, premiumFilter, selectedCategoryFilter, data, isOn]); //safetyFilter
 
 
     const videoSchema = Yup.object().shape({
@@ -274,6 +272,7 @@ const Video = () => {
         CategoryId: Yup.string().required('Prank Category Name is required'),
         LanguageId: Yup.string().required('Prank Language is required'),
         Hide: Yup.boolean(),
+        Safe: Yup.boolean(),
         isEditing: Yup.boolean()
     });
 
@@ -287,7 +286,7 @@ const Video = () => {
             LanguageId: '',
             Hide: false,
             isEditing: false,
-            Unsafe: false
+            Safe: false
         },
         validationSchema: videoSchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -307,8 +306,8 @@ const Video = () => {
                 formData.append('VideoPremium', values.VideoPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('LanguageId', values.LanguageId);
-                formData.append('Hide', values.Hide);
-                formData.append('Unsafe', "false");
+                formData.append('Hide', values.isEditing ? !values.Safe : values.Safe);
+                formData.append('Safe', values.Safe);
                 formData.append('inputType', inputType);
 
                 const request = id !== undefined
@@ -356,15 +355,16 @@ const Video = () => {
             VideoPremium: video.VideoPremium,
             CategoryId: video.CategoryId,
             LanguageId: video.LanguageId,
-            Hide: video.Hide,
+            Hide: video.Safe,
+            Safe: video.Safe,
             isEditing: true
         });
         setId(video._id);
         toggleModal('edit');
     };
 
-    const handleHideToggle = (videoId, currentHideStatus) => {
-        axios.patch(`http://localhost:5001/api/video/update/${videoId}`, { Hide: !currentHideStatus })
+    const handleSafeToggle = (videoId, currentSafeStatus) => {
+        axios.patch(`http://localhost:5001/api/video/update/${videoId}`, { Safe: !currentSafeStatus , Hide: currentSafeStatus})
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -497,7 +497,7 @@ const Video = () => {
                 </Button>
                 <div className='d-flex flex-wrap gap-3 align-items-center'>
                     {/* Safety Filter */}
-                    <div className='d-flex flex-wrap gap-2 align-items-center'>
+                    {/* <div className='d-flex flex-wrap gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Safety :</span>
                         <Form.Select
                             value={safetyFilter}
@@ -509,7 +509,7 @@ const Video = () => {
                             <option value="safe">Safe</option>
                             <option value="unsafe">Unsafe</option>
                         </Form.Select>
-                    </div>
+                    </div> */}
 
                     {/* Premium Filter */}
                     <div className='d-flex flex-wrap gap-2 align-items-center'>
@@ -539,7 +539,6 @@ const Video = () => {
                                 onClick={() => setActiveTab('all')}
                             >
                                 All ({getFilteredCount({
-                                    filterType: selectedFilter,
                                     categoryId: selectedCategoryFilter
                                 })})
                             </Nav.Link>
@@ -554,7 +553,6 @@ const Video = () => {
                                     <span className="pe-2">{cat.LanguageName}</span>
                                     ({getFilteredCount({
                                         languageId: cat.LanguageId,
-                                        filterType: selectedFilter,
                                         categoryId: selectedCategoryFilter,
                                         languageTab: cat.LanguageName.toLowerCase()
                                     })})
@@ -699,7 +697,7 @@ const Video = () => {
                             </Form.Label>
                             <div className="d-flex gap-3 mb-3">
                                 {inputTypes.map((type) => (
-                                    <div
+                                    <button
                                         key={type.id}
                                         onClick={() => !isSubmitting && setInputType(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'submit' : 'bg-light'}`}
@@ -710,7 +708,7 @@ const Video = () => {
                                         }}
                                     >
                                         {type.label}
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
 
@@ -792,11 +790,11 @@ const Video = () => {
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
-                                    id="Hide"
-                                    name="Hide"
+                                    id="Safe"
+                                    name="Safe"
                                     disabled={isSubmitting}
                                     label="Safe Video Prank"
-                                    checked={formik.values.Hide}
+                                    checked={formik.values.Safe}
                                     onChange={formik.handleChange}
                                 />
                             </Form.Group>
@@ -881,8 +879,8 @@ const Video = () => {
                                     </Button>
                                 </td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(video._id, video.Hide)}>
-                                        <FontAwesomeIcon icon={video.Hide ? faEyeSlash : faEye} />
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(video._id, video.Safe)}>
+                                        <FontAwesomeIcon icon={video.Safe ? faEye : faEyeSlash} />
                                     </Button>
                                 </td>
                                 <td>

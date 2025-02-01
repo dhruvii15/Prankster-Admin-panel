@@ -42,7 +42,7 @@ const Ads = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/ads/read')
+        axios.post('https://pslink.world/api/ads/read')
             .then((res) => {
                 setData(res.data.data);
                 setLoading(false);
@@ -55,7 +55,7 @@ const Ads = () => {
     };
 
     const getAdminData = () => {
-        axios.get('http://localhost:5001/api/admin/read')
+        axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].AdsStatus);
                 setAdminId(res.data.data[0]._id);
@@ -93,8 +93,8 @@ const Ads = () => {
         try {
             setIsSubmitting(true);
             const request = id !== undefined
-                ? axios.patch(`http://localhost:5001/api/ads/update/${id}`, payload)
-                : axios.post('http://localhost:5001/api/ads/create', payload);
+                ? axios.patch(`https://pslink.world/api/ads/update/${id}`, payload)
+                : axios.post('https://pslink.world/api/ads/create', payload);
 
             const res = await request;
             setAdsName('');
@@ -126,7 +126,7 @@ const Ads = () => {
         if (!isSubmitting && window.confirm("Are you sure you want to delete this ad?")) {
             try {
                 setIsSubmitting(true);
-                const res = await axios.delete(`http://localhost:5001/api/ads/delete/${adsId}`);
+                const res = await axios.delete(`https://pslink.world/api/ads/delete/${adsId}`);
                 getData();
                 toast.success(res.data.message);
             } catch (err) {
@@ -146,7 +146,7 @@ const Ads = () => {
                 setIsOn(newState);
 
                 if (adminId) {
-                    const response = await axios.patch(`http://localhost:5001/api/admin/update/${adminId}`, {
+                    const response = await axios.patch(`https://pslink.world/api/admin/update/${adminId}`, {
                         AdsStatus: newState
                     });
                     toast.success(response.data.message);
@@ -255,7 +255,7 @@ const Ads = () => {
                             </Form.Label>
                             <div className="d-flex gap-3">
                                 {platformTypes.map((type) => (
-                                    <div
+                                    <button
                                         key={type.id}
                                         onClick={() => !isSubmitting && setPlatform(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${platform === type.id ? 'bg-primary' : 'bg-light'}`}
@@ -266,7 +266,7 @@ const Ads = () => {
                                         }}
                                     >
                                         {type.label}
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                             {errors.platform && (

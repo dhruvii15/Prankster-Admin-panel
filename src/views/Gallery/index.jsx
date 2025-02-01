@@ -49,11 +49,10 @@ const Gallery = () => {
 
     // New state for language and additional filters
     const [activeTab, setActiveTab] = useState('all');
-    const [selectedFilter, setSelectedFilter] = useState('');
     const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
     const [inputType, setInputType] = useState('file');
     const [imageUrlText, setImageUrlText] = useState('');
-    const [safeFilter, setSafeFilter] = useState('');
+    // const [safeFilter, setSafeFilter] = useState('');
     const [premiumFilter, setPremiumFilter] = useState('');
 
     const inputTypes = [
@@ -73,7 +72,7 @@ const Gallery = () => {
     };
 
     const getAdminData = () => {
-        axios.get('https://pslink.world/api/admin/read')
+        axios.get('http://localhost:5001/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].ImageSafe);
                 setAdminId(res.data.data[0]._id);
@@ -106,7 +105,7 @@ const Gallery = () => {
             .then((res) => {
                 const newData = res.data.data
                 setData(newData);
-                filterGalleryData(newData, activeTab, selectedFilter);
+                filterGalleryData(newData, activeTab);
                 setLoading(false);
             })
             .catch((err) => {
@@ -125,12 +124,11 @@ const Gallery = () => {
         const {
             categoryId = null,
             languageId = null,
-            filterType = '',
             languageTab = 'all'
         } = options;
 
         // Start with base filtering by safe/unsafe
-        let filtered = data.filter(item => item.Unsafe === !isOn);
+        let filtered = data.filter(item => item.Safe === isOn);
 
         // Apply language filter
         if (languageTab !== 'all') {
@@ -155,13 +153,13 @@ const Gallery = () => {
         }
 
         // Apply additional filters
-        if (safeFilter) {
-            filtered = filtered.filter(item => {
-                if (safeFilter === 'Safe') return !item.Hide;
-                if (safeFilter === 'Unsafe') return item.Hide;
-                return true;
-            });
-        }
+        // if (safeFilter) {
+        //     filtered = filtered.filter(item => {
+        //         if (safeFilter === 'Safe') return !item.Hide;
+        //         if (safeFilter === 'Unsafe') return item.Hide;
+        //         return true;
+        //     });
+        // }
 
         // Apply premium/free filter
         if (premiumFilter) {
@@ -177,7 +175,7 @@ const Gallery = () => {
 
     const filterGalleryData = () => {
         // Start with base filtering by safe/unsafe
-        let filtered = data.filter(item => item.Unsafe === !isOn);
+        let filtered = data.filter(item => item.Safe === isOn);
 
         // Apply language filter
         if (activeTab !== 'all') {
@@ -193,13 +191,13 @@ const Gallery = () => {
         }
 
         // Apply safe/unsafe filter
-        if (safeFilter) {
-            filtered = filtered.filter(item => {
-                if (safeFilter === 'Safe') return !item.Hide;
-                if (safeFilter === 'Unsafe') return item.Hide;
-                return true;
-            });
-        }
+        // if (safeFilter) {
+        //     filtered = filtered.filter(item => {
+        //         if (safeFilter === 'Safe') return !item.Hide;
+        //         if (safeFilter === 'Unsafe') return item.Hide;
+        //         return true;
+        //     });
+        // }
 
         // Apply premium/free filter
         if (premiumFilter) {
@@ -215,7 +213,7 @@ const Gallery = () => {
 
     useEffect(() => {
         filterGalleryData();
-        }, [activeTab, safeFilter, premiumFilter, selectedCategoryFilter, data, isOn]);
+        }, [activeTab, premiumFilter, selectedCategoryFilter, data, isOn]); //safeFilter
 
     const handleToggle = async () => {
         if (!isSubmitting2) {
@@ -226,7 +224,7 @@ const Gallery = () => {
 
                 // Call the appropriate API based on the state
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
-                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "3" });
+                const response = await axios.post(`http://localhost:5001/api/${apiEndpoint}/${adminId}`, { type: "3" });
 
                 // Reset to first page when toggling safe mode
                 setCurrentPage(1);
@@ -246,8 +244,8 @@ const Gallery = () => {
 
     // Update useEffect to handle filtering
     useEffect(() => {
-        filterGalleryData(data, activeTab, selectedFilter);
-    }, [activeTab, selectedFilter, data]);
+        filterGalleryData(data, activeTab);
+    }, [activeTab, data]);
 
     const compressImage = (file) => {
         return new Promise((resolve, reject) => {
@@ -370,6 +368,7 @@ const Gallery = () => {
         CategoryId: Yup.string().required('Prank Category Name is required'),
         LanguageId: Yup.string().required('Language is required'),
         Hide: Yup.boolean(),
+        Safe: Yup.boolean(),
         isEditing: Yup.boolean()
     });
 
@@ -382,7 +381,7 @@ const Gallery = () => {
             LanguageId: '',
             Hide: false,
             isEditing: false,
-            Unsafe: false
+            Safe: false
         },
         validationSchema: gallerySchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -400,13 +399,13 @@ const Gallery = () => {
                 formData.append('GalleryPremium', values.GalleryPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('LanguageId', values.LanguageId);
-                formData.append('Hide', values.Hide);
-                formData.append('Unsafe', "false");
+                formData.append('Hide', values.isEditing ? !values.Safe : values.Safe);
+                formData.append('Safe', values.Safe);
                 formData.append('inputType', inputType);
 
                 const request = id !== undefined
-                    ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
-                    : axios.post('https://pslink.world/api/gallery/create', formData);
+                    ? axios.patch(`http://localhost:5001/api/gallery/update/${id}`, formData)
+                    : axios.post('http://localhost:5001/api/gallery/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -440,7 +439,8 @@ const Gallery = () => {
             GalleryPremium: gallery.GalleryPremium,
             CategoryId: gallery.CategoryId,
             LanguageId: gallery.LanguageId,
-            Hide: gallery.Hide,
+            Hide: gallery.Safe,
+            Safe: gallery.Safe,
             isEditing: true
         });
         setId(gallery._id);
@@ -448,8 +448,8 @@ const Gallery = () => {
         toggleModal('edit');
     };
 
-    const handleHideToggle = (galleryId, currentHideStatus) => {
-        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { Hide: !currentHideStatus })
+    const handleSafeToggle = (galleryId, currentSafeStatus) => {
+        axios.patch(`http://localhost:5001/api/gallery/update/${galleryId}`, { Safe: !currentSafeStatus , Hide: currentSafeStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -461,7 +461,7 @@ const Gallery = () => {
     };
 
     const handlePremiumToggle = (galleryId, currentPremiumStatus) => {
-        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
+        axios.patch(`http://localhost:5001/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -474,7 +474,7 @@ const Gallery = () => {
 
     const handleDelete = (galleryId) => {
         if (window.confirm("Are you sure you want to delete this Image Prank Image?")) {
-            axios.delete(`https://pslink.world/api/gallery/delete/${galleryId}`)
+            axios.delete(`http://localhost:5001/api/gallery/delete/${galleryId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -602,7 +602,7 @@ const Gallery = () => {
                 </Button>
 
                 <div className='d-flex gap-3 align-items-center'>
-                    <div className='d-flex gap-2 align-items-center'>
+                    {/* <div className='d-flex gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Safety :</span>
                         <Form.Select
                             value={safeFilter}
@@ -614,7 +614,7 @@ const Gallery = () => {
                             <option value="Safe">Safe</option>
                             <option value="Unsafe">Unsafe</option>
                         </Form.Select>
-                    </div>
+                    </div> */}
 
                     <div className='d-flex gap-2 align-items-center'>
                         <span className='mb-0 fw-bold fs-6'>Access :</span>
@@ -643,7 +643,6 @@ const Gallery = () => {
                                 onClick={() => setActiveTab('all')}
                             >
                                 All ({getFilteredCount({
-                                    filterType: selectedFilter,
                                     categoryId: selectedCategoryFilter
                                 })})
                             </Nav.Link>
@@ -658,7 +657,6 @@ const Gallery = () => {
                                     <span className="pe-2">{cat.LanguageName}</span>
                                     ({getFilteredCount({
                                         languageId: cat.LanguageId,
-                                        filterType: selectedFilter,
                                         categoryId: selectedCategoryFilter,
                                         languageTab: cat.LanguageName.toLowerCase()
                                     })})
@@ -784,7 +782,7 @@ const Gallery = () => {
                             </Form.Label>
                             <div className="d-flex gap-3 mb-3">
                                 {inputTypes.map((type) => (
-                                    <div
+                                    <button
                                         key={type.id}
                                         onClick={() => !isSubmitting && setInputType(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
@@ -795,7 +793,7 @@ const Gallery = () => {
                                         }}
                                     >
                                         {type.label}
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
 
@@ -869,11 +867,11 @@ const Gallery = () => {
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
-                                    id="Hide"
-                                    name="Hide"
+                                    id="Safe"
+                                    name="Safe"
                                     label="Safe Image Prank"
                                     disabled={isSubmitting}
-                                    checked={formik.values.Hide}
+                                    checked={formik.values.Safe}
                                     onChange={formik.handleChange}
                                 />
                             </Form.Group>
@@ -960,8 +958,8 @@ const Gallery = () => {
                                     </Button>
                                 </td>
                                 <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleHideToggle(gallery._id, gallery.Hide)}>
-                                        <FontAwesomeIcon icon={gallery.Hide ? faEyeSlash : faEye} />
+                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(gallery._id, gallery.Safe)}>
+                                        <FontAwesomeIcon icon={gallery.Safe ? faEye : faEyeSlash} />
                                     </Button>
                                 </td>
                                 <td>

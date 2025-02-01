@@ -163,7 +163,7 @@ const Notification = () => {
                             </Form.Label>
                             <div className="d-flex gap-3">
                                 {notificationTypes.map((type) => (
-                                    <div
+                                    <button
                                         key={type.id}
                                         onClick={() => !isSubmitting && setSelectedType(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${selectedType === type.id ? 'bg-primary' : 'bg-light'
@@ -175,7 +175,7 @@ const Notification = () => {
                                         }}
                                     >
                                         {type.label}
-                                    </div>
+                                    </button>
                                 ))}
                             </div>
                             {errors.type && (
