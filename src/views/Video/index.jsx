@@ -70,7 +70,7 @@ const Video = () => {
     };
 
     const getAdminData = () => {
-        axios.get('http://localhost:5001/api/admin/read')
+        axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].VideoSafe);
                 setAdminId(res.data.data[0]._id);
@@ -91,7 +91,7 @@ const Video = () => {
 
                 // Call the appropriate API based on the state
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
-                const response = await axios.post(`http://localhost:5001/api/${apiEndpoint}/${adminId}`, { type: "2" });
+                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "2" });
 
                 // Reset to first page when toggling safe mode
                 setCurrentPage(1);
@@ -118,6 +118,7 @@ const Video = () => {
                 setVideoFileLabel('Video Prank File Upload');
                 setSelectedVideoFileName('');
                 setCurrentVideoFileName('');
+                setVideoUrlText(''); // Reset Video URL text when opening modal
                 const fileInput = document.getElementById('Video');
                 if (fileInput) {
                     fileInput.value = '';
@@ -129,6 +130,7 @@ const Video = () => {
             setVideoFileLabel('Video Prank File Upload');
             setSelectedVideoFileName('');
             setCurrentVideoFileName('');
+            setVideoUrlText(''); // Reset Video URL text when closing modal
             const fileInput = document.getElementById('Video');
             if (fileInput) {
                 fileInput.value = '';
@@ -139,7 +141,7 @@ const Video = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/video/read')
+        axios.post('https://pslink.world/api/video/read')
             .then((res) => {
                 const newData = res.data.data
                 setData(newData);
@@ -311,8 +313,8 @@ const Video = () => {
                 formData.append('inputType', inputType);
 
                 const request = id !== undefined
-                    ? axios.patch(`http://localhost:5001/api/video/update/${id}`, formData)
-                    : axios.post('http://localhost:5001/api/video/create', formData);
+                    ? axios.patch(`https://pslink.world/api/video/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/video/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -364,7 +366,7 @@ const Video = () => {
     };
 
     const handleSafeToggle = (videoId, currentSafeStatus) => {
-        axios.patch(`http://localhost:5001/api/video/update/${videoId}`, { Safe: !currentSafeStatus , Hide: currentSafeStatus})
+        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Safe: !currentSafeStatus , Hide: currentSafeStatus})
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -376,7 +378,7 @@ const Video = () => {
     };
 
     const handlePremiumToggle = (videoId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5001/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { VideoPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -389,7 +391,7 @@ const Video = () => {
 
     const handleDelete = (videoId) => {
         if (window.confirm("Are you sure you want to delete this Video Prank?")) {
-            axios.delete(`http://localhost:5001/api/video/delete/${videoId}`)
+            axios.delete(`https://pslink.world/api/video/delete/${videoId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);

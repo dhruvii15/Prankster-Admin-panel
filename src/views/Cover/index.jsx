@@ -84,6 +84,7 @@ const CoverURL = () => {
                 setSelectedFile(null);
                 setPreviewUrl(null);
                 setCurrentFileName('');
+                setCoverUrlText(''); // Add this line
             }
             setVisible(!visible);
             if (!visible) {
@@ -101,6 +102,7 @@ const CoverURL = () => {
             setFileLabel('Cover Image Upload');
             setIsEditing(false);
             setCurrentFileName('');
+            setCoverUrlText('');
         }
     }, [visible]);
 
@@ -192,7 +194,7 @@ const CoverURL = () => {
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/cover/read')
+        axios.post('https://pslink.world/api/cover/read')
             .then((res) => {
                 const reversedData = res.data.data;
                 setData(reversedData);
@@ -206,7 +208,7 @@ const CoverURL = () => {
     };
 
     const getTagName = () => {
-        axios.post('http://localhost:5001/api/cover/TagName/read')
+        axios.post('https://pslink.world/api/cover/TagName/read')
             .then((res) => {
                 setTagName(res.data.data);
             })
@@ -217,7 +219,7 @@ const CoverURL = () => {
     };
 
     const getAdminData = () => {
-        axios.get('http://localhost:5001/api/admin/read')
+        axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].CoverSafe);
                 setAdminId(res.data.data[0]._id);
@@ -372,7 +374,7 @@ const CoverURL = () => {
                 let response;
                 if (isEditing) {
                     response = await axios.patch(
-                        `http://localhost:5001/api/cover/update/${id}`,
+                        `https://pslink.world/api/cover/update/${id}`,
                         formData,
                         {
                             headers: {
@@ -382,7 +384,7 @@ const CoverURL = () => {
                     );
                 } else {
                     response = await axios.post(
-                        'http://localhost:5001/api/cover/create',
+                        'https://pslink.world/api/cover/create',
                         formData,
                         {
                             headers: {
@@ -398,7 +400,7 @@ const CoverURL = () => {
                 setShowCustomInput(false);
                 setSelectedFile(null);
                 setPreviewUrl(null);
-                setCoverUrlText('');
+                setCoverUrlText(''); // Add this line
                 setId(undefined);
                 setIsEditing(false);
                 setFileLabel('Cover Image Upload');
@@ -417,7 +419,7 @@ const CoverURL = () => {
 
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
-            axios.delete(`http://localhost:5001/api/cover/delete/${coverId}`)
+            axios.delete(`https://pslink.world/api/cover/delete/${coverId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -508,7 +510,7 @@ const CoverURL = () => {
     };
 
     const handlePremiumToggle = (coverId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5001/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { CoverPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -520,7 +522,7 @@ const CoverURL = () => {
     };
 
     const handleSafeToggle = (coverId, currentSafeStatus) => {
-        axios.patch(`http://localhost:5001/api/cover/update/${coverId}`, { Safe: !currentSafeStatus, Hide: currentSafeStatus })
+        axios.patch(`https://pslink.world/api/cover/update/${coverId}`, { Safe: !currentSafeStatus, Hide: currentSafeStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -539,7 +541,7 @@ const CoverURL = () => {
                 setIsOn(newState);
 
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
-                const response = await axios.post(`http://localhost:5001/api/${apiEndpoint}/${adminId}`, { type: "4" });
+                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "4" });
 
                 setCurrentPage(1);
                 getData();

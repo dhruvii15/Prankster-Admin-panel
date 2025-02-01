@@ -71,7 +71,7 @@ const Audio = () => {
     };
 
     const getAdminData = () => {
-        axios.get('http://localhost:5001/api/admin/read')
+        axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].AudioSafe);
                 setAdminId(res.data.data[0]._id);
@@ -91,7 +91,7 @@ const Audio = () => {
 
                 // Call the appropriate API based on the state
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
-                const response = await axios.post(`http://localhost:5001/api/${apiEndpoint}/${adminId}`, { type: "1" });
+                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "1" });
 
                 // Reset to first page when toggling safe mode
                 setCurrentPage(1);
@@ -117,19 +117,23 @@ const Audio = () => {
                 setId(undefined);
                 setSelectedImageFileName('');
                 setSelectedAudioFileName('');
+                setImageUrlText(''); // Reset image URL text
+                setAudioUrlText(''); // Reset audio URL text
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
             setSelectedImageFileName('');
             setSelectedAudioFileName('');
+            setImageUrlText(''); // Reset image URL text
+            setAudioUrlText(''); // Reset audio URL text
         }
         setVisible(!visible);
     };
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/audio/read')
+        axios.post('https://pslink.world/api/audio/read')
             .then((res) => {
                 const newData = res.data.data;
                 setData(newData);
@@ -339,8 +343,8 @@ const Audio = () => {
                 formData.append('audioInputType', audioInputType);
 
                 const request = id !== undefined
-                    ? axios.patch(`http://localhost:5001/api/audio/update/${id}`, formData)
-                    : axios.post('http://localhost:5001/api/audio/create', formData);
+                    ? axios.patch(`https://pslink.world/api/audio/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/audio/create', formData);
 
                 const res = await request;
                 resetForm();
@@ -480,7 +484,7 @@ const Audio = () => {
     };
 
     const handlePremiumToggle = (audioId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5001/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { AudioPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -492,7 +496,7 @@ const Audio = () => {
     };
 
     const handleSafeToggle = (audioId, currentSafeStatus) => {
-        axios.patch(`http://localhost:5001/api/audio/update/${audioId}`, { Safe: !currentSafeStatus, Hide: currentSafeStatus })
+        axios.patch(`https://pslink.world/api/audio/update/${audioId}`, { Safe: !currentSafeStatus, Hide: currentSafeStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -505,7 +509,7 @@ const Audio = () => {
 
     const handleDelete = (audioId) => {
         if (window.confirm("Are you sure you want to delete this Audio Prank?")) {
-            axios.delete(`http://localhost:5001/api/audio/delete/${audioId}`)
+            axios.delete(`https://pslink.world/api/audio/delete/${audioId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
@@ -786,7 +790,13 @@ const Audio = () => {
 
             <Modal
                 show={visible}
-                onHide={() => !isSubmitting && toggleModal('add')}
+                onHide={() => {
+                    if (!isSubmitting) {
+                        setImageUrlText(''); // Reset image URL text
+                        setAudioUrlText(''); // Reset audio URL text
+                        toggleModal('add');
+                    }
+                }}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}

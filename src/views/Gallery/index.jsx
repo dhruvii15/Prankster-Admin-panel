@@ -72,7 +72,7 @@ const Gallery = () => {
     };
 
     const getAdminData = () => {
-        axios.get('http://localhost:5001/api/admin/read')
+        axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
                 setIsOn(res.data.data[0].ImageSafe);
                 setAdminId(res.data.data[0]._id);
@@ -89,19 +89,22 @@ const Gallery = () => {
                 setId(undefined);
                 setImageFileLabel('Image Prank Image Upload');
                 setSelectedFileName('');
+                setImageUrlText(''); // Reset image URL text
                 formik.resetForm();
             }
         } else {
             formik.resetForm();
             setSelectedFileName('');
+            setImageUrlText(''); // Reset image URL text
             setImageFileLabel('Image Prank Image Upload');
+            setInputType('file'); // Reset input type to file
         }
         setVisible(!visible);
     };
 
     const getData = () => {
         setLoading(true);
-        axios.post('http://localhost:5001/api/gallery/read')
+        axios.post('https://pslink.world/api/gallery/read')
             .then((res) => {
                 const newData = res.data.data
                 setData(newData);
@@ -224,7 +227,7 @@ const Gallery = () => {
 
                 // Call the appropriate API based on the state
                 const apiEndpoint = newState ? 'safe' : 'unsafe';
-                const response = await axios.post(`http://localhost:5001/api/${apiEndpoint}/${adminId}`, { type: "3" });
+                const response = await axios.post(`https://pslink.world/api/${apiEndpoint}/${adminId}`, { type: "3" });
 
                 // Reset to first page when toggling safe mode
                 setCurrentPage(1);
@@ -404,8 +407,8 @@ const Gallery = () => {
                 formData.append('inputType', inputType);
 
                 const request = id !== undefined
-                    ? axios.patch(`http://localhost:5001/api/gallery/update/${id}`, formData)
-                    : axios.post('http://localhost:5001/api/gallery/create', formData);
+                    ? axios.patch(`https://pslink.world/api/gallery/update/${id}`, formData)
+                    : axios.post('https://pslink.world/api/gallery/create', formData);
 
                 const res = await request;
                 setSubmitting(false);
@@ -449,7 +452,7 @@ const Gallery = () => {
     };
 
     const handleSafeToggle = (galleryId, currentSafeStatus) => {
-        axios.patch(`http://localhost:5001/api/gallery/update/${galleryId}`, { Safe: !currentSafeStatus , Hide: currentSafeStatus })
+        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { Safe: !currentSafeStatus , Hide: currentSafeStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -461,7 +464,7 @@ const Gallery = () => {
     };
 
     const handlePremiumToggle = (galleryId, currentPremiumStatus) => {
-        axios.patch(`http://localhost:5001/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
+        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { GalleryPremium: !currentPremiumStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -474,7 +477,7 @@ const Gallery = () => {
 
     const handleDelete = (galleryId) => {
         if (window.confirm("Are you sure you want to delete this Image Prank Image?")) {
-            axios.delete(`http://localhost:5001/api/gallery/delete/${galleryId}`)
+            axios.delete(`https://pslink.world/api/gallery/delete/${galleryId}`)
                 .then((res) => {
                     getData();
                     toast.success(res.data.message);
