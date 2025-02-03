@@ -562,7 +562,7 @@ const Audio = () => {
         if (audio?.Audio) {
             navigator.clipboard.writeText(audio.Audio)
                 .then(() => {
-                    toast.success("audio URL copied to clipboard!");
+                    toast.success("Audio URL copied to clipboard!");
                 })
                 .catch((error) => {
                     console.error("Failed to copy: ", error);
@@ -591,18 +591,20 @@ const Audio = () => {
                 </Form.Label>
                 <div className="d-flex gap-3 mb-3">
                     {inputTypes.map((type) => (
-                        <button
+                        <div
                             key={type.id}
                             onClick={() => !isSubmitting && setInputType(type.id)}
                             className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
                             style={{
                                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                 transition: 'all 0.3s ease',
-                                border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`
+                                border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`,
+                                userSelect: 'none' // Prevents text selection
                             }}
+                            role="button"
                         >
                             {type.label}
-                        </button>
+                        </div>
                     ))}
                 </div>
 
@@ -983,9 +985,7 @@ const Audio = () => {
                     {currentItems && currentItems.length > 0 ? (
                         currentItems.map((audio, index) => (
                             <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td style={{
-                                    backgroundColor: audio.Hide ? '#ffcccc' : ''
-                                }}>{indexOfFirstItem + index + 1}</td>
+                                <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{audio.AudioName}</td>
                                 <td>{audio.ArtistName}</td>
                                 <td>

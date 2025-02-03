@@ -366,7 +366,7 @@ const Video = () => {
     };
 
     const handleSafeToggle = (videoId, currentSafeStatus) => {
-        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Safe: !currentSafeStatus , Hide: currentSafeStatus})
+        axios.patch(`https://pslink.world/api/video/update/${videoId}`, { Safe: !currentSafeStatus, Hide: currentSafeStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -444,7 +444,7 @@ const Video = () => {
         if (video?.Video) {
             navigator.clipboard.writeText(video.Video)
                 .then(() => {
-                    toast.success("video URL copied to clipboard!");
+                    toast.success("Video URL copied to clipboard!");
                 })
                 .catch((error) => {
                     console.error("Failed to copy: ", error);
@@ -699,18 +699,20 @@ const Video = () => {
                             </Form.Label>
                             <div className="d-flex gap-3 mb-3">
                                 {inputTypes.map((type) => (
-                                    <button
+                                    <div
                                         key={type.id}
                                         onClick={() => !isSubmitting && setInputType(type.id)}
-                                        className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'submit' : 'bg-light'}`}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
                                         style={{
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.3s ease',
-                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`
+                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`,
+                                            userSelect: 'none' // Prevents text selection
                                         }}
+                                        role="button"
                                     >
                                         {type.label}
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
 
@@ -726,11 +728,11 @@ const Video = () => {
                                                 type="file"
                                                 id="Video"
                                                 name="Video"
+                                                accept="video/mp4,video/x-matroska,video/x-msvideo"
                                                 disabled={isSubmitting}
                                                 onChange={(event) => {
                                                     const file = event.currentTarget.files[0];
                                                     formik.setFieldValue("Video", file);
-                                                    // setSelectedFile(file);
                                                     if (file) {
                                                         setVideoFileLabel("Video Prank File uploaded");
                                                         setCurrentVideoFileName(file.name);
@@ -848,9 +850,7 @@ const Video = () => {
                     {currentItems && currentItems.length > 0 ? (
                         currentItems.map((video, index) => (
                             <tr key={video._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td style={{
-                                    backgroundColor: video.Hide ? '#ffcccc' : ''
-                                }}>{indexOfFirstItem + index + 1}</td>
+                                <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{video.VideoName}</td>
                                 <td>{video.ArtistName}</td>
                                 <td>

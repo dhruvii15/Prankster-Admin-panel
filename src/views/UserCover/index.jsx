@@ -6,6 +6,7 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ImagePreviewModal from 'components/ImagePreviewModal';
+import { faCopy } from '@fortawesome/free-regular-svg-icons';
 
 const UserCover = () => {
     const [loading, setLoading] = useState(true);
@@ -21,6 +22,7 @@ const UserCover = () => {
     const [formData, setFormData] = useState({
         CoverName: '',  // Add this new state for cover name
         CoverPremium: false,
+        Safe: false,
         Hide: false
     });
     const [showPreview, setShowPreview] = useState(false);
@@ -112,8 +114,8 @@ const UserCover = () => {
             ...prev,
             CoverName: cover.CoverName || '',
             CoverPremium: false,
+            Safe: false,
             Hide: false,
-            Unsafe: true,
         }));
         setShowModal(true);
     };
@@ -145,9 +147,9 @@ const UserCover = () => {
         apiFormData.append('CoverURL', selectedCover.CoverURL);
         apiFormData.append('CoverName', formData.CoverName);  // Use the updated cover name
         apiFormData.append('CoverPremium', formData.CoverPremium);
-        apiFormData.append('Hide', formData.Hide);
+        apiFormData.append('Safe', formData.Safe);
+        apiFormData.append('Hide', formData.Safe);
         apiFormData.append('role', selectedCover._id);
-        apiFormData.append('Unsafe', 'true');
         apiFormData.append('TagName', JSON.stringify(selectedTags));
 
         if (window.confirm("Are you sure you want to move this Cover Image?")) {
@@ -169,8 +171,8 @@ const UserCover = () => {
         setFormData({
             CoverName: '',  // Reset cover name
             CoverPremium: false,
+            Safe: false,
             Hide: false,
-            Unsafe: true
         });
         setSelectedTags([]);
         setFormErrors({});
@@ -196,6 +198,20 @@ const UserCover = () => {
         setPreviewIndex(actualIndex);
         setShowPreview(true);
     };
+
+    const handleCopyToClipboard = (cover) => {
+            if (cover) {
+                navigator.clipboard.writeText(cover)
+                    .then(() => {
+                        toast.success("Cover URL copied to clipboard!");
+                    })
+                    .catch((error) => {
+                        console.error("Failed to copy: ", error);
+                    });
+            } else {
+                alert("No URL to copy!");
+            }
+        };
 
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -300,6 +316,12 @@ const UserCover = () => {
                                         onClick={() => handleDownload(cover.CoverURL)} // Pass your image URL here
                                     >
                                         <FontAwesomeIcon icon={faDownload} />
+                                    </Button>
+                                    <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(cover.CoverURL)}
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
                                     </Button>
                                     <Button
                                         className="edit-dlt-btn"
@@ -492,10 +514,10 @@ const UserCover = () => {
                         <Form.Group className="mb-3">
                             <Form.Check
                                 type="checkbox"
-                                id="Hide"
-                                name="Hide"
-                                label="Hide Cover"
-                                checked={formData.Hide}
+                                id="Safe"
+                                name="Safe"
+                                label="Safe Cover"
+                                checked={formData.Safe}
                                 onChange={handleFormChange}
                             />
                         </Form.Group>

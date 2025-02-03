@@ -8,6 +8,7 @@ import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 // img
 import logo from "../../assets/images/logo.svg";
+import { faCopy } from '@fortawesome/free-regular-svg-icons';
 
 const UserVideo = () => {
     const category = [
@@ -40,8 +41,8 @@ const UserVideo = () => {
         artistName: '',
         videoName: '',
         videoPremium: false,
+        safe: false,
         hide: false,
-        Unsafe: true,
     });
 
     // Pagination states
@@ -77,8 +78,8 @@ const UserVideo = () => {
             artistName: '',
             videoName: '',
             videoPremium: false,
-            hide: false,
-            Unsafe: true
+            safe: false,
+            hide: false
         });
         setFormErrors({});
     };
@@ -91,8 +92,8 @@ const UserVideo = () => {
             artistName: '',
             videoName: video.VideoName,
             videoPremium: false,
-            hide: false,
-            Unsafe: true
+            safe: false,
+            hide: false
         });
         setShowModal(true);
     };
@@ -122,12 +123,12 @@ const UserVideo = () => {
         submitFormData.append('VideoName', formData.videoName);
         submitFormData.append('Video', selectedVideo.Video);
         submitFormData.append('VideoPremium', formData.videoPremium);
-        submitFormData.append('Hide', formData.hide);
+        submitFormData.append('Safe', formData.safe);
         submitFormData.append('role', selectedVideo._id);
         submitFormData.append('CategoryId', formData.categoryId);
         submitFormData.append('LanguageId', formData.languageId);
         submitFormData.append('ArtistName', formData.artistName);
-        submitFormData.append('Unsafe', 'true');
+        submitFormData.append('Hide', formData.safe);
 
         if (window.confirm("Are you sure you want to move this Video?")) {
             axios.post('https://pslink.world/api/video/create', submitFormData)
@@ -148,6 +149,19 @@ const UserVideo = () => {
         }
     };
 
+    const handleCopyToClipboard = (video) => {
+        if (video) {
+            navigator.clipboard.writeText(video)
+                .then(() => {
+                    toast.success("Video URL copied to clipboard!");
+                })
+                .catch((error) => {
+                    console.error("Failed to copy: ", error);
+                });
+        } else {
+            alert("No URL to copy!");
+        }
+    };
     // Pagination logic
     const indexOfLastItem = currentPage * itemsPerPage;
     const indexOfFirstItem = indexOfLastItem - itemsPerPage;
@@ -271,6 +285,12 @@ const UserVideo = () => {
                                         onClick={() => handleDownload(video.Video)}
                                     >
                                         <FontAwesomeIcon icon={faDownload} />
+                                    </Button>
+                                    <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(video.Video)}
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
                                     </Button>
                                     <Button
                                         className='edit-dlt-btn'
@@ -412,10 +432,10 @@ const UserVideo = () => {
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
-                                    id="Hide"
-                                    label="Hide Video Prank"
-                                    checked={formData.hide}
-                                    onChange={(e) => setFormData({ ...formData, hide: e.target.checked })}
+                                    id="Safe"
+                                    label="Safe Video Prank"
+                                    checked={formData.safe}
+                                    onChange={(e) => setFormData({ ...formData, safe: e.target.checked })}
                                 />
                             </Form.Group>
                         </div>

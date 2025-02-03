@@ -56,13 +56,43 @@ const PushNotification = () => {
         const newErrors = {};
         if (!selectedType) newErrors.type = 'Please select a notification type';
         if (!description) newErrors.description = 'Notification Description is required';
-        setErrors(newErrors);
-        return Object.keys(newErrors).length === 0;
+        return newErrors;
+    };
+
+    const handleTypeSelect = (typeId) => {
+        if (!isSubmitting) {
+            setSelectedType(typeId);
+            // Only clear the type error if it exists
+            if (errors.type) {
+                setErrors(prev => {
+                    const newErrors = { ...prev };
+                    delete newErrors.type;
+                    return newErrors;
+                });
+            }
+        }
+    };
+
+    const handleDescriptionChange = (e) => {
+        setdescription(e.target.value);
+        // Only clear the description error if it exists
+        if (errors.description) {
+            setErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors.description;
+                return newErrors;
+            });
+        }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        if (!validate()) return;
+        const validationErrors = validate();
+        
+        if (Object.keys(validationErrors).length > 0) {
+            setErrors(validationErrors);
+            return;
+        }
 
         try {
             setIsSubmitting(true);
@@ -136,23 +166,25 @@ const PushNotification = () => {
                             <div className="d-flex gap-3">
                                 {notificationTypes.map((type) => (
                                     <button
+                                        type="button"
                                         key={type.id}
-                                        onClick={() => !isSubmitting && setSelectedType(type.id)}
+                                        onClick={() => handleTypeSelect(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${
                                             selectedType === type.id ? 'bg-primary' : 'bg-light'
                                         }`}
                                         style={{
-                                            cursor: 'pointer',
+                                            cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.3s ease',
                                             border: `1px solid ${selectedType === type.id ? '' : '#dee2e6'}`
                                         }}
+                                        disabled={isSubmitting}
                                     >
                                         {type.label}
                                     </button>
                                 ))}
                             </div>
                             {errors.type && (
-                                <div className="text-danger mt-1 small">{errors.type}</div>
+                                <div className="mt-1" style={{color:"#e05866", fontSize:"12px"}}>{errors.type}</div>
                             )}
                         </Form.Group>
 
@@ -167,19 +199,20 @@ const PushNotification = () => {
                                 className="py-2"
                                 placeholder="Enter description"
                                 value={description}
-                                onChange={(e) => setdescription(e.target.value)}
+                                onChange={handleDescriptionChange}
                                 isInvalid={!!errors.description}
                                 disabled={isSubmitting}
                                 rows={3}
                             />
-                            <Form.Control.Feedback type="invalid">
-                                {errors.description}
-                            </Form.Control.Feedback>
+                            {errors.description && (
+                                <div className="mt-1" style={{color:"#e05866", fontSize:"12px"}}>{errors.description}</div>
+                            )}
                         </Form.Group>
 
                         <Row className="mt-4">
                             <Col xs={6}>
                                 <Button
+                                    type="button"
                                     variant="secondary"
                                     onClick={() => toggleModal()}
                                     disabled={isSubmitting}
@@ -237,6 +270,5 @@ const PushNotification = () => {
         </div>
     );
 };
-
 
 export default PushNotification;

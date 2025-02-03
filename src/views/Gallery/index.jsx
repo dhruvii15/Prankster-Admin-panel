@@ -216,7 +216,7 @@ const Gallery = () => {
 
     useEffect(() => {
         filterGalleryData();
-        }, [activeTab, premiumFilter, selectedCategoryFilter, data, isOn]); //safeFilter
+    }, [activeTab, premiumFilter, selectedCategoryFilter, data, isOn]); //safeFilter
 
     const handleToggle = async () => {
         if (!isSubmitting2) {
@@ -384,7 +384,8 @@ const Gallery = () => {
             LanguageId: '',
             Hide: false,
             isEditing: false,
-            Safe: false
+            Safe: false,
+            originalValues: null // To track original values
         },
         validationSchema: gallerySchema,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -392,6 +393,32 @@ const Gallery = () => {
                 setIsSubmitting(true);
                 const formData = new FormData();
 
+                // Check if any field was modified during editing
+                const isFieldModified = () => {
+                    if (!values.originalValues) return true; // For new entries
+
+                    // Compare current values with original values
+                    return (
+                        values.GalleryName !== values.originalValues.GalleryName ||
+                        values.GalleryPremium !== values.originalValues.GalleryPremium ||
+                        values.CategoryId !== values.originalValues.CategoryId ||
+                        values.LanguageId !== values.originalValues.LanguageId ||
+                        values.Safe !== values.originalValues.Safe ||
+                        (inputType === 'file' && values.GalleryImage instanceof File) ||
+                        (inputType === 'text' && imageUrlText !== values.originalValues.GalleryImage)
+                    );
+                };
+
+                // Only include Hide field if editing and fields were modified
+                if (values.isEditing) {
+                    if (isFieldModified()) {
+                        formData.append('Hide', !values.Safe);
+                    }
+                } else {
+                    formData.append('Hide', values.Safe);
+                }
+
+                // Append other form fields
                 if (inputType === 'file' && values.GalleryImage instanceof File) {
                     formData.append('GalleryImage', values.GalleryImage);
                 } else if (inputType === 'text') {
@@ -402,7 +429,6 @@ const Gallery = () => {
                 formData.append('GalleryPremium', values.GalleryPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('LanguageId', values.LanguageId);
-                formData.append('Hide', values.isEditing ? !values.Safe : values.Safe);
                 formData.append('Safe', values.Safe);
                 formData.append('inputType', inputType);
 
@@ -444,7 +470,8 @@ const Gallery = () => {
             LanguageId: gallery.LanguageId,
             Hide: gallery.Safe,
             Safe: gallery.Safe,
-            isEditing: true
+            isEditing: true,
+            originalValues: { ...gallery } // Store original values
         });
         setId(gallery._id);
         setImageFileLabel('Image Prank Image Upload');
@@ -452,7 +479,7 @@ const Gallery = () => {
     };
 
     const handleSafeToggle = (galleryId, currentSafeStatus) => {
-        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { Safe: !currentSafeStatus , Hide: currentSafeStatus })
+        axios.patch(`https://pslink.world/api/gallery/update/${galleryId}`, { Safe: !currentSafeStatus, Hide: currentSafeStatus })
             .then((res) => {
                 getData();
                 toast.success(res.data.message);
@@ -785,18 +812,20 @@ const Gallery = () => {
                             </Form.Label>
                             <div className="d-flex gap-3 mb-3">
                                 {inputTypes.map((type) => (
-                                    <button
+                                    <div
                                         key={type.id}
                                         onClick={() => !isSubmitting && setInputType(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
                                         style={{
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.3s ease',
-                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`
+                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`,
+                                            userSelect: 'none' // Prevents text selection
                                         }}
+                                        role="button"
                                     >
                                         {type.label}
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
 
@@ -812,6 +841,7 @@ const Gallery = () => {
                                             type="file"
                                             id="GalleryImage"
                                             name="GalleryImage"
+                                            accept="image/*,.png,.jpg,.jpeg,.gif,.webp"
                                             disabled={isSubmitting}
                                             onChange={handleFileChange}
                                             onBlur={formik.handleBlur}
@@ -924,9 +954,7 @@ const Gallery = () => {
                     {currentItems && currentItems.length > 0 ? (
                         currentItems.map((gallery, index) => (
                             <tr key={gallery._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td style={{
-                                    backgroundColor: gallery.Hide ? '#ffcccc' : ''
-                                }}>{indexOfFirstItem + index + 1}</td>
+                                <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{gallery.GalleryName}</td>
                                 <td>
                                     <button

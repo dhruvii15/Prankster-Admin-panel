@@ -8,6 +8,7 @@ import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons'
 
 // img
 import logo from "../../assets/images/logo.svg";
+import { faCopy } from '@fortawesome/free-regular-svg-icons';
 
 const UserAudio = () => {
     const category = [
@@ -40,8 +41,8 @@ const UserAudio = () => {
         artistName: '',
         audioName: '',
         audioPremium: false,
-        hide: false,
-        Unsafe: true
+        safe: false,
+        hide: false
     });
 
     // Pagination states
@@ -76,8 +77,8 @@ const UserAudio = () => {
             artistName: '',
             audioName: '',
             audioPremium: false,
-            hide: false,
-            Unsafe: true
+            safe: false,
+            hide: false
         });
     };
 
@@ -89,8 +90,8 @@ const UserAudio = () => {
             artistName: '',
             audioName: audio.AudioName,
             audioPremium: false,
-            hide: false,
-            Unsafe: true
+            safe: false,
+            hide: false
         });
         setShowModal(true);
     };
@@ -122,12 +123,12 @@ const UserAudio = () => {
         submitFormData.append('AudioName', formData.audioName);
         submitFormData.append('Audio', selectedAudio.Audio);
         submitFormData.append('AudioPremium', formData.audioPremium);
-        submitFormData.append('Hide', formData.hide);
+        submitFormData.append('Safe', formData.safe);
         submitFormData.append('role', selectedAudio._id);
         submitFormData.append('CategoryId', formData.categoryId);
         submitFormData.append('LanguageId', formData.languageId);
         submitFormData.append('ArtistName', formData.artistName);
-        submitFormData.append('Unsafe', 'true');
+        submitFormData.append('Hide', formData.safe);
 
         if (window.confirm("Are you sure you want to move this Audio?")) {
             axios.post('https://pslink.world/api/audio/create', submitFormData)
@@ -145,6 +146,20 @@ const UserAudio = () => {
                 });
         } else {
             setFormLoading(false);
+        }
+    };
+
+    const handleCopyToClipboard = (audio) => {
+        if (audio) {
+            navigator.clipboard.writeText(audio)
+                .then(() => {
+                    toast.success("Audio URL copied to clipboard!");
+                })
+                .catch((error) => {
+                    console.error("Failed to copy: ", error);
+                });
+        } else {
+            alert("No URL to copy!");
         }
     };
 
@@ -271,6 +286,12 @@ const UserAudio = () => {
                                         onClick={() => handleDownload(audio.Audio)} // Pass your image URL here
                                     >
                                         <FontAwesomeIcon icon={faDownload} />
+                                    </Button>
+                                    <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(audio.Audio)}
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
                                     </Button>
                                     <Button
                                         className='edit-dlt-btn'
@@ -412,10 +433,10 @@ const UserAudio = () => {
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
-                                    id="Hide"
-                                    label="Hide Audio Prank"
-                                    checked={formData.hide}
-                                    onChange={(e) => setFormData({ ...formData, hide: e.target.checked })}
+                                    id="Safe"
+                                    label="Safe Audio Prank"
+                                    checked={formData.safe}
+                                    onChange={(e) => setFormData({ ...formData, safe: e.target.checked })}
                                 />
                             </Form.Group>
                         </div>

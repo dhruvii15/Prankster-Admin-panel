@@ -9,6 +9,7 @@ import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons'
 // img
 import logo from "../../assets/images/logo.svg";
 import ImagePreviewModal from 'components/ImagePreviewModal';
+import { faCopy } from '@fortawesome/free-regular-svg-icons';
 
 const UserGallery = () => {
     const category = [
@@ -40,8 +41,8 @@ const UserGallery = () => {
         languageId: '',
         galleryName: '',
         galleryPremium: false,
-        hide: false,
-        Unsafe: true
+        safe: false,
+        hide: false
     });
     const [showPreview, setShowPreview] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
@@ -82,8 +83,8 @@ const UserGallery = () => {
             languageId: '',
             galleryName: '',
             galleryPremium: false,
-            hide: false,
-            Unsafe: true
+            safe: false,
+            hide: false
         });
         setFormErrors({});
     };
@@ -95,8 +96,8 @@ const UserGallery = () => {
             languageId: '',
             galleryName: gallery.GalleryName,
             galleryPremium: false,
-            hide: false,
-            Unsafe: true
+            safe: false,
+            hide: false
         });
         setShowModal(true);
     };
@@ -126,9 +127,9 @@ const UserGallery = () => {
         submitFormData.append('GalleryName', formData.galleryName);
         submitFormData.append('GalleryImage', selectedGallery.GalleryImage);
         submitFormData.append('GalleryPremium', formData.galleryPremium);
-        submitFormData.append('Hide', formData.hide);
+        submitFormData.append('Safe', formData.safe);
         submitFormData.append('role', selectedGallery._id);
-        submitFormData.append('Unsafe', 'true');
+        submitFormData.append('Hide', formData.safe);
         submitFormData.append('CategoryId', formData.categoryId);
         submitFormData.append('LanguageId', formData.languageId);
 
@@ -149,6 +150,20 @@ const UserGallery = () => {
                 });
         } else {
             setFormLoading(false);
+        }
+    };
+
+    const handleCopyToClipboard = (gallery) => {
+        if (gallery) {
+            navigator.clipboard.writeText(gallery)
+                .then(() => {
+                    toast.success("Image URL copied to clipboard!");
+                })
+                .catch((error) => {
+                    console.error("Failed to copy: ", error);
+                });
+        } else {
+            alert("No URL to copy!");
         }
     };
 
@@ -285,6 +300,12 @@ const UserGallery = () => {
                                         <FontAwesomeIcon icon={faDownload} />
                                     </Button>
                                     <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(gallery.GalleryImage)}
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
+                                    </Button>
+                                    <Button
                                         className='edit-dlt-btn'
                                         style={{ color: "#0385C3" }}
                                         onClick={() => handleModalShow(gallery)}
@@ -413,10 +434,10 @@ const UserGallery = () => {
                             <Form.Group className="mb-3">
                                 <Form.Check
                                     type="checkbox"
-                                    id="Hide"
-                                    label="Hide Gallery Prank"
-                                    checked={formData.hide}
-                                    onChange={(e) => setFormData({ ...formData, hide: e.target.checked })}
+                                    id="Safe"
+                                    label="Safe Gallery Prank"
+                                    checked={formData.safe}
+                                    onChange={(e) => setFormData({ ...formData, safe: e.target.checked })}
                                 />
                             </Form.Group>
                         </div>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
@@ -48,6 +48,9 @@ const CoverURL = () => {
         { id: 'text', label: 'URL' }
     ];
 
+    const handleClearSearch = () => {
+        setSearchTerm('');
+    };
 
     const renderPaginationItems = () => {
         const totalPages = Math.ceil(filterData(data).length / itemsPerPage);
@@ -614,20 +617,6 @@ const CoverURL = () => {
                     Add CoverImage
                 </Button>
                 <div className='d-flex gap-3'>
-                    {/* <div className='d-flex flex-wrap align-items-center'>
-                        <span className='mb-0 fw-bold fs-6 pe-2'>Safe :</span>
-                        <Form.Select
-                            value={safetyFilter}
-                            onChange={(e) => setSafetyFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='my-3 bg-white'
-                        >
-                            <option value="">All</option>
-                            <option value="Safe">Safe</option>
-                            <option value="Unsafe">Unsafe</option>
-                        </Form.Select>
-                    </div> */}
-
                     <div className="search-bar-container my-3">
                         <input
                             type="text"
@@ -636,9 +625,15 @@ const CoverURL = () => {
                             value={searchTerm}
                             onChange={handleSearch}
                         />
-                        <button className="search-button">
-                            <span role="img" aria-label="search-icon">
-                                <FontAwesomeIcon icon={faMagnifyingGlass} />
+                        <button 
+                            className="search-button"
+                            onClick={searchTerm ? handleClearSearch : undefined}
+                            style={{ cursor: searchTerm ? 'pointer' : 'default' }}
+                        >
+                            <span role="img" aria-label={searchTerm ? "clear-search" : "search-icon"}>
+                                <FontAwesomeIcon 
+                                    icon={searchTerm ? faTimes : faMagnifyingGlass}
+                                />
                             </span>
                         </button>
                     </div>
@@ -677,9 +672,7 @@ const CoverURL = () => {
                     {currentItems && currentItems.length > 0 ? (
                         currentItems.map((cover, index) => (
                             <tr key={cover._id}>
-                                <td style={{
-                                    backgroundColor: cover.Hide ? '#ffcccc' : ''
-                                }}>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                 <td>{cover.CoverName || 'No Name'}</td>
                                 <td>
                                     <button
@@ -846,19 +839,20 @@ const CoverURL = () => {
                             </Form.Label>
                             <div className="d-flex gap-3 mb-3">
                                 {inputTypes.map((type) => (
-                                    <button
+                                    <div
                                         key={type.id}
                                         onClick={() => !isSubmitting && setInputType(type.id)}
-                                        className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'
-                                            }`}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
                                         style={{
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.3s ease',
-                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`
+                                            border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`,
+                                            userSelect: 'none' // Prevents text selection
                                         }}
+                                        role="button"
                                     >
                                         {type.label}
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
 

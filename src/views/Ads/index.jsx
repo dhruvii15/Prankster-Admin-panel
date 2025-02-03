@@ -255,18 +255,19 @@ const Ads = () => {
                             </Form.Label>
                             <div className="d-flex gap-3">
                                 {platformTypes.map((type) => (
-                                    <button
+                                    <div
                                         key={type.id}
                                         onClick={() => !isSubmitting && setPlatform(type.id)}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${platform === type.id ? 'bg-primary' : 'bg-light'}`}
                                         style={{
-                                            cursor: 'pointer',
+                                            cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.3s ease',
-                                            border: `1px solid ${platform === type.id ? '' : '#dee2e6'}`
+                                            border: `1px solid ${platform === type.id ? '' : '#dee2e6'}`,
+                                            userSelect: 'none'
                                         }}
                                     >
                                         {type.label}
-                                    </button>
+                                    </div>
                                 ))}
                             </div>
                             {errors.platform && (
