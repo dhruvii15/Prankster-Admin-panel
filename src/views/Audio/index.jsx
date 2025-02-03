@@ -313,6 +313,9 @@ const Audio = () => {
             Safe: false
         },
         validationSchema: audioSchema,
+        validateOnMount: false, // Disable validation on mount
+        validateOnBlur: false,  // Disable validation on blur
+        validateOnChange: false,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 setIsSubmitting(true);
@@ -595,13 +598,19 @@ const Audio = () => {
                             key={type.id}
                             onClick={() => !isSubmitting && setInputType(type.id)}
                             className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    !isSubmitting && setInputType(type.id);
+                                }
+                            }}
+                            role="button"
+                            tabIndex={0}
                             style={{
                                 cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                 transition: 'all 0.3s ease',
                                 border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`,
                                 userSelect: 'none' // Prevents text selection
                             }}
-                            role="button"
                         >
                             {type.label}
                         </div>

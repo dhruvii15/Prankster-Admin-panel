@@ -291,6 +291,9 @@ const Video = () => {
             Safe: false
         },
         validationSchema: videoSchema,
+        validateOnMount: false, // Disable validation on mount
+        validateOnBlur: false,  // Disable validation on blur
+        validateOnChange: false,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 setIsSubmitting(true);
@@ -702,6 +705,13 @@ const Video = () => {
                                     <div
                                         key={type.id}
                                         onClick={() => !isSubmitting && setInputType(type.id)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                !isSubmitting && setInputType(type.id);
+                                            }
+                                        }}
+                                        role="button"
+                                        tabIndex={0}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
                                         style={{
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
@@ -709,7 +719,6 @@ const Video = () => {
                                             border: `1px solid ${inputType === type.id ? '' : '#dee2e6'}`,
                                             userSelect: 'none' // Prevents text selection
                                         }}
-                                        role="button"
                                     >
                                         {type.label}
                                     </div>

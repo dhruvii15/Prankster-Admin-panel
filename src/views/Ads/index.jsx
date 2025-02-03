@@ -258,6 +258,13 @@ const Ads = () => {
                                     <div
                                         key={type.id}
                                         onClick={() => !isSubmitting && setPlatform(type.id)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                !isSubmitting && setPlatform(type.id);
+                                            }
+                                        }}
+                                        role="button"
+                                        tabIndex={0}
                                         className={`cursor-pointer px-3 py-1 rounded-3 ${platform === type.id ? 'bg-primary' : 'bg-light'}`}
                                         style={{
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
@@ -268,6 +275,7 @@ const Ads = () => {
                                     >
                                         {type.label}
                                     </div>
+
                                 ))}
                             </div>
                             {errors.platform && (

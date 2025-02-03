@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Table } from 'react-bootstrap';
+import { Row, Col, Card } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFileAudio, faPhotoFilm, faVideo } from '@fortawesome/free-solid-svg-icons';
 import { faImage } from '@fortawesome/free-regular-svg-icons';
