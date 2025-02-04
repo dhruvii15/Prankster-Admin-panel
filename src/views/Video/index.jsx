@@ -58,6 +58,13 @@ const Video = () => {
         { id: 'text', label: 'URL' }
     ];
 
+    const isValidVideoUrl = (url) => {
+        if (!url) return false;
+
+        // Basic URL validation for video files
+        const videoRegex = /^https?:\/\/.*\.(mp4|mkv|avi|mov|wmv)$/i;
+        return videoRegex.test(url);
+    };
 
     const getCategoryName = (categoryId) => {
         const cat = category.find(c => c.CategoryId === parseInt(categoryId));
@@ -118,7 +125,8 @@ const Video = () => {
                 setVideoFileLabel('Video Prank File Upload');
                 setSelectedVideoFileName('');
                 setCurrentVideoFileName('');
-                setVideoUrlText(''); // Reset Video URL text when opening modal
+                setVideoUrlText(''); // Reset Video URL text
+                setInputType('file'); // Reset input type to file
                 const fileInput = document.getElementById('Video');
                 if (fileInput) {
                     fileInput.value = '';
@@ -130,7 +138,8 @@ const Video = () => {
             setVideoFileLabel('Video Prank File Upload');
             setSelectedVideoFileName('');
             setCurrentVideoFileName('');
-            setVideoUrlText(''); // Reset Video URL text when closing modal
+            setVideoUrlText(''); // Reset Video URL text
+            setInputType('file'); // Reset input type to file
             const fileInput = document.getElementById('Video');
             if (fileInput) {
                 fileInput.value = '';
@@ -255,10 +264,12 @@ const Video = () => {
                 return value instanceof File;
             })
             .test(
-                'fileValidation',
-                'Only video files are allowed (e.g., .mp4, .mkv, .avi)',
+                'validateInput',
+                'Please provide a valid video file or URL',
                 function (value) {
-                    if (inputType === 'text') return true;
+                    if (inputType === 'text') {
+                        return isValidVideoUrl(videoUrlText);
+                    }
                     if (value instanceof File) {
                         const allowedExtensions = [
                             'video/mp4',
@@ -292,8 +303,8 @@ const Video = () => {
         },
         validationSchema: videoSchema,
         validateOnMount: false, // Disable validation on mount
-        validateOnBlur: false,  // Disable validation on blur
-        validateOnChange: false,
+        validateOnBlur: true,  // Disable validation on blur
+        validateOnChange: true,
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 setIsSubmitting(true);
@@ -356,7 +367,7 @@ const Video = () => {
         formik.setValues({
             VideoName: video.VideoName,
             ArtistName: video.ArtistName,
-            Video: video.Video,
+            Video: '',
             VideoPremium: video.VideoPremium,
             CategoryId: video.CategoryId,
             LanguageId: video.LanguageId,
@@ -772,9 +783,15 @@ const Video = () => {
                                     </Form.Label>
                                     <Form.Control
                                         type="text"
-                                        placeholder="Enter video URL"
+                                        placeholder="Enter video URL (must end with .mp4, .mkv, .avi, etc.)"
                                         value={videoUrlText}
-                                        onChange={(e) => setVideoUrlText(e.target.value)}
+                                        onChange={(e) => {
+                                            setVideoUrlText(e.target.value);
+                                            // Trigger validation immediately
+                                            formik.setFieldTouched('Video', true, false);
+                                            formik.validateForm();
+                                        }}
+                                        isInvalid={formik.touched.Video && formik.errors.Video && inputType === 'text'}
                                         disabled={isSubmitting}
                                     />
                                 </Form.Group>

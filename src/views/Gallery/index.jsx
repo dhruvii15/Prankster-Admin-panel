@@ -60,6 +60,12 @@ const Gallery = () => {
         { id: 'text', label: 'URL' }
     ];
 
+    const isValidImageUrl = (url) => {
+        // Basic URL validation
+        const urlPattern = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i;
+        return urlPattern.test(url);
+    };
+
 
     const getCategoryName = (categoryId) => {
         const cat = category.find(c => c.CategoryId === parseInt(categoryId));
@@ -340,17 +346,23 @@ const Gallery = () => {
         GalleryName: Yup.string().required('Image Prank Name is required'),
         GalleryImage: Yup.mixed()
             .test('fileOrText', 'Either file upload or URL is required', function (value) {
-                if (formik.values.isEditing && !value && formik.initialValues.GalleryImage) return true;
+                if (this.parent.isEditing && !value && this.parent.originalValues?.GalleryImage) return true;
                 if (inputType === 'text') return !!imageUrlText;
                 return value instanceof File;
             })
+            .test('validImageUrl', 'Invalid image URL format.', function () {
+                if (inputType === 'text' && imageUrlText) {
+                    return isValidImageUrl(imageUrlText);
+                }
+                return true;
+            })
             .test(
                 'fileType',
-                'Only image files are allowed (jpg, png, gif)',
+                'Only image files are allowed (jpg, png, gif, webp)',
                 function (value) {
                     if (inputType === 'text') return true;
                     if (value instanceof File) {
-                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif', 'image/webp'];
                         return allowedExtensions.includes(value.type);
                     }
                     return true;
@@ -389,8 +401,23 @@ const Gallery = () => {
         },
         validationSchema: gallerySchema,
         validateOnMount: false, // Disable validation on mount
-        validateOnBlur: false,  // Disable validation on blur
-        validateOnChange: false,
+        validateOnBlur: true,  // Disable validation on blur
+        validateOnChange: true,
+
+        validate: () => {
+            const errors = {};
+
+            if (inputType === 'text' && imageUrlText && !isValidImageUrl(imageUrlText)) {
+                errors.GalleryImage = 'Invalid image URL format . (ending with .jpg, .jpeg, or .png)';
+            }
+
+            return errors;
+        },
+        onChange: () => {
+            // Clear errors when fields are changed
+            formik.setErrors({});
+        },
+
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 setIsSubmitting(true);
@@ -467,7 +494,7 @@ const Gallery = () => {
 
         formik.setValues({
             GalleryName: gallery.GalleryName,
-            GalleryImage: gallery.GalleryImage,
+            GalleryImage: '',
             GalleryPremium: gallery.GalleryPremium,
             CategoryId: gallery.CategoryId,
             LanguageId: gallery.LanguageId,
@@ -878,9 +905,20 @@ const Gallery = () => {
                                         placeholder="Enter image URL"
                                         value={imageUrlText}
                                         onChange={(e) => {
-                                            setImageUrlText(e.target.value);
-                                            formik.setFieldValue('GalleryImage', e.target.value);
+                                            const newValue = e.target.value;
+                                            setImageUrlText(newValue);
+                                            formik.setFieldValue('GalleryImage', newValue);
+                                            // Clear error when user starts typing
+                                            if (formik.errors.GalleryImage) {
+                                                formik.setFieldError('GalleryImage', '');
+                                            }
                                         }}
+                                        onBlur={() => {
+                                            if (imageUrlText && !isValidImageUrl(imageUrlText)) {
+                                                formik.setFieldError('GalleryImage', 'Invalid image URL format.');
+                                            }
+                                        }}
+                                        isInvalid={!!formik.errors.GalleryImage}
                                         disabled={isSubmitting}
                                     />
                                 </Form.Group>

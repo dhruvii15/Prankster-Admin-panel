@@ -40,7 +40,7 @@ const CoverURL = () => {
     // const [safetyFilter, setSafetyFilter] = useState("");
     const [premiumFilter, setPremiumFilter] = useState("");
     const [searchTerm, setSearchTerm] = useState('');
-    
+
     console.log(previewUrl);
 
     const inputTypes = [
@@ -317,6 +317,14 @@ const CoverURL = () => {
                 if (inputType === 'text') return !!coverUrlText;
                 return value instanceof File;
             })
+            .test('urlFormat', 'Invalid URL format . (ending with .jpg, .jpeg, or .png)', function () {
+                if (inputType === 'text') {
+                    // URL validation regex
+                    const urlPattern = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i;
+                    return urlPattern.test(coverUrlText);
+                }
+                return true;
+            })
             .test(
                 'fileType',
                 'Only image files are allowed (jpg, png, gif)',
@@ -356,9 +364,9 @@ const CoverURL = () => {
             isEditing: false,
         },
         validationSchema: coverSchema,
-        validateOnMount: false, // Disable validation on mount
-        validateOnBlur: false,  // Disable validation on blur
-        validateOnChange: false,
+        validateOnMount: false,
+        validateOnBlur: true,  // Enable validation on blur
+        validateOnChange: true, // Enable validation on change
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 setIsSubmitting(true);
@@ -422,6 +430,12 @@ const CoverURL = () => {
             }
         },
     });
+
+    const handleUrlChange = (e) => {
+        setCoverUrlText(e.target.value);
+        // Trigger validation when URL changes
+        formik.setFieldValue('CoverURL', e.target.value);
+    };
 
     const handleDelete = (coverId) => {
         if (window.confirm("Are you sure you want to delete this Cover Image?")) {
@@ -628,13 +642,13 @@ const CoverURL = () => {
                             value={searchTerm}
                             onChange={handleSearch}
                         />
-                        <button 
+                        <button
                             className="search-button"
                             onClick={searchTerm ? handleClearSearch : undefined}
                             style={{ cursor: searchTerm ? 'pointer' : 'default' }}
                         >
                             <span role="img" aria-label={searchTerm ? "clear-search" : "search-icon"}>
-                                <FontAwesomeIcon 
+                                <FontAwesomeIcon
                                     icon={searchTerm ? faTimes : faMagnifyingGlass}
                                 />
                             </span>
@@ -913,7 +927,9 @@ const CoverURL = () => {
                                         type="text"
                                         placeholder="Enter image URL"
                                         value={coverUrlText}
-                                        onChange={(e) => setCoverUrlText(e.target.value)}
+                                        onChange={handleUrlChange}
+                                        onBlur={formik.handleBlur}
+                                        isInvalid={formik.touched.CoverURL && !!formik.errors.CoverURL}
                                         disabled={isSubmitting}
                                     />
                                 </Form.Group>

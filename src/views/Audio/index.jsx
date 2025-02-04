@@ -111,22 +111,35 @@ const Audio = () => {
         }
     };
 
+    // Update the toggleModal function
     const toggleModal = (mode) => {
         if (!visible) {
             if (mode === 'add') {
                 setId(undefined);
                 setSelectedImageFileName('');
                 setSelectedAudioFileName('');
-                setImageUrlText(''); // Reset image URL text
-                setAudioUrlText(''); // Reset audio URL text
+                setImageUrlText('');
+                setAudioUrlText('');
+                setImageInputType('file');  // Reset input type to default
+                setAudioInputType('file');  // Reset input type to default
                 formik.resetForm();
+                formik.setTouched({});
+                Object.keys(formik.errors).forEach(key => {
+                    formik.setFieldError(key, undefined);
+                });
             }
         } else {
             formik.resetForm();
             setSelectedImageFileName('');
             setSelectedAudioFileName('');
-            setImageUrlText(''); // Reset image URL text
-            setAudioUrlText(''); // Reset audio URL text
+            setImageUrlText('');
+            setAudioUrlText('');
+            setImageInputType('file');  // Reset input type to default
+            setAudioInputType('file');  // Reset input type to default
+            formik.setTouched({});
+            Object.keys(formik.errors).forEach(key => {
+                formik.setFieldError(key, undefined);
+            });
         }
         setVisible(!visible);
     };
@@ -255,41 +268,47 @@ const Audio = () => {
         AudioName: Yup.string().required('Audio Prank Name is required'),
         Audio: Yup.mixed()
             .test('fileOrText', 'Either file upload or URL is required', function (value) {
-                if (formik.values.isEditing && !value) return true;
+                if (this.parent.isEditing && !value) return true;
                 if (audioInputType === 'text') return !!audioUrlText;
                 return value instanceof File;
             })
-            .test(
-                'fileType',
-                'Only audio files are allowed (mp3, wav)',
-                function (value) {
-                    if (audioInputType === 'text') return true;
-                    if (value instanceof File) {
-                        const allowedExtensions = ['audio/mpeg', 'audio/wav'];
-                        return allowedExtensions.includes(value.type);
-                    }
-                    return true;
+            .test('fileType', 'Invalid URL format . (ending with .mp3, .wav)', function (value) {
+                if (audioInputType === 'text') {
+                    const url = audioUrlText;
+                    if (!url) return true;
+                    const validAudioExtensions = ['.mp3', '.wav'];
+                    return validAudioExtensions.some(ext => url.toLowerCase().endsWith(ext));
                 }
-            ),
+                if (value instanceof File) {
+                    const allowedTypes = ['audio/mpeg', 'audio/wav'];
+                    return allowedTypes.includes(value.type);
+                }
+                return true;
+            }),
         AudioImage: Yup.mixed()
-            .test('fileOrText', 'Either file upload or URL is required', function (value) {
-                if (formik.values.isEditing && !value) return true;
-                if (imageInputType === 'text') return !!imageUrlText;
-                if (!value) return true; // Optional field
-                return value instanceof File;
-            })
-            .test(
-                'fileType',
-                'Only image files are allowed (jpg, png)',
-                function (value) {
-                    if (imageInputType === 'text') return true;
-                    if (value instanceof File) {
-                        const allowedExtensions = ['image/jpeg', 'image/png', 'image/jpg'];
-                        return allowedExtensions.includes(value.type);
-                    }
-                    return true;
+            .test('fileOrText', 'Invalid URL format . (ending with .jpg, .jpeg, or .png)', function (value) {
+                // If no image file or URL is provided, validation passes
+                if (!value && !imageUrlText) return true;
+                
+                // If in text mode, check if URL is provided
+                if (imageInputType === 'text') {
+                    // If URL is empty, validation passes (optional field)
+                    if (!imageUrlText) return true;
+                    // If URL is provided, validate extension
+                    const validImageExtensions = ['.jpg', '.jpeg', '.png'];
+                    return validImageExtensions.some(ext => 
+                        imageUrlText.toLowerCase().endsWith(ext)
+                    );
                 }
-            ),
+                
+                // If in file mode, validate file type if a file is provided
+                if (value instanceof File) {
+                    const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+                    return allowedTypes.includes(value.type);
+                }
+                
+                return true;
+            }),
         AudioPremium: Yup.boolean(),
         CategoryId: Yup.string().required('Prank Category Name is required'),
         LanguageId: Yup.string().required('Prank Language is required'),
@@ -313,9 +332,9 @@ const Audio = () => {
             Safe: false
         },
         validationSchema: audioSchema,
-        validateOnMount: false, // Disable validation on mount
-        validateOnBlur: false,  // Disable validation on blur
-        validateOnChange: false,
+        validateOnMount: false,
+        validateOnBlur: true,  // Enable validation on blur
+        validateOnChange: true, // Enable validation on change
         onSubmit: async (values, { setSubmitting, resetForm }) => {
             try {
                 setIsSubmitting(true);
@@ -600,7 +619,7 @@ const Audio = () => {
                             className={`cursor-pointer px-3 py-1 rounded-3 ${inputType === type.id ? 'bg-primary' : 'bg-light'}`}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter' || e.key === ' ') {
-                                    !isSubmitting && setInputType(type.id);
+                                    !isSubmitting && setPlatform(type.id);
                                 }
                             }}
                             role="button"
