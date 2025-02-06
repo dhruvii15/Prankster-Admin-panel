@@ -336,3 +336,10 @@ File: style.css
   .search-button span {
     color: #555;
   }
+
+  @media (min-width:1080px) {
+    .w-25-cal{
+        width: 35%;
+    }
+    
+}

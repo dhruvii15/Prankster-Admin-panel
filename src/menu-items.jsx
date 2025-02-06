@@ -1,3 +1,4 @@
+import { faAndroid, faAppStoreIos, faJs } from "@fortawesome/free-brands-svg-icons";
 import { faImage } from "@fortawesome/free-regular-svg-icons";
 import {faBell, faFileAudio, faHome, faLayerGroup, faPhotoFilm, faRectangleAd, faVideo} from "@fortawesome/free-solid-svg-icons";
 
@@ -111,6 +112,35 @@ const menuItems = {
           url: '/user/image',
           icon: faPhotoFilm
         },
+      ]
+    },
+    {
+      id: 'after-app-analytics',
+      title: 'After-App-Analytics',
+      type: 'group',
+      icon: 'icon-ui',
+      children: [
+        {
+          id: 'android',
+          title: 'Android',
+          type: 'item',
+          url: '/android',
+          icon: faAndroid
+        },
+        {
+          id: 'ios',
+          title: 'IOS',
+          type: 'item',
+          url: '/ios',
+          icon: faAppStoreIos
+        },
+        {
+          id: 'web',
+          title: 'Web',
+          type: 'item',
+          url: '/web',
+          icon: faJs
+        }
       ]
     },
     {

@@ -17,6 +17,7 @@ const Ads = () => {
     const [adsName, setAdsName] = useState('');
     const [adsId, setAdsId] = useState('');
     const [platform, setPlatform] = useState('');
+    const [platformFilter, setPlatformFilter] = useState(''); // Add platform filter state
     const [errors, setErrors] = useState({});
     const [isOn, setIsOn] = useState(false);
     const [adminId, setAdminId] = useState(null);
@@ -187,6 +188,8 @@ const Ads = () => {
                 <div>
                     <h4>Ads</h4>
                 </div>
+
+
                 <Form className='pe-5 d-flex align-items-center gap-3'>
                     <span>Ads Status : </span>
                     <Form.Check
@@ -202,14 +205,30 @@ const Ads = () => {
                 </Form>
             </div>
 
-            <Button
-                onClick={() => toggleModal('add')}
-                className='my-4 rounded-3 border-0'
-                style={{ backgroundColor: "#F9E238" }}
-                disabled={isSubmitting}
-            >
-                Add New Ad
-            </Button>
+            <div className='d-flex align-items-center gap-4 justify-content-between pt-4'>
+                <Button
+                    onClick={() => toggleModal('add')}
+                    className='my-4 rounded-3 border-0'
+                    style={{ backgroundColor: "#F9E238" }}
+                    disabled={isSubmitting}
+                >
+                    Add New Ad
+                </Button>
+
+                <div className='d-flex gap-2 align-items-center'>
+                    <span className='mb-0 fw-bold fs-6'>Platform :</span>
+                    <Form.Select
+                        value={platformFilter}
+                        onChange={(e) => setPlatformFilter(e.target.value)}
+                        style={{ width: 'auto' }}
+                        className='bg-white fs-6'
+                    >
+                        <option value="">All</option>
+                        <option value="ios">iOS</option>
+                        <option value="android">Android</option>
+                    </Form.Select>
+                </div>
+            </div>
 
             <Modal
                 show={visible}
@@ -337,31 +356,33 @@ const Ads = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((ads, index) => (
-                        <tr key={ads._id} className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}>
-                            <td>{index + 1}</td>
-                            <td>{ads.AdsName}</td>
-                            <td>{ads.Platform}</td>
-                            <td>{ads.AdsId}</td>
-                            <td>
-                                <Button
-                                    className='edit-dlt-btn'
-                                    style={{ color: "#0385C3" }}
-                                    onClick={() => handleEdit(ads)}
-                                    disabled={isSubmitting}
-                                >
-                                    <FontAwesomeIcon icon={faEdit} />
-                                </Button>
-                                <Button
-                                    className='edit-dlt-btn text-danger'
-                                    onClick={() => handleDelete(ads._id)}
-                                    disabled={isSubmitting}
-                                >
-                                    <FontAwesomeIcon icon={faTrash} />
-                                </Button>
-                            </td>
-                        </tr>
-                    ))}
+                    {data
+                        .filter(ads => !platformFilter || ads.Platform === platformFilter)
+                        .map((ads, index) => (
+                            <tr key={ads._id} className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}>
+                                <td>{index + 1}</td>
+                                <td>{ads.AdsName}</td>
+                                <td>{ads.Platform}</td>
+                                <td>{ads.AdsId}</td>
+                                <td>
+                                    <Button
+                                        className='edit-dlt-btn'
+                                        style={{ color: "#0385C3" }}
+                                        onClick={() => handleEdit(ads)}
+                                        disabled={isSubmitting}
+                                    >
+                                        <FontAwesomeIcon icon={faEdit} />
+                                    </Button>
+                                    <Button
+                                        className='edit-dlt-btn text-danger'
+                                        onClick={() => handleDelete(ads._id)}
+                                        disabled={isSubmitting}
+                                    >
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
                 </tbody>
             </Table>
 

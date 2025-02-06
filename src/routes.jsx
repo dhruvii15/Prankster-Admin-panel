@@ -21,6 +21,9 @@ import UserVideo from 'views/UserVideo';
 import UserCover from 'views/UserCover';
 import Notification from 'views/Notification';
 import PushNotification from 'views/Push-Notification';
+import Web from 'views/Analytics/Web';
+import Android from 'views/Analytics/Android';
+import Ios from 'views/Analytics/Ios';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -125,6 +128,21 @@ export const routes = [
         exact: true,
         path: '/push-notification',
         element: () => <AdminProtect><PushNotification /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/web',
+        element: () => <AdminProtect><Web /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/android',
+        element: () => <AdminProtect><Android /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/ios',
+        element: () => <AdminProtect><Ios /></AdminProtect>
       },
       {
         path: '*',
