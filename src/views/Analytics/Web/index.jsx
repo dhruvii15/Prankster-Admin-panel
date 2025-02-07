@@ -18,6 +18,13 @@ const WebDashboard = () => {
     const [trendingFilter, setTrendingFilter] = useState('');
     const [typeFilter, setTypeFilter] = useState('');
 
+    // Reset filters function
+    const resetFilters = () => {
+        setTrendingFilter('');
+        setTypeFilter('');
+        setCurrentPage(1);
+    };
+
     useEffect(() => {
         if (data?.data) {
             let filtered = [...data.data];
@@ -51,6 +58,8 @@ const WebDashboard = () => {
             setData(result);
             setFilteredData(result.data || []);
             setShowDateModal(false);
+            // Reset filters when new data is fetched
+            resetFilters();
         } catch (error) {
             console.error('Error fetching data:', error);
             toast.error("Failed to fetch data");
@@ -245,21 +254,21 @@ const WebDashboard = () => {
                             <div className="d-flex flex-column gap-2 mb-4 border-end px-3">
                                 {['today', 'yesterday', 'thisWeek', 'lastWeek', 'thisYear', 'lastYear', 'custom'].map((preset) => (
                                     <Button
-                                    key={preset}
-                                    variant="light"
-                                    onClick={() => handlePresetClick(preset)}
-                                    className="text-start"
-                                    disabled={isLoading}
-                                    style={{
-                                        background: selectedPreset === preset ? '#F9E238' : 'transparent',
-                                        transition: 'all 0.3s ease',
-                                        border: 'none', // Border remove karva mate
-                                        outline: 'none', // Focus effect remove karva mate
-                                        boxShadow: 'none' // Extra shadow remove karva mate
-                                    }}
-                                >
-                                    {preset.charAt(0).toUpperCase() + preset.slice(1).replace(/([A-Z])/g, ' $1')}
-                                </Button>
+                                        key={preset}
+                                        variant="light"
+                                        onClick={() => handlePresetClick(preset)}
+                                        className="text-start"
+                                        disabled={isLoading}
+                                        style={{
+                                            background: selectedPreset === preset ? '#F9E238' : 'transparent',
+                                            transition: 'all 0.3s ease',
+                                            border: 'none', // Border remove karva mate
+                                            outline: 'none', // Focus effect remove karva mate
+                                            boxShadow: 'none' // Extra shadow remove karva mate
+                                        }}
+                                    >
+                                        {preset.charAt(0).toUpperCase() + preset.slice(1).replace(/([A-Z])/g, ' $1')}
+                                    </Button>
 
                                 ))}
                             </div>
@@ -290,7 +299,7 @@ const WebDashboard = () => {
                             </div>
                         </Col>
                     </Row>
-                    
+
                     <Row className="mt-4 w-25-cal ms-auto">
                         <Col xs={6}>
                             <Button
@@ -360,11 +369,25 @@ const WebDashboard = () => {
                             currentItems.map((item, index) => (
                                 <tr key={item._id}>
                                     <td className="text-center">{indexOfFirstItem + index + 1}</td>
-                                    <td>
-                                        <a href={item.url} target="_blank" rel="noopener noreferrer" className="text-decoration-none text-black">
+                                    <td style={{
+                                        minWidth: "150px", // Prevents shrinking on small screens
+                                        width: "150px",    // Keeps it fixed on larger screens
+                                        maxWidth: "150px", // Ensures it doesn't grow beyond 150px
+                                        wordBreak: "break-word",
+                                        overflowWrap: "break-word",
+                                        whiteSpace: "normal"
+                                    }}>
+                                        <a
+                                            href={item.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-decoration-none text-black"
+                                            style={{ display: "block", wordBreak: "break-word" }}
+                                        >
                                             {item.url}
                                         </a>
                                     </td>
+
                                     <td className="text-center">
                                         <FontAwesomeIcon
                                             icon={item.Trending ? faArrowTrendUp : faArrowTrendDown}
@@ -382,7 +405,7 @@ const WebDashboard = () => {
                                         />
                                     </td><td className="text-center">
                                         {item.Type === "video" ? (
-                                            <video controls width="240">
+                                            <video controls width="100" height="100">
                                                 <source src={item.File} type="video/mp4" />
                                                 <track
                                                     kind="captions"
@@ -409,7 +432,7 @@ const WebDashboard = () => {
                                             <img
                                                 src={item.File}
                                                 alt="File"
-                                                style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+                                                style={{ width: '100px', height: '100px', objectFit: 'cover' }}
                                             />
                                         )}
                                     </td>
@@ -424,12 +447,12 @@ const WebDashboard = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-                            <div className='d-flex justify-content-center'>
-                                <Pagination>
-                                    {renderPaginationItems()}
-                                </Pagination>
-                            </div>
-                        )}
+                <div className='d-flex justify-content-center'>
+                    <Pagination>
+                        {renderPaginationItems()}
+                    </Pagination>
+                </div>
+            )}
 
             <ToastContainer
                 position="top-right"
