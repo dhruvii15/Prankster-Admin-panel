@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Row, Col, Spinner } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Row, Col, Spinner, Pagination } from 'react-bootstrap';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -18,8 +18,8 @@ const PushNotification = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     const notificationTypes = [
-        { id: 'Prankster😆', label: 'English' },
-        { id: 'प्रेंकस्टर😆', label: 'Hindi' }
+        { id: 'Prankster', label: 'English' },
+        { id: 'प्रेंकस्टर', label: 'Hindi' }
     ];
 
     const toggleModal = (mode) => {
@@ -88,7 +88,7 @@ const PushNotification = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
-        
+
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
@@ -112,6 +112,43 @@ const PushNotification = () => {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    // Pagination logic
+    const itemsPerPage = 15;
+    const [currentPage, setCurrentPage] = useState(1);
+
+    const indexOfLastItem = currentPage * itemsPerPage;
+    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(data.length / itemsPerPage);
+
+    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+
+    const renderPaginationItems = () => {
+        let items = [];
+        const totalPagesToShow = 4;
+
+        let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
+
+        if (endPage - startPage < totalPagesToShow - 1) {
+            startPage = Math.max(1, endPage - totalPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            items.push(
+                <Pagination.Item
+                    key={i}
+                    active={i === currentPage}
+                    onClick={() => paginate(i)}
+                >
+                    {i}
+                </Pagination.Item>
+            );
+        }
+
+        return items;
     };
 
     if (loading) return (
@@ -169,9 +206,8 @@ const PushNotification = () => {
                                         type="button"
                                         key={type.id}
                                         onClick={() => handleTypeSelect(type.id)}
-                                        className={`cursor-pointer px-3 py-1 rounded-3 ${
-                                            selectedType === type.id ? 'bg-primary' : 'bg-light'
-                                        }`}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${selectedType === type.id ? 'bg-primary' : 'bg-light'
+                                            }`}
                                         style={{
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.3s ease',
@@ -184,7 +220,7 @@ const PushNotification = () => {
                                 ))}
                             </div>
                             {errors.type && (
-                                <div className="mt-1" style={{color:"#e05866", fontSize:"12px"}}>{errors.type}</div>
+                                <div className="mt-1" style={{ color: "#e05866", fontSize: "12px" }}>{errors.type}</div>
                             )}
                         </Form.Group>
 
@@ -205,7 +241,7 @@ const PushNotification = () => {
                                 rows={3}
                             />
                             {errors.description && (
-                                <div className="mt-1" style={{color:"#e05866", fontSize:"12px"}}>{errors.description}</div>
+                                <div className="mt-1" style={{ color: "#e05866", fontSize: "12px" }}>{errors.description}</div>
                             )}
                         </Form.Group>
 
@@ -245,13 +281,13 @@ const PushNotification = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.length > 0 ? (
-                        data.map((notification, index) => (
+                    {currentItems.length > 0 ? (
+                        currentItems.map((notification, index) => (
                             <tr
                                 key={notification._id}
                                 className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}
                             >
-                                <td>{index + 1}</td>
+                                <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{notification.Title}</td>
                                 <td>{notification.Description}</td>
                             </tr>
@@ -265,6 +301,14 @@ const PushNotification = () => {
                     )}
                 </tbody>
             </Table>
+
+            {totalPages > 1 && (
+                <div className='d-flex justify-content-center'>
+                    <Pagination>
+                        {renderPaginationItems()}
+                    </Pagination>
+                </div>
+            )}
 
             <ToastContainer />
         </div>

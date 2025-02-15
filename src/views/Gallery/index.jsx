@@ -120,7 +120,6 @@ const Gallery = () => {
             .catch((err) => {
                 console.error(err);
                 setLoading(false);
-                toast.error("Failed to fetch data.");
             });
     };
 
@@ -445,7 +444,11 @@ const Gallery = () => {
                         formData.append('Hide', !values.Safe);
                     }
                 } else {
-                    formData.append('Hide', values.Safe);
+                    if (isOn) {
+                        formData.append('Hide', !values.Safe);
+                    } else {
+                        formData.append('Hide', false);
+                    }
                 }
 
                 // Append other form fields
@@ -566,6 +569,8 @@ const Gallery = () => {
         }
     };
 
+    console.log(filteredData);
+    
     // Pagination logic
     const itemsPerPage = 15;
     const [currentPage, setCurrentPage] = useState(1);

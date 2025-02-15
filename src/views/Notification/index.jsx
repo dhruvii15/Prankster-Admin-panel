@@ -1,54 +1,51 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Row, Col, Spinner } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Row, Col, Spinner, Pagination } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-// img
 import logo from "../../assets/images/logo.svg";
+
+const ITEMS_PER_PAGE = 15;
+
+const notificationTypes = [
+    { id: 'Prankster', label: 'English' },
+    { id: 'प्रेंकस्टर', label: 'Hindi' }
+];
 
 const Notification = () => {
     const [visible, setVisible] = useState(false);
     const [data, setData] = useState([]);
-    const [id, setId] = useState();
+    const [id, setId] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedType, setSelectedType] = useState('');
-    const [description, setdescription] = useState('');
+    const [description, setDescription] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const notificationTypes = [
-        { id: 'Prankster😆', label: 'English' },
-        { id: 'प्रेंकस्टर😆', label: 'Hindi' }
-    ];
+    // Derived state
+    const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
+    const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
+    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
+    const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
-    const toggleModal = (mode) => {
-        if (!isSubmitting) {
-            if (mode === 'add') {
-                setSelectedType('');
-                setdescription('');
-                setId(undefined);
-            }
-            setErrors({});
-            setVisible(!visible);
+    // API calls
+    const getData = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.post('https://pslink.world/api/notification/read');
+            const reversedData = response.data.data.reverse(); 
+            setData(reversedData);
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to fetch data.");
+        } finally {
+            setLoading(false);
         }
     };
-
-    const getData = () => {
-        setLoading(true);
-        axios.post('https://pslink.world/api/notification/read')
-            .then((res) => {
-                setData(res.data.data);
-                setLoading(false);
-            })
-            .catch((err) => {
-                console.error(err);
-                setLoading(false);
-                toast.error("Failed to fetch data.");
-            });
-    };
+    
 
     useEffect(() => {
         getData();
@@ -72,17 +69,19 @@ const Notification = () => {
 
         try {
             setIsSubmitting(true);
-            const request = id !== undefined
-                ? axios.patch(`https://pslink.world/api/notification/update/${id}`, { Title: selectedType, Description: description })
-                : axios.post('https://pslink.world/api/notification/create', { Title: selectedType, Description: description });
+            const endpoint = id 
+                ? `https://pslink.world/api/notification/update/${id}`
+                : 'https://pslink.world/api/notification/create';
+            const method = id ? 'patch' : 'post';
+            
+            const response = await axios[method](endpoint, {
+                Title: selectedType,
+                Description: description
+            });
 
-            const res = await request;
-            setSelectedType('');
-            setdescription('');
-            setId(undefined);
+            toast.success(response.data.message);
+            resetForm();
             getData();
-            toast.success(res.data.message);
-            toggleModal('add');
         } catch (err) {
             console.error(err);
             toast.error("An error occurred. Please try again.");
@@ -91,6 +90,14 @@ const Notification = () => {
         }
     };
 
+    // UI handlers
+    const resetForm = () => {
+        setSelectedType('');
+        setDescription('');
+        setId(null);
+        setErrors({});
+        setVisible(false);
+    };
     const handleTypeSelect = (typeId) => {
         if (!isSubmitting) {
             setSelectedType(typeId);
@@ -106,8 +113,7 @@ const Notification = () => {
     };
 
     const handleDescriptionChange = (e) => {
-        setdescription(e.target.value);
-        // Only clear the description error if it exists
+        setDescription(e.target.value);
         if (errors.description) {
             setErrors(prev => {
                 const newErrors = { ...prev };
@@ -120,19 +126,19 @@ const Notification = () => {
     const handleEdit = (notification) => {
         if (!isSubmitting) {
             setSelectedType(notification.Title);
-            setdescription(notification.Description);
+            setDescription(notification.Description);
             setId(notification._id);
-            toggleModal('edit');
+            setVisible(true);
         }
     };
 
-    const handleDelete = async (description) => {
+    const handleDelete = async (id) => {
         if (!isSubmitting && window.confirm("Are you sure you want to delete this Auto notification?")) {
             try {
                 setIsSubmitting(true);
-                const res = await axios.delete(`https://pslink.world/api/notification/delete/${description}`);
+                const response = await axios.delete(`https://pslink.world/api/notification/delete/${id}`);
+                toast.success(response.data.message);
                 getData();
-                toast.success(res.data.message);
             } catch (err) {
                 console.error(err);
                 toast.error("An error occurred. Please try again.");
@@ -142,32 +148,60 @@ const Notification = () => {
         }
     };
 
+    // Pagination
+    const renderPaginationItems = () => {
+        const items = [];
+        const totalPagesToShow = 4;
+        
+        let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
+        
+        if (endPage - startPage < totalPagesToShow - 1) {
+            startPage = Math.max(1, endPage - totalPagesToShow + 1);
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            items.push(
+                <Pagination.Item
+                    key={i}
+                    active={i === currentPage}
+                    onClick={() => setCurrentPage(i)}
+                >
+                    {i}
+                </Pagination.Item>
+            );
+        }
+        
+        return items;
+    };
+
     if (loading) return (
-        <div style={{
-            height: '100vh',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            overflow: "hidden"
-        }}>
+        <div
+            style={{
+                height: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                overflow: "hidden"
+            }}
+        >
             <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2",
-                width: "200px"
+                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
             }} />
         </div>
     );
 
     return (
         <div>
-            <div className='d-sm-flex justify-content-between align-items-center'>
+            <div className="d-sm-flex justify-content-between align-items-center">
                 <div>
                     <h4>Auto Notification</h4>
                 </div>
             </div>
 
             <Button
-                onClick={() => toggleModal('add')}
-                className='my-4 rounded-3 border-0'
+                onClick={() => setVisible(true)}
+                className="my-4 rounded-3 border-0"
                 style={{ backgroundColor: "#F9E238" }}
                 disabled={isSubmitting}
             >
@@ -176,7 +210,7 @@ const Notification = () => {
 
             <Modal
                 show={visible}
-                onHide={() => !isSubmitting && toggleModal('add')}
+                onHide={() => !isSubmitting && resetForm()}
                 centered
                 backdrop={isSubmitting ? 'static' : true}
                 keyboard={!isSubmitting}
@@ -187,21 +221,23 @@ const Notification = () => {
                 <Modal.Body>
                     <Form onSubmit={handleSubmit}>
                         <Form.Group className="mb-3">
-                            <Form.Label className='fw-bold'>
+                            <Form.Label className="fw-bold">
                                 Notification Type
-                                <span className='text-danger ps-2 fw-normal' style={{ fontSize: "17px" }}>*</span>
+                                <span className="text-danger ps-2 fw-normal" style={{ fontSize: "17px" }}>*</span>
                             </Form.Label>
                             <div className="d-flex gap-3">
                                 {notificationTypes.map((type) => (
                                     <button
-                                        type="button" // Add type="button" to prevent form submission
+                                        type="button"
                                         key={type.id}
                                         onClick={() => handleTypeSelect(type.id)}
-                                        className={`cursor-pointer px-3 py-1 rounded-3 ${selectedType === type.id ? 'bg-primary' : 'bg-light'}`}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${
+                                            selectedType === type.id ? 'bg-primary' : 'bg-light'
+                                        }`}
                                         style={{
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.3s ease',
-                                            border: `1px solid ${selectedType === type.id ? '' : '#dee2e6'}`
+                                            border: `1px solid ${selectedType === type.id ? 'transparent' : '#dee2e6'}`
                                         }}
                                         disabled={isSubmitting}
                                     >
@@ -210,7 +246,7 @@ const Notification = () => {
                                 ))}
                             </div>
                             {errors.type && (
-                                <div className="mt-1" style={{color:"#e05866", fontSize:"12px"}}>{errors.type}</div>
+                                <div className="mt-1 text-danger" style={{ fontSize: "12px" }}>{errors.type}</div>
                             )}
                         </Form.Group>
 
@@ -221,17 +257,15 @@ const Notification = () => {
                             </Form.Label>
                             <Form.Control
                                 as="textarea"
-                                id="description"
-                                className="py-2"
+                                rows={3}
                                 placeholder="Enter description"
                                 value={description}
                                 onChange={handleDescriptionChange}
-                                isInvalid={!!errors.description}
                                 disabled={isSubmitting}
-                                rows={3}
+                                isInvalid={!!errors.description}
                             />
                             {errors.description && (
-                                <div className="mt-1" style={{color:"#e05866", fontSize:"12px"}}>{errors.description}</div>
+                                <div className="mt-1 text-danger" style={{ fontSize: "12px" }}>{errors.description}</div>
                             )}
                         </Form.Group>
 
@@ -240,9 +274,9 @@ const Notification = () => {
                                 <Button
                                     type="button"
                                     variant="secondary"
-                                    onClick={() => toggleModal()}
+                                    onClick={resetForm}
                                     disabled={isSubmitting}
-                                    className='w-100 rounded-3 text-black'
+                                    className="w-100 rounded-3 text-black"
                                     style={{ background: "#F6F7FB" }}
                                 >
                                     Cancel
@@ -251,10 +285,10 @@ const Notification = () => {
                             <Col xs={6}>
                                 <Button
                                     type="submit"
-                                    className='submit border-0 rounded-3 w-100'
+                                    className="submit border-0 rounded-3 w-100"
                                     disabled={isSubmitting}
                                 >
-                                    {isSubmitting ? <Spinner size='sm' /> : (id ? 'Update' : 'Submit')}
+                                    {isSubmitting ? <Spinner size="sm" /> : (id ? 'Update' : 'Submit')}
                                 </Button>
                             </Col>
                         </Row>
@@ -262,7 +296,7 @@ const Notification = () => {
                 </Modal.Body>
             </Modal>
 
-            <Table striped bordered hover responsive className='text-center fs-6'>
+            <Table striped bordered hover responsive className="text-center fs-6">
                 <thead>
                     <tr>
                         <th>Index</th>
@@ -272,14 +306,14 @@ const Notification = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {data.map((notification, index) => (
+                    {currentItems.map((notification, index) => (
                         <tr key={notification._id} className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}>
-                            <td>{index + 1}</td>
+                            <td>{indexOfFirstItem + index + 1}</td>
                             <td>{notification.Title}</td>
                             <td>{notification.Description}</td>
                             <td>
                                 <Button
-                                    className='edit-dlt-btn'
+                                    className="edit-dlt-btn"
                                     style={{ color: "#0385C3" }}
                                     onClick={() => handleEdit(notification)}
                                     disabled={isSubmitting}
@@ -287,7 +321,7 @@ const Notification = () => {
                                     <FontAwesomeIcon icon={faEdit} />
                                 </Button>
                                 <Button
-                                    className='edit-dlt-btn text-danger'
+                                    className="edit-dlt-btn text-danger"
                                     onClick={() => handleDelete(notification._id)}
                                     disabled={isSubmitting}
                                 >
@@ -300,6 +334,12 @@ const Notification = () => {
             </Table>
 
             <ToastContainer />
+
+            {totalPages > 1 && (
+                <div className="d-flex justify-content-center">
+                    <Pagination>{renderPaginationItems()}</Pagination>
+                </div>
+            )}
         </div>
     );
 };

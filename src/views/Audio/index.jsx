@@ -156,7 +156,6 @@ const Audio = () => {
             .catch((err) => {
                 console.error(err);
                 setLoading(false);
-                toast.error("Failed to fetch data.");
             });
     };
 
@@ -359,7 +358,7 @@ const Audio = () => {
                 formData.append('AudioPremium', values.AudioPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('LanguageId', values.LanguageId);
-                formData.append('Hide', values.isEditing ? !values.Safe : values.Safe);
+                formData.append('Hide', values.isEditing ? !values.Safe : isOn ? !values.Safe : false);
                 formData.append('Safe', values.Safe);
                 formData.append('imageInputType', imageInputType);
                 formData.append('audioInputType', audioInputType);

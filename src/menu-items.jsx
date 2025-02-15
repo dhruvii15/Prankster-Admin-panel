@@ -1,6 +1,6 @@
-import { faAndroid, faAppStoreIos, faJs } from "@fortawesome/free-brands-svg-icons";
+import { faAndroid, faAppStoreIos, faGoogle, faJs, faMeta } from "@fortawesome/free-brands-svg-icons";
 import { faImage } from "@fortawesome/free-regular-svg-icons";
-import {faBell, faFileAudio, faHome, faLayerGroup, faPhotoFilm, faRectangleAd, faVideo} from "@fortawesome/free-solid-svg-icons";
+import {faA, faBell, faChartSimple, faFileAudio, faHome, faLayerGroup, faLink, faPhotoFilm, faRectangleAd, faVideo} from "@fortawesome/free-solid-svg-icons";
 
 const menuItems = {
   items: [
@@ -111,6 +111,49 @@ const menuItems = {
           type: 'item',
           url: '/user/image',
           icon: faPhotoFilm
+        },
+      ]
+    },
+    {
+      id: 'before-app-analytics',
+      title: 'Before-App-Analytics',
+      type: 'group',
+      icon: 'icon-ui',
+      children: [
+        {
+          id: 'deeplink',
+          title: 'DeepLink',
+          type: 'item',
+          url: '/deeplink',
+          icon: faLink
+        },
+        {
+          id: 'deeplinkanalytics',
+          title: 'DeepLink-Analytics',
+          type: 'item',
+          url: '/analytics',
+          icon: faChartSimple
+        },
+        {
+          id: 'meta',
+          title: 'Meta',
+          type: 'item',
+          url: '/meta',
+          icon: faMeta
+        },
+        {
+          id: 'google',
+          title: 'Google',
+          type: 'item',
+          url: '/google',
+          icon: faGoogle
+        },
+        {
+          id: 'appsFlyer',
+          title: 'Appsflyer',
+          type: 'item',
+          url: '/appsflyer',
+          icon: faA
         },
       ]
     },

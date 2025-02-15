@@ -107,7 +107,7 @@ const Ads = () => {
             toggleModal('add');
         } catch (err) {
             console.error(err);
-            toast.error("An error occurred. Please try again.");
+            toast.error(err.response.data.message ||"An error occurred. Please try again.");
         } finally {
             setIsSubmitting(false);
         }

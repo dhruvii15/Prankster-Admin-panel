@@ -24,6 +24,11 @@ import PushNotification from 'views/Push-Notification';
 import Web from 'views/Analytics/Web';
 import Android from 'views/Analytics/Android';
 import Ios from 'views/Analytics/Ios';
+import DeepLink from 'views/BeforeApp/DeepLink';
+import DeepLinkAnalytics from 'views/BeforeApp/DeepLinkAnalytics';
+import Meta from 'views/BeforeApp/Meta';
+import Google from 'views/BeforeApp/Google';
+import AppsFlyer from 'views/BeforeApp/Appsflyer';
 
 // ==============================|| ROUTES ||============================== //
 
@@ -143,6 +148,31 @@ export const routes = [
         exact: true,
         path: '/ios',
         element: () => <AdminProtect><Ios /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/deeplink',
+        element: () => <AdminProtect><DeepLink /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/analytics',
+        element: () => <AdminProtect><DeepLinkAnalytics /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/meta',
+        element: () => <AdminProtect><Meta /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/google',
+        element: () => <AdminProtect><Google /></AdminProtect>
+      },
+      {
+        exact: true,
+        path: '/appsflyer',
+        element: () => <AdminProtect><AppsFlyer /></AdminProtect>
       },
       {
         path: '*',

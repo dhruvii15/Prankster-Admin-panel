@@ -160,7 +160,6 @@ const Video = () => {
             .catch((err) => {
                 console.error(err);
                 setLoading(false);
-                toast.error("Failed to fetch data.");
             });
     };
 
@@ -322,7 +321,7 @@ const Video = () => {
                 formData.append('VideoPremium', values.VideoPremium);
                 formData.append('CategoryId', values.CategoryId);
                 formData.append('LanguageId', values.LanguageId);
-                formData.append('Hide', values.isEditing ? !values.Safe : values.Safe);
+                formData.append('Hide', values.isEditing ? !values.Safe : isOn ? !values.Safe : false);
                 formData.append('Safe', values.Safe);
                 formData.append('inputType', inputType);
 
