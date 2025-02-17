@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faTag, faCrown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -10,6 +10,24 @@ import 'react-toastify/dist/ReactToastify.css';
 import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 
 
+const AccessTabs = ({ activeTab2, onTabChange }) => {
+    return (
+        <div className="d-flex border rounded-pill overflow-hidden border bg-white" style={{ height: "40px", width: "210px" }}>
+            <button
+                className={`border-0 w-50 rounded-pill ${activeTab2 === "Free" ? "bg-tab" : "bg-white"}`}
+                onClick={() => onTabChange("Free")}
+            >
+                <FontAwesomeIcon icon={faTag} /> Free
+            </button>
+            <button
+                className={`border-0 w-50 rounded-pill ${activeTab2 === "Premium" ? "bg-tab" : "bg-white"}`}
+                onClick={() => onTabChange("Premium")}
+            >
+                <FontAwesomeIcon icon={faCrown} /> Premium
+            </button>
+        </div>
+    );
+};
 
 const Video = () => {
 
@@ -51,6 +69,8 @@ const Video = () => {
     const [videoUrlText, setVideoUrlText] = useState('');
     // const [safetyFilter, setSafetyFilter] = useState('');
     const [premiumFilter, setPremiumFilter] = useState('');
+    const [activeTab2, setActiveTab2] = useState("Free");
+
 
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
@@ -204,10 +224,10 @@ const Video = () => {
         // }
 
         // Apply premium filter
-        if (premiumFilter === 'premium') {
-            filtered = filtered.filter(item => item.VideoPremium);
-        } else if (premiumFilter === 'free') {
-            filtered = filtered.filter(item => !item.VideoPremium);
+        if (activeTab2 === "Premium") {
+            filtered = filtered.filter(item => item.VideoPremium); // Only show premium items
+        } else if (activeTab2 === "Free") {
+            filtered = filtered.filter(item => !item.VideoPremium); // Only show free items
         }
 
         return filtered.length;
@@ -230,26 +250,20 @@ const Video = () => {
             filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
         }
 
-        // Apply safety filter
-        // if (safetyFilter === 'safe') {
-        //     filtered = filtered.filter(item => !item.Hide);
-        // } else if (safetyFilter === 'unsafe') {
-        //     filtered = filtered.filter(item => item.Hide);
-        // }
-
-        // Apply premium filter
-        if (premiumFilter === 'premium') {
+        // Apply premium/free filter based on activeTab2
+        if (activeTab2 === "Premium") {
             filtered = filtered.filter(item => item.VideoPremium);
-        } else if (premiumFilter === 'free') {
+        } else if (activeTab2 === "Free") {
             filtered = filtered.filter(item => !item.VideoPremium);
         }
 
         setFilteredData(filtered);
     };
 
+    // Update useEffect dependencies to include activeTab2
     useEffect(() => {
         filterGalleryData();
-    }, [activeTab, premiumFilter, selectedCategoryFilter, data, isOn]); //safetyFilter
+    }, [activeTab, activeTab2, selectedCategoryFilter, data, isOn]);
 
 
     const videoSchema = Yup.object().shape({
@@ -493,18 +507,20 @@ const Video = () => {
                 <div>
                     <h4>Video Prank</h4>
                 </div>
-                <Form className='d-flex align-items-center gap-3'>
-                    <span>Safe : </span>
-                    <Form.Check
-                        type="switch"
-                        id="custom-switch"
-                        checked={isOn}
-                        onChange={handleToggle}
-                        className="custom-switch-lg"
-                        style={{ transform: 'scale(1.3)' }}
-                        disabled={isSubmitting2}
-                    />
-                </Form>
+                <div className='d-flex justify-content-between align-items-center gap-3'>
+                    <Form className='d-flex align-items-center gap-4'>
+                        <span className='fs-6 pt-1'>Safe : </span>
+                        <Form.Check
+                            type="switch"
+                            id="custom-switch"
+                            checked={isOn}
+                            onChange={handleToggle}
+                            className="custom-switch-lg"
+                            style={{ transform: 'scale(1.5)' }}
+                            disabled={isSubmitting2}
+                        />
+                    </Form>
+                </div>
             </div>
             <div className='d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4'>
                 <Button
@@ -514,37 +530,14 @@ const Video = () => {
                 >
                     Add Video Prank
                 </Button>
-                <div className='d-flex flex-wrap gap-3 align-items-center'>
-                    {/* Safety Filter */}
-                    {/* <div className='d-flex flex-wrap gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Safety :</span>
-                        <Form.Select
-                            value={safetyFilter}
-                            onChange={(e) => setSafetyFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All</option>
-                            <option value="safe">Safe</option>
-                            <option value="unsafe">Unsafe</option>
-                        </Form.Select>
-                    </div> */}
-
-                    {/* Premium Filter */}
-                    <div className='d-flex flex-wrap gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Access :</span>
-                        <Form.Select
-                            value={premiumFilter}
-                            onChange={(e) => setPremiumFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All</option>
-                            <option value="premium">Premium</option>
-                            <option value="free">Free</option>
-                        </Form.Select>
-                    </div>
-                </div>
+                
+                <AccessTabs
+                        activeTab2={activeTab2}
+                        onTabChange={(tab) => {
+                            setActiveTab2(tab);
+                            setCurrentPage(1);
+                        }}
+                    />
             </div>
 
 

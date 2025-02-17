@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Col, Row, Spinner, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faTag, faCrown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -9,6 +9,26 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import ImagePreviewModal from 'components/ImagePreviewModal';
+
+
+const AccessTabs = ({ activeTab2, onTabChange }) => {
+    return (
+        <div className="d-flex border rounded-pill overflow-hidden border bg-white" style={{ height: "40px", width: "210px" }}>
+            <button
+                className={`border-0 w-50 rounded-pill ${activeTab2 === "Free" ? "bg-tab" : "bg-white"}`}
+                onClick={() => onTabChange("Free")}
+            >
+                <FontAwesomeIcon icon={faTag} /> Free
+            </button>
+            <button
+                className={`border-0 w-50 rounded-pill ${activeTab2 === "Premium" ? "bg-tab" : "bg-white"}`}
+                onClick={() => onTabChange("Premium")}
+            >
+                <FontAwesomeIcon icon={faCrown} /> Premium
+            </button>
+        </div>
+    );
+};
 
 
 const Audio = () => {
@@ -54,6 +74,8 @@ const Audio = () => {
     const [audioUrlText, setAudioUrlText] = useState('');
     const [showPreview, setShowPreview] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
+    const [activeTab2, setActiveTab2] = useState("Free");
+
 
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
@@ -209,13 +231,11 @@ const Audio = () => {
         //     });
         // }
 
-        // Apply premium/free filter
-        if (premiumFilter) {
-            filtered = filtered.filter(item => {
-                if (premiumFilter === 'Premium') return item.AudioPremium;
-                if (premiumFilter === 'Free') return !item.AudioPremium;
-                return true;
-            });
+        // Apply premium/free filter based on activeTab (Free or Premium)
+        if (activeTab2 === "Premium") {
+            filtered = filtered.filter(item => item.AudioPremium); // Only show premium items
+        } else if (activeTab2 === "Free") {
+            filtered = filtered.filter(item => !item.AudioPremium); // Only show free items
         }
 
         return filtered.length;
@@ -225,43 +245,33 @@ const Audio = () => {
         // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Safe === isOn);
 
-        // Apply language filter
+        // Apply language filter if not "all"
         if (activeTab !== 'all') {
-            const selectedLanguage = language.find(cat => cat.LanguageName.toLowerCase() === activeTab);
+            const selectedLanguage = language.find(lang => lang.LanguageName.toLowerCase() === activeTab.toLowerCase());
             if (selectedLanguage) {
                 filtered = filtered.filter(item => item.LanguageId === selectedLanguage.LanguageId);
             }
         }
 
-        // Apply category filter
+        // Apply category filter if one is selected
         if (selectedCategoryFilter) {
             filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
         }
 
-        // Apply safe/unsafe filter
-        // if (safeFilter) {
-        //     filtered = filtered.filter(item => {
-        //         if (safeFilter === 'Safe') return !item.Hide;
-        //         if (safeFilter === 'Unsafe') return item.Hide;
-        //         return true;
-        //     });
-        // }
-
         // Apply premium/free filter
-        if (premiumFilter) {
-            filtered = filtered.filter(item => {
-                if (premiumFilter === 'Premium') return item.AudioPremium;
-                if (premiumFilter === 'Free') return !item.AudioPremium;
-                return true;
-            });
+        if (activeTab2 === "Premium") {
+            filtered = filtered.filter(item => item.AudioPremium);
+        } else if (activeTab2 === "Free") {
+            filtered = filtered.filter(item => !item.AudioPremium);
         }
 
         setFilteredData(filtered);
     };
 
+    // Update useEffect dependencies to include all relevant filters
     useEffect(() => {
         filterAudioData();
-    }, [activeTab, premiumFilter, selectedCategoryFilter, data, isOn]); // safeFilter
+    }, [activeTab, activeTab2, selectedCategoryFilter, data, isOn]);
 
 
     const audioSchema = Yup.object().shape({
@@ -612,13 +622,13 @@ const Audio = () => {
     const isValidUrl = (url, type) => {
         try {
             new URL(url);
-            
+
             if (type === 'image') {
                 return /\.(jpg|jpeg|png)$/i.test(url);
             } else if (type === 'audio') {
                 return /\.(mp3|wav)$/i.test(url);
             }
-            
+
             return false;
         } catch (e) {
             return false;
@@ -712,10 +722,10 @@ const Audio = () => {
                             onChange={(e) => {
                                 const newUrl = e.target.value;
                                 setUrlText(newUrl);
-                                
+
                                 // Set field value for formik
                                 formik.setFieldValue(fieldName, newUrl);
-                                
+
                                 // Validate URL as user types
                                 if (newUrl) {
                                     const isValid = isValidUrl(newUrl, isImage ? 'image' : 'audio');
@@ -761,18 +771,20 @@ const Audio = () => {
                 <div>
                     <h4>Audio Prank</h4>
                 </div>
-                <Form className='d-flex align-items-center gap-3'>
-                    <span>Safe : </span>
-                    <Form.Check
-                        type="switch"
-                        id="custom-switch"
-                        checked={isOn}
-                        onChange={handleToggle}
-                        className="custom-switch-lg"
-                        style={{ transform: 'scale(1.3)' }}
-                        disabled={isSubmitting2}
-                    />
-                </Form>
+                <div className='d-flex justify-content-between align-items-center gap-3'>
+                    <Form className='d-flex align-items-center gap-4'>
+                        <span className='fs-6 pt-1'>Safe : </span>
+                        <Form.Check
+                            type="switch"
+                            id="custom-switch"
+                            checked={isOn}
+                            onChange={handleToggle}
+                            className="custom-switch-lg"
+                            style={{ transform: 'scale(1.5)' }}
+                            disabled={isSubmitting2}
+                        />
+                    </Form>
+                </div>
             </div>
             <div className='d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4'>
                 <Button
@@ -782,35 +794,14 @@ const Audio = () => {
                 >
                     Add Audio Prank
                 </Button>
-                <div className='d-flex flex-wrap gap-3 align-items-center'>
-                    {/* <div className='d-flex flex-wrap gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Safety :</span>
-                        <Form.Select
-                            value={safeFilter}
-                            onChange={(e) => setSafeFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All</option>
-                            <option value="Safe">Safe</option>
-                            <option value="Unsafe">Unsafe</option>
-                        </Form.Select>
-                    </div> */}
 
-                    <div className='d-flex flex-wrap gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Access :</span>
-                        <Form.Select
-                            value={premiumFilter}
-                            onChange={(e) => setPremiumFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Free">Free</option>
-                        </Form.Select>
-                    </div>
-                </div>
+                <AccessTabs
+                    activeTab2={activeTab2}
+                    onTabChange={(tab) => {
+                        setActiveTab2(tab);
+                        setCurrentPage(1);
+                    }}
+                />
             </div>
 
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass, faTimes, faCrown, faTag } from '@fortawesome/free-solid-svg-icons';
 import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
@@ -10,6 +10,26 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import TagSelector from 'views/TagSelector';
 import ImagePreviewModal from 'components/ImagePreviewModal';
+
+const AccessTabs = ({ activeTab, onTabChange }) => {
+    return (
+        <div className="d-flex border rounded-pill overflow-hidden border bg-white" style={{ height: "40px", width: "210px" }}>
+            <button
+                className={`border-0 w-50 rounded-pill ${activeTab === "Free" ? "bg-tab" : "bg-white"}`}
+                onClick={() => onTabChange("Free")}
+            >
+                <FontAwesomeIcon icon={faTag} /> Free
+            </button>
+            <button
+                className={`border-0 w-50 rounded-pill ${activeTab === "Premium" ? "bg-tab" : "bg-white"}`}
+                onClick={() => onTabChange("Premium")}
+            >
+                <FontAwesomeIcon icon={faCrown} /> Premium
+            </button>
+        </div>
+    );
+};
+
 
 const CoverURL = () => {
     const [visible, setVisible] = useState(false);
@@ -37,8 +57,8 @@ const CoverURL = () => {
     const [inputType, setInputType] = useState('file'); // 'file' or 'text'
     const [coverUrlText, setCoverUrlText] = useState('');
     // const [safetyFilter, setSafetyFilter] = useState("");
-    const [premiumFilter, setPremiumFilter] = useState("");
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState("Free");
 
 
 
@@ -319,17 +339,10 @@ const CoverURL = () => {
         // First filter by unsafe status based on isOn state
         let filteredData = covers.filter(cover => cover.Safe === isOn);
 
-        // Apply safety filter
-        // if (safetyFilter === "Safe") {
-        //     filteredData = filteredData.filter(cover => !cover.Hide);
-        // } else if (safetyFilter === "Unsafe") {
-        //     filteredData = filteredData.filter(cover => cover.Hide);
-        // }
-
-        // Apply premium filter
-        if (premiumFilter === "Premium") {
+        // Apply access filter based on active tab
+        if (activeTab === "Premium") {
             filteredData = filteredData.filter(cover => cover.CoverPremium);
-        } else if (premiumFilter === "Free") {
+        } else if (activeTab === "Free") {
             filteredData = filteredData.filter(cover => !cover.CoverPremium);
         }
 
@@ -337,13 +350,11 @@ const CoverURL = () => {
         if (searchTerm.trim()) {
             const searchLower = searchTerm.toLowerCase();
             filteredData = filteredData.filter(item => {
-                // Check if TagName is an array and any tag includes the search term
                 if (Array.isArray(item.TagName)) {
                     return item.TagName.some(tag =>
                         tag.toLowerCase().includes(searchLower)
                     );
                 }
-                // If TagName is a string, check if it includes the search term
                 return item.TagName.toLowerCase().includes(searchLower);
             });
         }
@@ -666,18 +677,20 @@ const CoverURL = () => {
                 <div>
                     <h4>Cover Image</h4>
                 </div>
-                <Form className='d-flex align-items-center gap-3'>
-                    <span>Safe : </span>
-                    <Form.Check
-                        type="switch"
-                        id="custom-switch"
-                        checked={isOn}
-                        onChange={handleToggle}
-                        className="custom-switch-lg"
-                        style={{ transform: 'scale(1.3)' }}
-                        disabled={isSubmitting2}
-                    />
-                </Form>
+                <div className='d-flex justify-content-between align-items-center gap-3'>
+                    <Form className='d-flex align-items-center gap-4'>
+                        <span className='fs-6 pt-1'>Safe : </span>
+                        <Form.Check
+                            type="switch"
+                            id="custom-switch"
+                            checked={isOn}
+                            onChange={handleToggle}
+                            className="custom-switch-lg"
+                            style={{ transform: 'scale(1.5)' }}
+                            disabled={isSubmitting2}
+                        />
+                    </Form>
+                </div>
             </div>
 
             <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap">
@@ -688,7 +701,7 @@ const CoverURL = () => {
                 >
                     Add CoverImage
                 </Button>
-                <div className='d-flex gap-3 flex-wrap'>
+                <div className='d-flex gap-3 flex-wrap align-items-center'>
                     <div ref={searchContainerRef} className="position-relative">
                         <div className="flex items-center search-bar-container my-3">
                             <input
@@ -720,7 +733,7 @@ const CoverURL = () => {
                                             key={index}
                                             className="px-3 py-1 rounded-3 border mx-1 mb-1"
                                             onClick={() => handleSuggestionClick(suggestion)}
-                                            style={{cursor:"pointer" , fontSize:"13px"}}
+                                            style={{ cursor: "pointer", fontSize: "13px" }}
                                         >
                                             {suggestion}
                                         </p>
@@ -730,21 +743,16 @@ const CoverURL = () => {
                                 )}
                             </div>
                         )}
+                        
                     </div>
-
-                    <div className='d-flex flex-wrap align-items-center'>
-                        <span className='mb-0 fw-bold fs-6 pe-2'>Access :</span>
-                        <Form.Select
-                            value={premiumFilter}
-                            onChange={(e) => setPremiumFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='my-3 bg-white'
-                        >
-                            <option value="">All</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Free">Free</option>
-                        </Form.Select>
-                    </div>
+                    
+                    <AccessTabs
+                        activeTab={activeTab}
+                        onTabChange={(tab) => {
+                            setActiveTab(tab);
+                            setCurrentPage(1);
+                        }}
+                    />
                 </div>
             </div>
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner, Nav } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faTag, faCrown } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -10,6 +10,25 @@ import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import 'react-toastify/dist/ReactToastify.css';
 
 import ImagePreviewModal from 'components/ImagePreviewModal';
+
+const AccessTabs = ({ activeTab2, onTabChange }) => {
+    return (
+        <div className="d-flex border rounded-pill overflow-hidden border bg-white" style={{ height: "40px", width: "210px" }}>
+            <button
+                className={`border-0 w-50 rounded-pill ${activeTab2 === "Free" ? "bg-tab" : "bg-white"}`}
+                onClick={() => onTabChange("Free")}
+            >
+                <FontAwesomeIcon icon={faTag} /> Free
+            </button>
+            <button
+                className={`border-0 w-50 rounded-pill ${activeTab2 === "Premium" ? "bg-tab" : "bg-white"}`}
+                onClick={() => onTabChange("Premium")}
+            >
+                <FontAwesomeIcon icon={faCrown} /> Premium
+            </button>
+        </div>
+    );
+};
 
 const Gallery = () => {
 
@@ -51,7 +70,7 @@ const Gallery = () => {
     const [inputType, setInputType] = useState('file');
     const [imageUrlText, setImageUrlText] = useState('');
     // const [safeFilter, setSafeFilter] = useState('');
-    const [premiumFilter, setPremiumFilter] = useState('');
+    const [activeTab2, setActiveTab2] = useState("Free");
 
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
@@ -169,12 +188,10 @@ const Gallery = () => {
         // }
 
         // Apply premium/free filter
-        if (premiumFilter) {
-            filtered = filtered.filter(item => {
-                if (premiumFilter === 'Premium') return item.GalleryPremium;
-                if (premiumFilter === 'Free') return !item.GalleryPremium;
-                return true;
-            });
+        if (activeTab2 === "Premium") {
+            filtered = filtered.filter(item => item.GalleryPremium); // Only show premium items
+        } else if (activeTab2 === "Free") {
+            filtered = filtered.filter(item => !item.GalleryPremium); // Only show free items
         }
 
         return filtered.length;
@@ -207,12 +224,10 @@ const Gallery = () => {
         // }
 
         // Apply premium/free filter
-        if (premiumFilter) {
-            filtered = filtered.filter(item => {
-                if (premiumFilter === 'Premium') return item.GalleryPremium;
-                if (premiumFilter === 'Free') return !item.GalleryPremium;
-                return true;
-            });
+        if (activeTab2 === "Premium") {
+            filtered = filtered.filter(item => item.GalleryPremium); // Only show premium items
+        } else if (activeTab2 === "Free") {
+            filtered = filtered.filter(item => !item.GalleryPremium); // Only show free items
         }
 
         setFilteredData(filtered);
@@ -220,7 +235,7 @@ const Gallery = () => {
 
     useEffect(() => {
         filterGalleryData();
-    }, [activeTab, premiumFilter, selectedCategoryFilter, data, isOn]); //safeFilter
+    }, [activeTab, activeTab2, selectedCategoryFilter, data, isOn]); //safeFilter
 
     const handleToggle = async () => {
         if (!isSubmitting2) {
@@ -643,18 +658,20 @@ const Gallery = () => {
                 <div>
                     <h4>Image Prank</h4>
                 </div>
-                <Form className='d-flex align-items-center gap-3'>
-                    <span>Safe : </span>
-                    <Form.Check
-                        type="switch"
-                        id="custom-switch"
-                        checked={isOn}
-                        onChange={handleToggle}
-                        className="custom-switch-lg"
-                        style={{ transform: 'scale(1.3)' }}
-                        disabled={isSubmitting2}
-                    />
-                </Form>
+                <div className='d-flex justify-content-between align-items-center gap-3'>
+                    <Form className='d-flex align-items-center gap-4'>
+                        <span className='fs-6 pt-1'>Safe : </span>
+                        <Form.Check
+                            type="switch"
+                            id="custom-switch"
+                            checked={isOn}
+                            onChange={handleToggle}
+                            className="custom-switch-lg"
+                            style={{ transform: 'scale(1.5)' }}
+                            disabled={isSubmitting2}
+                        />
+                    </Form>
+                </div>
             </div>
             <div className='d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4'>
                 <Button
@@ -665,35 +682,13 @@ const Gallery = () => {
                     Add Image Prank
                 </Button>
 
-                <div className='d-flex gap-3 align-items-center'>
-                    {/* <div className='d-flex gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Safety :</span>
-                        <Form.Select
-                            value={safeFilter}
-                            onChange={(e) => setSafeFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All</option>
-                            <option value="Safe">Safe</option>
-                            <option value="Unsafe">Unsafe</option>
-                        </Form.Select>
-                    </div> */}
-
-                    <div className='d-flex gap-2 align-items-center'>
-                        <span className='mb-0 fw-bold fs-6'>Access :</span>
-                        <Form.Select
-                            value={premiumFilter}
-                            onChange={(e) => setPremiumFilter(e.target.value)}
-                            style={{ width: 'auto' }}
-                            className='bg-white fs-6'
-                        >
-                            <option value="">All</option>
-                            <option value="Premium">Premium</option>
-                            <option value="Free">Free</option>
-                        </Form.Select>
-                    </div>
-                </div>
+                <AccessTabs
+                    activeTab2={activeTab2}
+                    onTabChange={(tab) => {
+                        setActiveTab2(tab);
+                        setCurrentPage(1);
+                    }}
+                />
             </div>
 
 

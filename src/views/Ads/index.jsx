@@ -6,6 +6,33 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
+const PlatformTabs = ({ activeTab, onTabChange }) => {
+    return (
+        <div className="d-flex border rounded-pill overflow-hidden border bg-white p-0" style={{ height: "40px", width: "240px" }}>
+            <button
+                className={`border-0 p-0 rounded-pill ${activeTab === "" ? "bg-tab" : "bg-white"}`}
+                style={{width:"33.33%"}}
+                onClick={() => onTabChange("")}
+            >
+                All
+            </button>
+            <button
+                className={`border-0 p-0 rounded-pill ${activeTab === "ios" ? "bg-tab" : "bg-white"}`}
+                style={{width:"33.33%"}}
+                onClick={() => onTabChange("ios")}
+            >
+                iOS
+            </button>
+            <button
+                className={`border-0 p-0 rounded-pill ${activeTab === "android" ? "bg-tab" : "bg-white"}`}
+                style={{width:"33.33%"}}
+                onClick={() => onTabChange("android")}
+            >
+                Android
+            </button>
+        </div>
+    );
+};
 
 const Ads = () => {
     const [visible, setVisible] = useState(false);
@@ -105,7 +132,7 @@ const Ads = () => {
             toggleModal('add');
         } catch (err) {
             console.error(err);
-            toast.error(err.response.data.message ||"An error occurred. Please try again.");
+            toast.error(err.response.data.message || "An error occurred. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -202,7 +229,7 @@ const Ads = () => {
                 </Form>
             </div>
 
-            <div className='d-flex align-items-center gap-4 justify-content-between pt-4'>
+            <div className='d-flex align-items-center justify-content-between py-2 flex-wrap'>
                 <Button
                     onClick={() => toggleModal('add')}
                     className='my-4 rounded-3 border-0'
@@ -214,16 +241,10 @@ const Ads = () => {
 
                 <div className='d-flex gap-2 align-items-center'>
                     <span className='mb-0 fw-bold fs-6'>Platform :</span>
-                    <Form.Select
-                        value={platformFilter}
-                        onChange={(e) => setPlatformFilter(e.target.value)}
-                        style={{ width: 'auto' }}
-                        className='bg-white fs-6'
-                    >
-                        <option value="">All</option>
-                        <option value="ios">iOS</option>
-                        <option value="android">Android</option>
-                    </Form.Select>
+                    <PlatformTabs
+                        activeTab={platformFilter}
+                        onTabChange={setPlatformFilter}
+                    />
                 </div>
             </div>
 
