@@ -59,7 +59,6 @@ const Video = () => {
 
     const isValidVideoUrl = (url) => {
         if (!url) return false;
-
         // Basic URL validation for video files
         const videoRegex = /^https?:\/\/.*\.(mp4|mkv|avi|mov|wmv)$/i;
         return videoRegex.test(url);
@@ -258,7 +257,11 @@ const Video = () => {
         Video: Yup.mixed()
             .test('fileOrText', 'Either file upload or URL is required', function (value) {
                 if (formik.values.isEditing && !value && currentVideoFileName) return true;
-                if (inputType === 'text') return !!videoUrlText;
+                if (inputType === 'text') {
+                    // Only validate if URL is provided
+                    if (!videoUrlText) return true;
+                    return isValidVideoUrl(videoUrlText);
+                }
                 return value instanceof File;
             })
             .test(
@@ -266,6 +269,8 @@ const Video = () => {
                 'Please provide a valid video file or URL',
                 function (value) {
                     if (inputType === 'text') {
+                        // Only validate if URL is provided
+                        if (!videoUrlText) return true;
                         return isValidVideoUrl(videoUrlText);
                     }
                     if (value instanceof File) {
@@ -784,12 +789,22 @@ const Video = () => {
                                         placeholder="Enter video URL (must end with .mp4, .mkv, .avi, etc.)"
                                         value={videoUrlText}
                                         onChange={(e) => {
-                                            setVideoUrlText(e.target.value);
-                                            // Trigger validation immediately
-                                            formik.setFieldTouched('Video', true, false);
-                                            formik.validateForm();
+                                            const newUrl = e.target.value;
+                                            setVideoUrlText(newUrl);
+
+                                            if (newUrl) {
+                                                formik.setFieldTouched('Video', true, false);
+                                                if (!isValidVideoUrl(newUrl)) {
+                                                    formik.setFieldError('Video', 'Please provide a valid video URL');
+                                                } else {
+                                                    formik.setFieldError('Video', undefined);
+                                                }
+                                            } else {
+                                                formik.setFieldError('Video', undefined);
+                                            }
                                         }}
-                                        isInvalid={formik.touched.Video && formik.errors.Video && inputType === 'text'}
+                                        isInvalid={formik.touched.Video && !!formik.errors.Video && inputType === 'text'}
+                                        isValid={videoUrlText && isValidVideoUrl(videoUrlText)}
                                         disabled={isSubmitting}
                                     />
                                 </Form.Group>
@@ -889,7 +904,7 @@ const Video = () => {
                                         />
                                         Your browser does not support the video element.
                                     </video>
-                                    
+
                                     <Button
                                         className="edit-dlt-btn text-black"
                                         onClick={() => handleCopyToClipboard(video)}

@@ -11,6 +11,7 @@ const NavigationDropdowns = () => {
         content: false,
         analytics: false
     });
+    const [selectedItem, setSelectedItem] = useState(null); // State for tracking selected item
 
     const toggleDropdown = (dropdown) => {
         setOpenDropdowns(prev => ({
@@ -19,12 +20,20 @@ const NavigationDropdowns = () => {
         }));
     };
 
+    const handleSelectItem = (item) => {
+        setSelectedItem(item); // Set the selected item
+    };
+
+    const isSelected = (item) => {
+        return selectedItem === item ? 'bg-bg text-white' : ''; // Apply red background and white text when selected
+    };
+
     return (
         <div className="navigation-container">
             <ListGroup variant="flush">
                 {/* Dashboard Item */}
-                <ListGroup.Item className="nav-item p-0 py-3">
-                    <Link to="/dashboard" className="nav-link fw-bold">
+                <ListGroup.Item className={`nav-item p-0 py-3 ${isSelected('dashboard')}`}>
+                    <Link to="/dashboard" className="nav-link fw-bold" onClick={() => handleSelectItem('dashboard')}>
                         <FontAwesomeIcon icon={faHome} className="me-2" />
                         Dashboard
                     </Link>
@@ -35,7 +44,7 @@ const NavigationDropdowns = () => {
                     <div
                         className="nav-link"
                         onClick={() => toggleDropdown('content')}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' , cursor:"pointer" }}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: "pointer" }}
                     >
                         <div className='fw-bold'>
                             <FontAwesomeIcon icon={faLayerGroup} className="me-2" />
@@ -45,14 +54,14 @@ const NavigationDropdowns = () => {
                     </div>
                     <Collapse in={openDropdowns.content}>
                         <ListGroup variant="flush">
-                            <ListGroup.Item>
-                                <Link to="/cover" className="nav-link">
+                            <ListGroup.Item className={`${isSelected('cover')}`}>
+                                <Link to="/cover" className="nav-link" onClick={() => handleSelectItem('cover')}>
                                     <FontAwesomeIcon icon={faImage} className="me-2" />
                                     Cover Image
                                 </Link>
                             </ListGroup.Item>
-                            <ListGroup.Item>
-                                <Link to="/category" className="nav-link">
+                            <ListGroup.Item className={`nav-link ${isSelected('category')}`}>
+                                <Link to="/category" className="nav-link" onClick={() => handleSelectItem('category')}>
                                     <FontAwesomeIcon icon={faLayerGroup} className="me-2" />
                                     Prank Category
                                 </Link>
@@ -62,51 +71,52 @@ const NavigationDropdowns = () => {
                                     Prank Type
                                 </div>
                                 <ListGroup variant="flush">
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/type/audio" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('audio')}`}>
+                                        <Link to="/type/audio" className="nav-link" onClick={() => handleSelectItem('audio')}>
                                             <FontAwesomeIcon icon={faFileAudio} className="me-2" />
                                             Audio Prank
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/type/video" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('video')}`}>
+                                        <Link to="/type/video" className="nav-link" onClick={() => handleSelectItem('video')}>
                                             <FontAwesomeIcon icon={faVideo} className="me-2" />
                                             Video Prank
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/type/image" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('image')}`}>
+                                        <Link to="/type/image" className="nav-link" onClick={() => handleSelectItem('image')}>
                                             <FontAwesomeIcon icon={faPhotoFilm} className="me-2" />
                                             Image Prank
                                         </Link>
                                     </ListGroup.Item>
                                 </ListGroup>
                             </ListGroup.Item>
+                            
                             <ListGroup.Item className='p-0'>
                                 <div className="p-2 fw-bold">
                                     User-Uploads
                                 </div>
                                 <ListGroup variant="flush">
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/user/cover" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('usercover')}`}>
+                                        <Link to="/user/cover" className="nav-link" onClick={() => handleSelectItem('usercover')}>
                                             <FontAwesomeIcon icon={faImage} className="me-2" />
                                             Cover Image
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/user/audio" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('useraudio')}`}>
+                                        <Link to="/user/audio" className="nav-link" onClick={() => handleSelectItem('useraudio')}>
                                             <FontAwesomeIcon icon={faFileAudio} className="me-2" />
                                             Audio Prank
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/user/video" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('uservideo')}`}>
+                                        <Link to="/user/video" className="nav-link" onClick={() => handleSelectItem('uservideo')}>
                                             <FontAwesomeIcon icon={faVideo} className="me-2" />
                                             Video Prank
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/user/image" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('userprank')}`}>
+                                        <Link to="/user/image" className="nav-link" onClick={() => handleSelectItem('userprank')}>
                                             <FontAwesomeIcon icon={faPhotoFilm} className="me-2" />
                                             Image Prank
                                         </Link>
@@ -117,20 +127,20 @@ const NavigationDropdowns = () => {
                                     More
                                 </div>
                                 <ListGroup variant="flush">
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/auto-notification" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('auto')}`}>
+                                        <Link to="/auto-notification" className="nav-link" onClick={() => handleSelectItem('auto')}>
                                             <FontAwesomeIcon icon={faBell} className="me-2" />
                                             Auto Notification
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/push-notification" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('push')}`}>
+                                        <Link to="/push-notification" className="nav-link" onClick={() => handleSelectItem('push')}>
                                             <FontAwesomeIcon icon={faBell} className="me-2" />
                                             Push Notification
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item className='border-0'>
-                                        <Link to="/ads" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('ads')}`}>
+                                        <Link to="/ads" className="nav-link" onClick={() => handleSelectItem('ads')}>
                                             <FontAwesomeIcon icon={faRectangleAd} className="me-2" />
                                             Ads
                                         </Link>
@@ -146,9 +156,9 @@ const NavigationDropdowns = () => {
                     <div
                         className="nav-link"
                         onClick={() => toggleDropdown('analytics')}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' , cursor:"pointer" }}
+                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: "pointer" }}
                     >
-                        <div  className='fw-bold'>
+                        <div className='fw-bold'>
                             <FontAwesomeIcon icon={faChartSimple} className="me-2" />
                             Analytics
                         </div>
@@ -162,32 +172,32 @@ const NavigationDropdowns = () => {
                                     Before App Analytics
                                 </div>
                                 <ListGroup variant="flush">
-                                    <ListGroup.Item>
-                                        <Link to="/deeplink" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('deeplink')}`}>
+                                        <Link to="/deeplink" className="nav-link" onClick={() => handleSelectItem('deeplink')}>
                                             <FontAwesomeIcon icon={faLink} className="me-2" />
                                             DeepLink
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item>
-                                        <Link to="/analytics" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('analytics')}`}>
+                                        <Link to="/analytics" className="nav-link" onClick={() => handleSelectItem('analytics')}>
                                             <FontAwesomeIcon icon={faChartSimple} className="me-2" />
                                             DeepLink Analytics
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item>
-                                        <Link to="/meta" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('meta')}`}>
+                                        <Link to="/meta" className="nav-link" onClick={() => handleSelectItem('meta')}>
                                             <FontAwesomeIcon icon={faMeta} className="me-2" />
                                             Meta
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item>
-                                        <Link to="/google" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('google')}`}>
+                                        <Link to="/google" className="nav-link" onClick={() => handleSelectItem('google')}>
                                             <FontAwesomeIcon icon={faGoogle} className="me-2" />
                                             Google
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item>
-                                        <Link to="/appsflyer" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('appsflyer')}`}>
+                                        <Link to="/appsflyer" className="nav-link" onClick={() => handleSelectItem('appsflyer')}>
                                             <FontAwesomeIcon icon={faA} className="me-2" />
                                             Appsflyer
                                         </Link>
@@ -200,20 +210,20 @@ const NavigationDropdowns = () => {
                                     After App Analytics
                                 </div>
                                 <ListGroup variant="flush">
-                                    <ListGroup.Item>
-                                        <Link to="/android" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('Android')}`}>
+                                        <Link to="/android" className="nav-link" onClick={() => handleSelectItem('Android')}>
                                             <FontAwesomeIcon icon={faAndroid} className="me-2" />
                                             Android
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item>
-                                        <Link to="/ios" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('iOS')}`}>
+                                        <Link to="/ios" className="nav-link" onClick={() => handleSelectItem('iOS')}>
                                             <FontAwesomeIcon icon={faAppStoreIos} className="me-2" />
                                             iOS
                                         </Link>
                                     </ListGroup.Item>
-                                    <ListGroup.Item>
-                                        <Link to="/web" className="nav-link">
+                                    <ListGroup.Item className={`border-0 ${isSelected('Web')}`}>
+                                        <Link to="/web" className="nav-link" onClick={() => handleSelectItem('Web')}>
                                             <FontAwesomeIcon icon={faJs} className="me-2" />
                                             Web
                                         </Link>

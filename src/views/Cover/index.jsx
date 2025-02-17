@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass, faTimes } from '@fortawesome/free-solid-svg-icons';
@@ -40,16 +40,67 @@ const CoverURL = () => {
     const [premiumFilter, setPremiumFilter] = useState("");
     const [searchTerm, setSearchTerm] = useState('');
 
-    console.log(previewUrl);
+
+
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const searchContainerRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const fetchSuggestions = async () => {
+        try {
+            setLoading(true);
+            const formData = new FormData();
+            formData.append("prankid", "4");
+
+            const response = await axios.post("http://localhost:5001/api/cover/tagName", formData);
+            setSuggestions(response.data.data || []);
+        } catch (error) {
+            console.error("Error fetching suggestions:", error);
+            setSuggestions([]);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleInputFocus = () => {
+        setShowSuggestions(true);
+        if (suggestions.length === 0) {
+            fetchSuggestions();
+        }
+    };
+
+    const handleSearch = (e) => {
+        setSearchTerm(e.target.value);
+        setShowSuggestions(true);
+    };
+
+    const handleClearSearch = () => {
+        setSearchTerm("");
+        setShowSuggestions(false);
+    };
+
+    const handleSuggestionClick = (suggestion) => {
+        setSearchTerm(suggestion);
+        setShowSuggestions(false);
+    };
+
 
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
         { id: 'text', label: 'URL' }
     ];
 
-    const handleClearSearch = () => {
-        setSearchTerm('');
-    };
 
     const renderPaginationItems = () => {
         const totalPages = Math.ceil(filterData(data).length / itemsPerPage);
@@ -263,9 +314,6 @@ const CoverURL = () => {
         }
     };
 
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
-    };
 
     const filterData = (covers) => {
         // First filter by unsafe status based on isOn state
@@ -640,26 +688,48 @@ const CoverURL = () => {
                 >
                     Add CoverImage
                 </Button>
-                <div className='d-flex gap-3'>
-                    <div className="search-bar-container my-3">
-                        <input
-                            type="text"
-                            placeholder="Search by Tagname"
-                            className="search-input"
-                            value={searchTerm}
-                            onChange={handleSearch}
-                        />
-                        <button
-                            className="search-button"
-                            onClick={searchTerm ? handleClearSearch : undefined}
-                            style={{ cursor: searchTerm ? 'pointer' : 'default' }}
-                        >
-                            <span role="img" aria-label={searchTerm ? "clear-search" : "search-icon"}>
-                                <FontAwesomeIcon
-                                    icon={searchTerm ? faTimes : faMagnifyingGlass}
-                                />
-                            </span>
-                        </button>
+                <div className='d-flex gap-3 flex-wrap'>
+                    <div ref={searchContainerRef} className="position-relative">
+                        <div className="flex items-center search-bar-container my-3">
+                            <input
+                                type="text"
+                                placeholder="Search by Tagname"
+                                className="search-input"
+                                value={searchTerm}
+                                onChange={handleSearch}
+                                onFocus={handleInputFocus}
+                            />
+                            <button
+                                className="search-button"
+                                onClick={searchTerm ? handleClearSearch : undefined}
+                                style={{ cursor: searchTerm ? "pointer" : "default" }}
+                            >
+                                <span role="img" aria-label={searchTerm ? "clear-search" : "search-icon"}>
+                                    <FontAwesomeIcon icon={searchTerm ? faTimes : faMagnifyingGlass} />
+                                </span>
+                            </button>
+                        </div>
+
+                        {showSuggestions && (
+                            <div className="suggestion-box shadow d-flex flex-wrap align-items-center p-2 overflow-hidden">
+                                {loading ? (
+                                    <div>Loading...</div>
+                                ) : suggestions.length > 0 ? (
+                                    suggestions.slice(0, 15).map((suggestion, index) => (
+                                        <p
+                                            key={index}
+                                            className="px-3 py-1 rounded-3 border mx-1 mb-1"
+                                            onClick={() => handleSuggestionClick(suggestion)}
+                                            style={{cursor:"pointer" , fontSize:"13px"}}
+                                        >
+                                            {suggestion}
+                                        </p>
+                                    ))
+                                ) : (
+                                    <div className="p-2 text-center text-gray-500">No suggestions available</div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     <div className='d-flex flex-wrap align-items-center'>
@@ -936,11 +1006,16 @@ const CoverURL = () => {
                                         placeholder="Enter image URL"
                                         value={coverUrlText}
                                         onChange={handleUrlChange}
-                                        onBlur={formik.handleBlur}
+                                        onBlur={(e) => {
+                                            formik.handleBlur(e);
+                                            formik.setFieldTouched('CoverURL', true);
+                                        }}
                                         isInvalid={formik.touched.CoverURL && !!formik.errors.CoverURL}
+                                        isValid={coverUrlText && !formik.errors.CoverURL}
                                         disabled={isSubmitting}
                                     />
                                 </Form.Group>
+
                             )}
 
                             {formik.touched.CoverURL && formik.errors.CoverURL && (

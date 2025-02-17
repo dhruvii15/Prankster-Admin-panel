@@ -608,6 +608,23 @@ const Audio = () => {
             }
         }
     };
+
+    const isValidUrl = (url, type) => {
+        try {
+            new URL(url);
+            
+            if (type === 'image') {
+                return /\.(jpg|jpeg|png)$/i.test(url);
+            } else if (type === 'audio') {
+                return /\.(mp3|wav)$/i.test(url);
+            }
+            
+            return false;
+        } catch (e) {
+            return false;
+        }
+    };
+
     const renderFileInputSection = (type, formik) => {
         const isImage = type === 'image';
         const inputType = isImage ? imageInputType : audioInputType;
@@ -692,7 +709,22 @@ const Audio = () => {
                             type="text"
                             placeholder={`Enter ${label.toLowerCase()} URL`}
                             value={urlText}
-                            onChange={(e) => setUrlText(e.target.value)}
+                            onChange={(e) => {
+                                const newUrl = e.target.value;
+                                setUrlText(newUrl);
+                                
+                                // Set field value for formik
+                                formik.setFieldValue(fieldName, newUrl);
+                                
+                                // Validate URL as user types
+                                if (newUrl) {
+                                    const isValid = isValidUrl(newUrl, isImage ? 'image' : 'audio');
+                                    e.target.classList.remove('is-valid', 'is-invalid');
+                                    e.target.classList.add(isValid ? 'is-valid' : 'is-invalid');
+                                } else {
+                                    e.target.classList.remove('is-valid', 'is-invalid');
+                                }
+                            }}
                             disabled={isSubmitting}
                         />
                     </Form.Group>

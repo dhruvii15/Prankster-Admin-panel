@@ -59,9 +59,10 @@ const Gallery = () => {
     ];
 
     const isValidImageUrl = (url) => {
-        // Basic URL validation
-        const urlPattern = /^https?:\/\/.*\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i;
-        return urlPattern.test(url);
+        const imageExtensions = /\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i;
+        const urlPattern = /^https?:\/\/.+/i;
+
+        return urlPattern.test(url) && imageExtensions.test(url);
     };
 
 
@@ -394,25 +395,24 @@ const Gallery = () => {
             Hide: false,
             isEditing: false,
             Safe: false,
-            originalValues: null // To track original values
+            originalValues: null
         },
         validationSchema: gallerySchema,
-        validateOnMount: false, // Disable validation on mount
-        validateOnBlur: true,  // Disable validation on blur
+        validateOnMount: false,
+        validateOnBlur: true,
         validateOnChange: true,
 
         validate: () => {
             const errors = {};
 
-            if (inputType === 'text' && imageUrlText && !isValidImageUrl(imageUrlText)) {
-                errors.GalleryImage = 'Invalid image URL format . (ending with .jpg, .jpeg, or .png)';
+            // Only validate URL if input type is 'text' and there is a URL entered
+            if (inputType === 'text' && imageUrlText) {
+                if (!isValidImageUrl(imageUrlText)) {
+                    errors.GalleryImage = 'Invalid image URL format. URL must end with .jpg, .jpeg, .png, .gif, or .webp';
+                }
             }
 
             return errors;
-        },
-        onChange: () => {
-            // Clear errors when fields are changed
-            formik.setErrors({});
         },
 
         onSubmit: async (values, { setSubmitting, resetForm }) => {
@@ -912,17 +912,26 @@ const Gallery = () => {
                                             const newValue = e.target.value;
                                             setImageUrlText(newValue);
                                             formik.setFieldValue('GalleryImage', newValue);
-                                            // Clear error when user starts typing
+
+                                            // Clear existing errors when user starts typing
                                             if (formik.errors.GalleryImage) {
                                                 formik.setFieldError('GalleryImage', '');
+                                            }
+
+                                            // Validate immediately if there's a value
+                                            if (newValue) {
+                                                if (!isValidImageUrl(newValue)) {
+                                                    formik.setFieldError('GalleryImage', 'Invalid image URL format. URL must end with .jpg, .jpeg, .png, .gif, or .webp');
+                                                }
                                             }
                                         }}
                                         onBlur={() => {
                                             if (imageUrlText && !isValidImageUrl(imageUrlText)) {
-                                                formik.setFieldError('GalleryImage', 'Invalid image URL format.');
+                                                formik.setFieldError('GalleryImage', 'Invalid image URL format. URL must end with .jpg, .jpeg, .png, .gif, or .webp');
                                             }
                                         }}
-                                        isInvalid={!!formik.errors.GalleryImage}
+                                        isInvalid={formik.touched.GalleryImage && !!formik.errors.GalleryImage}
+                                        isValid={imageUrlText && !formik.errors.GalleryImage && isValidImageUrl(imageUrlText)}
                                         disabled={isSubmitting}
                                     />
                                 </Form.Group>
@@ -1023,13 +1032,13 @@ const Gallery = () => {
                                             style={{ width: '100px', height: '100px' }}
                                         />
                                     </button>
-                                        
-                                        <Button
-                                            className="edit-dlt-btn text-black"
-                                            onClick={() => handleCopyToClipboard(gallery)} // Use an arrow function to pass the parameter
-                                        >
-                                            <FontAwesomeIcon icon={faCopy} />
-                                        </Button>
+
+                                    <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(gallery)} // Use an arrow function to pass the parameter
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
+                                    </Button>
                                 </td>
 
                                 <td>{getLanguageName(gallery.LanguageId)}</td>

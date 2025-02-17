@@ -188,12 +188,11 @@ const Ads = () => {
                 </div>
 
 
-                <Form className='pe-5 d-flex align-items-center gap-3'>
+                <Form className='d-flex align-items-center gap-3'>
                     <span>Ads Status : </span>
                     <Form.Check
                         type="switch"
                         id="custom-switch"
-                        label={isOn ? 'On' : 'Off'}
                         checked={isOn}
                         onChange={handleToggle}
                         className="custom-switch-lg"
