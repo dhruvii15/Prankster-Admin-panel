@@ -877,8 +877,8 @@ const Video = () => {
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{video.VideoName}</td>
                                 <td>{video.ArtistName}</td>
-                                <td>
-                                    <video controls width="240">
+                                <td className='d-flex2'>
+                                    <video controls width="150px" height="150px">
                                         <source src={video.Video} type="video/mp4" />
                                         <track
                                             kind="captions"
@@ -889,6 +889,13 @@ const Video = () => {
                                         />
                                         Your browser does not support the video element.
                                     </video>
+                                    
+                                    <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(video)}
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
+                                    </Button>
                                 </td>
                                 <td>{getLanguageName(video.LanguageId)}</td>
                                 <td>{getCategoryName(video.CategoryId)}</td>
@@ -918,12 +925,6 @@ const Video = () => {
                                     />
                                 </td>
                                 <td>
-                                    <Button
-                                        className="edit-dlt-btn text-black"
-                                        onClick={() => handleCopyToClipboard(video)} // Use an arrow function to pass the parameter
-                                    >
-                                        <FontAwesomeIcon icon={faCopy} />
-                                    </Button>
                                     <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(video)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>

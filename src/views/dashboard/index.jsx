@@ -15,10 +15,8 @@ import {
   LineElement,
   Title
 } from 'chart.js';
-import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import StatusChart from 'components/statusChart';
 
 ChartJS.register(
   ArcElement,
@@ -43,7 +41,6 @@ const DashAnalytics = () => {
     6: 'Punjabi'
   };
 
-  const getLanguageName = (id) => languageMap[id];
 
   const [data, setData] = useState({
     users: [],
@@ -95,37 +92,6 @@ const DashAnalytics = () => {
   const trendingVideo = data.video.filter(item => item.trending === true).length;
   const trendingGallery = data.gallery.filter(item => item.trending === true).length;
 
-  // Doughnut Chart Data
-  const doughnutData = {
-    labels: [],
-    datasets: [
-      {
-        label: "Trending Items",
-        data: [trendingCover, trendingAudio, trendingVideo, trendingGallery],
-        backgroundColor: [
-          "#44a6e9",
-          "#ff8548",
-          "#fec600",
-          "#15cab8"
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
-
-  const doughnutOptions = {
-    responsive: true,
-    cutout: "60%", // Adjust the percentage to control the inner circle size
-    plugins: {
-      legend: {
-        position: "top",
-      },
-      tooltip: {
-        enabled: true,
-      },
-    },
-  };
-
 
   useEffect(() => {
     fetchData();
@@ -161,143 +127,8 @@ const DashAnalytics = () => {
     { title: 'User Image Prank', icon: faPhotoFilm, count: data.userGallery.length, className: 'dash-color-4', path: '/user/image' },
   ];
 
-  // Bar Chart Data for user content
-  const barChartData = {
-    labels: ['User Cover', 'User Audio', 'User Video', 'User Gallery'],
-    datasets: [
-      {
-        label: 'User Content Count',
-        data: [
-          data.userCover.length || 0,
-          data.userAudio.length || 0,
-          data.userVideo.length || 0,
-          data.userGallery.length || 0
-        ], // If the data is empty, set it to 0
-        backgroundColor: ['#0bb3ea', '#0bb3ea', '#0bb3ea', '#0bb3ea'],
-        borderColor: ['#0bb3ea', '#0bb3ea', '#0bb3ea', '#0bb3ea'],
-        borderWidth: 1,
-      }
-    ],
-  };
-
-  const barChartOptions = {
-    responsive: true,
-    scales: {
-      x: {
-        grid: { display: false }, // Remove X-axis grid line
-      },
-      y: {
-        grid: { display: false }, // Remove Y-axis grid line
-        beginAtZero: true,
-      },
-    },
-    plugins: {
-      legend: {
-        display: false, // Hide the legend (User Content Count)
-      },
-      tooltip: {
-        enabled: false, // Hide tooltips
-      },
-    },
-    elements: {
-      bar: {
-        borderRadius: 10, // Rounded edges
-        barThickness: 30, // Adjust bar width
-      },
-    },
-  };
-
-
-
-  const lineChartData = {
-    labels: [...new Set([
-      ...data.audio.map(item => getLanguageName(item.LanguageId)),
-      ...data.video.map(item => getLanguageName(item.LanguageId)),
-      ...data.gallery.map(item => getLanguageName(item.LanguageId))
-    ])].sort(),
-    datasets: [
-      {
-        label: 'Audio',
-        data: [...new Set([
-          ...data.audio.map(item => item.LanguageId)
-        ])].sort().map(langId =>
-          data.audio.filter(item => item.LanguageId === langId).length
-        ),
-        borderColor: 'rgb(153, 102, 255)',
-        backgroundColor: 'rgba(153, 102, 255, 0.2)',
-        tension: 0.4,
-      },
-      {
-        label: 'Video',
-        data: [...new Set([
-          ...data.video.map(item => item.LanguageId)
-        ])].sort().map(langId =>
-          data.video.filter(item => item.LanguageId === langId).length
-        ),
-        borderColor: 'rgb(255, 159, 64)',
-        backgroundColor: 'rgba(255, 159, 64, 0.2)',
-        tension: 0.4,
-      },
-      {
-        label: 'Gallery',
-        data: [...new Set([
-          ...data.gallery.map(item => item.LanguageId)
-        ])].sort().map(langId =>
-          data.gallery.filter(item => item.LanguageId === langId).length
-        ),
-        borderColor: 'rgb(255, 99, 132)',
-        backgroundColor: 'rgba(255, 99, 132, 0.2)',
-        tension: 0.4,
-      },
-    ],
-  };
-
-  // Update the lineChartOptions to reflect language distribution
-  const lineChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-      },
-      title: {
-        display: true,
-        text: 'Content Distribution by Language'
-      },
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        grid: {
-          drawBorder: false,
-          color: 'rgba(0, 0, 0, 0.1)',
-        },
-        title: {
-          display: true,
-          text: 'Number of Items'
-        }
-      },
-      x: {
-        grid: {
-          display: false,
-        },
-        title: {
-          display: true,
-          text: 'Language'
-        }
-      },
-    },
-    elements: {
-      point: {
-        radius: 4,
-        hoverRadius: 6,
-      },
-      line: {
-        borderWidth: 2,
-      },
-    },
-  };
-
-
+  
+  
 
   return (
     <>
@@ -343,48 +174,7 @@ const DashAnalytics = () => {
         ))}
       </Row>
 
-      <Row className='py-5 px-4 mt-3 d-flex align-items-start'>
-        <Col md={12} lg={6} className='mx-auto mt-3'>
-          <h5 className="mb-4">User Upload</h5>
-          <div className='bg-white p-4 rounded-4 align-items-center' style={{ border: "1px solid #c1c1c1" }}>
-            <Bar data={barChartData} options={barChartOptions} />
-          </div>
-        </Col>
-        <Col md={12} lg={6} className='mx-auto'>
-          <h5 className="mb-4 pt-3">Trending Prank </h5>
-          <div className="p-4 d-flex flex-wrap bg-white rounded-4 align-items-center" style={{ border: "1px solid #c1c1c1" }}>
-            <div className='w-50'>
-              <Doughnut data={doughnutData} options={doughnutOptions} />
-            </div>
-            <div className='pt-4 w-50 px-3'>
-              <div className='d-flex align-items-center gap-3 py-1'>
-                <span style={{ background: "#44a6e9", width: "12px", height: "12px" }} className='rounded-circle'></span>
-                <span>Cover</span>
-                <span className='ms-auto'>{trendingCover}</span>
-              </div>
-
-              <div className='d-flex align-items-center gap-3 py-1'>
-                <span style={{ background: "#ff8548", width: "12px", height: "12px" }} className='rounded-circle'></span>
-                <span>Audio</span>
-                <span className='ms-auto'>{trendingAudio}</span>
-              </div>
-
-              <div className='d-flex align-items-center gap-3 py-1'>
-                <span style={{ background: "#fec600", width: "12px", height: "12px" }} className='rounded-circle'></span>
-                <span>Video</span>
-                <span className='ms-auto'>{trendingVideo}</span>
-              </div>
-
-              <div className='d-flex align-items-center gap-3 py-1'>
-                <span style={{ background: "#15cab8", width: "12px", height: "12px" }} className='rounded-circle'></span>
-                <span>Gallery</span>
-                <span className='ms-auto'>{trendingGallery}</span>
-              </div>
-
-            </div>
-          </div>
-        </Col>
-      </Row>
+      
 
 
 
@@ -394,23 +184,7 @@ const DashAnalytics = () => {
 
 
 
-
-      <Row className="py-5 px-4 d-flex align-items-stretch">
-        <Col md={12} lg={4} className="mx-auto d-flex flex-column">
-          <h5 className="mb-4">Prank Status</h5>
-          <div className="bg-white rounded-4 py-4 px-3" style={{ border: "1px solid #c1c1c1", height: "100%" }}>
-            <StatusChart />
-          </div>
-        </Col>
-        <Col md={12} lg={8} className="mx-auto d-flex flex-column">
-          <h5 className="mb-4">Language Chart</h5>
-          <div className="bg-white rounded-4 p-3" style={{ border: "1px solid #c1c1c1", height: "100%" }}>
-            <Line data={lineChartData} options={lineChartOptions} />
-          </div>
-        </Col>
-      </Row>
-
-
+      
     </>
   );
 };

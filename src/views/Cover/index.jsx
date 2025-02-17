@@ -698,7 +698,7 @@ const CoverURL = () => {
                             <tr key={cover._id}>
                                 <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                 <td>{cover.CoverName || 'No Name'}</td>
-                                <td>
+                                <td className='d-flex2'>
                                     <button
                                         style={{
                                             background: 'none',
@@ -721,6 +721,13 @@ const CoverURL = () => {
                                             }}
                                         />
                                     </button>
+
+                                    <Button
+                                        className="edit-dlt-btn text-black"
+                                        onClick={() => handleCopyToClipboard(cover)}
+                                    >
+                                        <FontAwesomeIcon icon={faCopy} />
+                                    </Button>
                                 </td>
 
                                 <td>
@@ -759,12 +766,6 @@ const CoverURL = () => {
                                     />
                                 </td>
                                 <td>
-                                    <Button
-                                        className="edit-dlt-btn text-black"
-                                        onClick={() => handleCopyToClipboard(cover)}
-                                    >
-                                        <FontAwesomeIcon icon={faCopy} />
-                                    </Button>
 
                                     <Button
                                         className="edit-dlt-btn"

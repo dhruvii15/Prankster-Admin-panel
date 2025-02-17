@@ -1007,7 +1007,7 @@ const Gallery = () => {
                             <tr key={gallery._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
                                 <td>{indexOfFirstItem + index + 1}</td>
                                 <td>{gallery.GalleryName}</td>
-                                <td>
+                                <td className='d-flex2'>
                                     <button
                                         style={{
                                             background: 'none',
@@ -1023,6 +1023,13 @@ const Gallery = () => {
                                             style={{ width: '100px', height: '100px' }}
                                         />
                                     </button>
+                                        
+                                        <Button
+                                            className="edit-dlt-btn text-black"
+                                            onClick={() => handleCopyToClipboard(gallery)} // Use an arrow function to pass the parameter
+                                        >
+                                            <FontAwesomeIcon icon={faCopy} />
+                                        </Button>
                                 </td>
 
                                 <td>{getLanguageName(gallery.LanguageId)}</td>
@@ -1053,12 +1060,6 @@ const Gallery = () => {
                                     />
                                 </td>
                                 <td>
-                                    <Button
-                                        className="edit-dlt-btn text-black"
-                                        onClick={() => handleCopyToClipboard(gallery)} // Use an arrow function to pass the parameter
-                                    >
-                                        <FontAwesomeIcon icon={faCopy} />
-                                    </Button>
                                     <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(gallery)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>

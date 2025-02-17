@@ -8,6 +8,7 @@ import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import ImagePreviewModal from 'components/ImagePreviewModal';
 
 
 const Audio = () => {
@@ -51,6 +52,8 @@ const Audio = () => {
     const [audioInputType, setAudioInputType] = useState('file');
     const [imageUrlText, setImageUrlText] = useState('');
     const [audioUrlText, setAudioUrlText] = useState('');
+    const [showPreview, setShowPreview] = useState(false);
+    const [previewIndex, setPreviewIndex] = useState(0);
 
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
@@ -286,24 +289,24 @@ const Audio = () => {
             .test('fileOrText', 'Invalid URL format . (ending with .jpg, .jpeg, or .png)', function (value) {
                 // If no image file or URL is provided, validation passes
                 if (!value && !imageUrlText) return true;
-                
+
                 // If in text mode, check if URL is provided
                 if (imageInputType === 'text') {
                     // If URL is empty, validation passes (optional field)
                     if (!imageUrlText) return true;
                     // If URL is provided, validate extension
                     const validImageExtensions = ['.jpg', '.jpeg', '.png'];
-                    return validImageExtensions.some(ext => 
+                    return validImageExtensions.some(ext =>
                         imageUrlText.toLowerCase().endsWith(ext)
                     );
                 }
-                
+
                 // If in file mode, validate file type if a file is provided
                 if (value instanceof File) {
                     const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
                     return allowedTypes.includes(value.type);
                 }
-                
+
                 return true;
             }),
         AudioPremium: Yup.boolean(),
@@ -578,19 +581,33 @@ const Audio = () => {
     };
 
     const handleCopyToClipboard = (audio) => {
-        if (audio?.Audio) {
-            navigator.clipboard.writeText(audio.Audio)
-                .then(() => {
-                    toast.success("Audio URL copied to clipboard!");
-                })
-                .catch((error) => {
-                    console.error("Failed to copy: ", error);
-                });
-        } else {
-            alert("No URL to copy!");
-        }
+        navigator.clipboard.writeText(audio)
+            .then(() => {
+                toast.success("URL copied to clipboard!");
+            })
+            .catch((error) => {
+                alert("No URL to copy!");
+            });
     };
 
+    const handleShowPreview = (currentPageIndex) => {
+        // Calculate the actual index in the full filtered dataset
+        const actualIndex = (currentPage - 1) * itemsPerPage + currentPageIndex;
+        setPreviewIndex(actualIndex);
+        setShowPreview(true);
+    };
+
+    const handlePreviewNavigation = (newIndex) => {
+        if (newIndex >= 0 && newIndex < filteredData.length) {
+            setPreviewIndex(newIndex);
+            // Calculate which page this image is on
+            const newPage = Math.floor(newIndex / itemsPerPage) + 1;
+            // Update the current page if necessary
+            if (newPage !== currentPage) {
+                setCurrentPage(newPage);
+            }
+        }
+    };
     const renderFileInputSection = (type, formik) => {
         const isImage = type === 'image';
         const inputType = isImage ? imageInputType : audioInputType;
@@ -1014,20 +1031,51 @@ const Audio = () => {
                                 <td>{audio.AudioName}</td>
                                 <td>{audio.ArtistName}</td>
                                 <td>
-                                    <img src={audio.AudioImage} alt="Audio thumbnail" style={{ width: '50px', height: '50px' }} />
+                                    <div className='d-flex2'>
+                                        <button
+                                            style={{
+                                                background: 'none',
+                                                border: 'none',
+                                                padding: 0,
+                                                cursor: 'pointer',
+                                            }}
+                                            onClick={() => handleShowPreview(index)}
+                                        >
+                                            <img
+                                                src={audio.AudioImage}
+                                                alt="Audio thumbnail"
+                                                style={{ width: '50px', height: '50px' }}
+                                            />
+                                        </button>
+                                        <Button
+                                            className="edit-dlt-btn text-black"
+                                            onClick={() => handleCopyToClipboard(audio.AudioImage)} // Use an arrow function to pass the parameter
+                                        >
+                                            <FontAwesomeIcon icon={faCopy} />
+                                        </Button>
+                                    </div>
                                 </td>
-                                <td>
-                                    <audio controls>
-                                        <source src={audio.Audio} type="audio/mpeg" />
-                                        <track
-                                            kind="captions"
-                                            src={audio.AudioName}
-                                            srcLang="en"
-                                            label="English"
-                                            default
-                                        />
-                                        Your browser does not support the audio element.
-                                    </audio>
+                                <td >
+                                    <div className='d-flex2'>
+                                        <audio controls>
+                                            <source src={audio.Audio} type="audio/mpeg" />
+                                            <track
+                                                kind="captions"
+                                                src={audio.AudioName}
+                                                srcLang="en"
+                                                label="English"
+                                                default
+                                            />
+                                            Your browser does not support the audio element.
+                                        </audio>
+
+                                        <Button
+                                            className="edit-dlt-btn text-black"
+                                            onClick={() => handleCopyToClipboard(audio.Audio)} // Use an arrow function to pass the parameter
+                                        >
+                                            <FontAwesomeIcon icon={faCopy} />
+                                        </Button>
+                                    </div>
                                 </td>
                                 <td>{getLanguageName(audio.LanguageId)}</td>
                                 <td>{getCategoryName(audio.CategoryId)}</td>
@@ -1056,12 +1104,6 @@ const Audio = () => {
                                     />
                                 </td>
                                 <td>
-                                    <Button
-                                        className="edit-dlt-btn text-black"
-                                        onClick={() => handleCopyToClipboard(audio)} // Use an arrow function to pass the parameter
-                                    >
-                                        <FontAwesomeIcon icon={faCopy} />
-                                    </Button>
                                     <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
                                         <FontAwesomeIcon icon={faEdit} />
                                     </Button>
@@ -1088,6 +1130,15 @@ const Audio = () => {
                     </div>
                 )
             }
+
+            <ImagePreviewModal
+                show={showPreview}
+                onHide={() => setShowPreview(false)}
+                images={filteredData.map(item => item.AudioImage)} // Changed from GalleryImage to AudioImage
+                currentIndex={previewIndex}
+                onNavigate={handlePreviewNavigation}
+                totalImages={filteredData.length}
+            />
 
             <ToastContainer />
         </div >
