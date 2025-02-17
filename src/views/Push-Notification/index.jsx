@@ -4,8 +4,6 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// img
-import logo from "../../assets/images/logo.svg";
 
 const PushNotification = () => {
     const [visible, setVisible] = useState(false);
@@ -152,17 +150,18 @@ const PushNotification = () => {
     };
 
     if (loading) return (
-        <div style={{
-            height: '100vh',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            overflow: "hidden"
-        }}>
-            <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2",
-                width: "200px"
-            }} />
+        <div
+            style={{
+                height: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                overflow: "hidden"
+            }}
+        >
+            <div className="dots-loader">
+                <span></span><span></span><span></span>
+            </div>
         </div>
     );
 

@@ -7,7 +7,6 @@ import 'react-toastify/dist/ReactToastify.css';
 import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // img
-import logo from "../../assets/images/logo.svg";
 import ImagePreviewModal from 'components/ImagePreviewModal';
 import { faCopy } from '@fortawesome/free-regular-svg-icons';
 
@@ -241,10 +240,9 @@ const UserGallery = () => {
                 overflow: "hidden"
             }}
         >
-            <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2",
-                width: "200px"
-            }} />
+            <div className="dots-loader">
+                <span></span><span></span><span></span>
+            </div>
         </div>
     );
 

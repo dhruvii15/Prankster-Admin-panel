@@ -8,7 +8,6 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import logo from "../../assets/images/logo.svg";
 import TagSelector from 'views/TagSelector';
 import ImagePreviewModal from 'components/ImagePreviewModal';
 
@@ -578,13 +577,21 @@ const CoverURL = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div style={{ height: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', overflow: "hidden" }}>
-                <img src={logo} alt='loading....' style={{ animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px" }} />
+    if (loading) return (
+        <div
+            style={{
+                height: '100vh',
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                overflow: "hidden"
+            }}
+        >
+            <div className="dots-loader">
+                <span></span><span></span><span></span>
             </div>
-        );
-    }
+        </div>
+    );
 
     const handleCopyToClipboard = (cover) => {
         if (cover?.CoverURL) {
@@ -738,7 +745,7 @@ const CoverURL = () => {
                                         onClick={() => handleSafeToggle(cover._id, cover.Safe)}
                                     >
                                         <FontAwesomeIcon
-                                            icon={cover.Safe ? faEyeSlash : faEye}
+                                            icon={cover.Safe ? faEye : faEyeSlash}
                                             title={cover.Safe ? "Hidden" : "Visible"}
                                         />
                                     </Button>

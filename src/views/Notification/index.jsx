@@ -5,7 +5,6 @@ import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import logo from "../../assets/images/logo.svg";
 
 const ITEMS_PER_PAGE = 15;
 
@@ -185,9 +184,9 @@ const Notification = () => {
                 overflow: "hidden"
             }}
         >
-            <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
-            }} />
+            <div className="dots-loader">
+                <span></span><span></span><span></span>
+            </div>
         </div>
     );
 

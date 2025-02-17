@@ -57,7 +57,7 @@ const NavBar = () => {
                 src={logo} 
                 alt="Main Logo" 
                 className="logo img-fluid" 
-                style={{ width: "90px", cursor: "pointer" }} 
+                style={{ width: "80px", cursor: "pointer" }} 
             />
         </button>
         </Link>

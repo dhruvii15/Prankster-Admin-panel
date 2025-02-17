@@ -6,8 +6,6 @@ import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// img
-import logo from "../../../assets/images/logo.svg";
 
 const DeepLink = () => {
     const [visible, setVisible] = useState(false);
@@ -118,9 +116,9 @@ const DeepLink = () => {
                 overflow: "hidden"
             }}
         >
-            <img src={logo} alt='loading....' style={{
-                animation: "1.2s ease-out infinite zoom-in-zoom-out2", width: "200px"
-            }} />
+            <div className="dots-loader">
+                <span></span><span></span><span></span>
+            </div>
         </div>
     );
 

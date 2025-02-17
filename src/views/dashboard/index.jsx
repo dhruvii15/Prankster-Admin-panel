@@ -18,7 +18,6 @@ import {
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
-import logo from "../../assets/images/logo.svg";
 import StatusChart from 'components/statusChart';
 
 ChartJS.register(
@@ -132,23 +131,21 @@ const DashAnalytics = () => {
     fetchData();
   }, []);
 
-  if (loading) {
-    return (
-      <div style={{
+  if (loading) return (
+    <div
+      style={{
         height: '100vh',
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
         overflow: "hidden"
-      }}>
-        <img src={logo} alt='loading....' style={{
-          animation: "1.2s ease-out infinite zoom-in-zoom-out2",
-          width: "200px"
-        }} />
+      }}
+    >
+      <div className="dots-loader">
+        <span></span><span></span><span></span>
       </div>
-    );
-  }
-
+    </div>
+  );
   // Card data for displaying count of items in each category
   const cardData = [
     { title: 'Cover-Image', icon: faImage, count: data.cover.length, className: 'dash-color-5', path: '/cover' },
