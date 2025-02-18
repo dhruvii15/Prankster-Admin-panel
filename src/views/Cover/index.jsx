@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass, faTimes, faCrown, faTag } from '@fortawesome/free-solid-svg-icons';
-import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faClipboard, faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -77,13 +77,15 @@ const CoverURL = () => {
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    console.log(previewUrl);
+
     const fetchSuggestions = async () => {
         try {
             setLoading(true);
             const formData = new FormData();
             formData.append("prankid", "4");
 
-            const response = await axios.post("http://localhost:5001/api/cover/tagName", formData);
+            const response = await axios.post("https://pslink.world/api/cover/tagName", formData);
             setSuggestions(response.data.data || []);
         } catch (error) {
             console.error("Error fetching suggestions:", error);
@@ -306,6 +308,7 @@ const CoverURL = () => {
         getData();
         getTagName();
         getAdminData();
+        fetchSuggestions();
     }, []);
 
     const getGlobalIndex = (localIndex) => {
@@ -693,6 +696,12 @@ const CoverURL = () => {
                 </div>
             </div>
 
+            <div className='mt-4 border p-3 rounded-4 d-inline-block' style={{ background: "#FFF0E7" }}>
+                <p className='fw-bold fs-6'><FontAwesomeIcon icon={faClipboard} className='pe-3' />Notes :</p>
+                <p className='m-0' style={{ fontSize: "13px" }}> * Use the Safe/Unsafe toggle to control content visibility.</p>
+                <p className='m-0' style={{ fontSize: "13px" }}> * Switch between Free and Premium content using the tabs.</p>
+            </div>
+
             <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap">
                 <Button
                     onClick={() => toggleModal('add')}
@@ -729,23 +738,23 @@ const CoverURL = () => {
                                     <div>Loading...</div>
                                 ) : suggestions.length > 0 ? (
                                     suggestions.slice(0, 15).map((suggestion, index) => (
-                                        <p
+                                        <button
                                             key={index}
                                             className="px-3 py-1 rounded-3 border mx-1 mb-1"
                                             onClick={() => handleSuggestionClick(suggestion)}
                                             style={{ cursor: "pointer", fontSize: "13px" }}
                                         >
                                             {suggestion}
-                                        </p>
+                                        </button>
                                     ))
                                 ) : (
                                     <div className="p-2 text-center text-gray-500">No suggestions available</div>
                                 )}
                             </div>
                         )}
-                        
+
                     </div>
-                    
+
                     <AccessTabs
                         activeTab={activeTab}
                         onTabChange={(tab) => {

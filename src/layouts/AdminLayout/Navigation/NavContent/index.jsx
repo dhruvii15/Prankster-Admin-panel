@@ -6,7 +6,7 @@ import { ConfigContext } from '../../../../contexts/ConfigContext';
 import * as actionType from '../../../../store/actions';
 import NavigationDropdowns from './NavigationDropdowns';
 
-const NavContent = ({ navigation }) => {
+const NavContent = () => {
   const [scrollWidth, setScrollWidth] = useState(0);
   const [prevDisable, setPrevDisable] = useState(true);
   const [nextDisable, setNextDisable] = useState(false);

@@ -32,14 +32,14 @@ ChartJS.register(
 
 const DashAnalytics = () => {
   // Language mapping
-  const languageMap = {
-    1: 'Hindi',
-    2: 'English',
-    3: 'Marathi',
-    4: 'Gujarati',
-    5: 'Tamil',
-    6: 'Punjabi'
-  };
+  // const languageMap = {
+  //   1: 'Hindi',
+  //   2: 'English',
+  //   3: 'Marathi',
+  //   4: 'Gujarati',
+  //   5: 'Tamil',
+  //   6: 'Punjabi'
+  // };
 
 
   const [data, setData] = useState({
@@ -87,10 +87,10 @@ const DashAnalytics = () => {
 
 
   // Filtering trending items
-  const trendingCover = data.cover.filter(item => item.trending === true).length;
-  const trendingAudio = data.audio.filter(item => item.trending === true).length;
-  const trendingVideo = data.video.filter(item => item.trending === true).length;
-  const trendingGallery = data.gallery.filter(item => item.trending === true).length;
+  // const trendingCover = data.cover.filter(item => item.trending === true).length;
+  // const trendingAudio = data.audio.filter(item => item.trending === true).length;
+  // const trendingVideo = data.video.filter(item => item.trending === true).length;
+  // const trendingGallery = data.gallery.filter(item => item.trending === true).length;
 
 
   useEffect(() => {

@@ -7,7 +7,7 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faClipboard, faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import ImagePreviewModal from 'components/ImagePreviewModal';
 
 
@@ -63,7 +63,6 @@ const Audio = () => {
     const [isSubmitting2, setIsSubmitting2] = useState(false);
     const [adminId, setAdminId] = useState(null);
     // const [safeFilter, setSafeFilter] = useState('');
-    const [premiumFilter, setPremiumFilter] = useState('');
 
     // New state for category and additional filters
     const [activeTab, setActiveTab] = useState('all');
@@ -595,7 +594,7 @@ const Audio = () => {
             .then(() => {
                 toast.success("URL copied to clipboard!");
             })
-            .catch((error) => {
+            .catch(() => {
                 alert("No URL to copy!");
             });
     };
@@ -785,6 +784,13 @@ const Audio = () => {
                         />
                     </Form>
                 </div>
+            </div>
+            <div className='mt-4 border p-3 rounded-4 d-inline-block' style={{ background: "#FFF0E7" }}>
+                <p className='fw-bold fs-6'><FontAwesomeIcon icon={faClipboard} className='pe-3' />Notes :</p>
+                <p className='m-0' style={{ fontSize: "13px" }}> * Use the Safe/Unsafe toggle to control content visibility.</p>
+                <p className='m-0' style={{ fontSize: "13px" }}> * Switch between Free and Premium content using the tabs.</p>
+                <p className='m-0' style={{ fontSize: "13px" }}> * Select a language tab to find content in your preferred language.</p>
+                <p className='m-0' style={{ fontSize: "13px" }}> * Use the dropdown to filter content by category.</p>
             </div>
             <div className='d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4'>
                 <Button

@@ -41,17 +41,18 @@ const NavigationDropdowns = () => {
 
                 {/* Content Management Dropdown */}
                 <ListGroup.Item className="nav-item p-0 py-3">
-                    <div
-                        className="nav-link"
+                    <button
+                        className="nav-link w-100 p-2 d-flex justify-content-between align-items-center border-0 bg-transparent"
                         onClick={() => toggleDropdown('content')}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: "pointer" }}
+                        style={{ cursor: "pointer" }}
                     >
-                        <div className='fw-bold'>
+                        <div className="fw-bold d-flex align-items-center">
                             <FontAwesomeIcon icon={faLayerGroup} className="me-2" />
                             Content Management
                         </div>
                         <FontAwesomeIcon icon={openDropdowns.content ? faChevronUp : faChevronDown} />
-                    </div>
+                    </button>
+
                     <Collapse in={openDropdowns.content}>
                         <ListGroup variant="flush">
                             <ListGroup.Item className={`${isSelected('cover')}`}>
@@ -91,7 +92,7 @@ const NavigationDropdowns = () => {
                                     </ListGroup.Item>
                                 </ListGroup>
                             </ListGroup.Item>
-                            
+
                             <ListGroup.Item className='p-0'>
                                 <div className="p-2 fw-bold">
                                     User-Uploads
@@ -153,17 +154,20 @@ const NavigationDropdowns = () => {
 
                 {/* Analytics Dropdown */}
                 <ListGroup.Item className="nav-item p-0 py-3">
-                    <div
+                    <button
                         className="nav-link"
                         onClick={() => toggleDropdown('analytics')}
-                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: "pointer" }}
+                        style={{ cursor: "pointer", background: "none", border: "none", width: "100%" }}
                     >
-                        <div className='fw-bold'>
-                            <FontAwesomeIcon icon={faChartSimple} className="me-2" />
-                            Analytics
+                        <div className="d-flex justify-content-between align-items-center w-100">
+                            <div className='fw-bold d-flex align-items-center'>
+                                <FontAwesomeIcon icon={faChartSimple} className="me-2" />
+                                Analytics
+                            </div>
+                            <FontAwesomeIcon icon={openDropdowns.analytics ? faChevronUp : faChevronDown} />
                         </div>
-                        <FontAwesomeIcon icon={openDropdowns.analytics ? faChevronUp : faChevronDown} />
-                    </div>
+                    </button>
+
                     <Collapse in={openDropdowns.analytics}>
                         <ListGroup variant="flush">
                             {/* Before App Analytics */}
