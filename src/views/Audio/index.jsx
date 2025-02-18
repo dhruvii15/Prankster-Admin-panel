@@ -1,34 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination, Col, Row, Spinner, Nav } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Col, Row, Spinner, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faTag, faCrown } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faChevronDown, faPlus } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faClipboard, faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import ImagePreviewModal from 'components/ImagePreviewModal';
 
-
-const AccessTabs = ({ activeTab2, onTabChange }) => {
-    return (
-        <div className="d-flex border rounded-pill overflow-hidden border bg-white" style={{ height: "40px", width: "210px" }}>
-            <button
-                className={`border-0 w-50 rounded-pill ${activeTab2 === "Free" ? "bg-tab" : "bg-white"}`}
-                onClick={() => onTabChange("Free")}
-            >
-                <FontAwesomeIcon icon={faTag} /> Free
-            </button>
-            <button
-                className={`border-0 w-50 rounded-pill ${activeTab2 === "Premium" ? "bg-tab" : "bg-white"}`}
-                onClick={() => onTabChange("Premium")}
-            >
-                <FontAwesomeIcon icon={faCrown} /> Premium
-            </button>
-        </div>
-    );
-};
+// img
+import filter from "../../assets/images/filter.png"
 
 
 const Audio = () => {
@@ -65,8 +48,6 @@ const Audio = () => {
     // const [safeFilter, setSafeFilter] = useState('');
 
     // New state for category and additional filters
-    const [activeTab, setActiveTab] = useState('all');
-    const [selectedCategoryFilter, setSelectedCategoryFilter] = useState('');
     const [imageInputType, setImageInputType] = useState('file');
     const [audioInputType, setAudioInputType] = useState('file');
     const [imageUrlText, setImageUrlText] = useState('');
@@ -74,6 +55,8 @@ const Audio = () => {
     const [showPreview, setShowPreview] = useState(false);
     const [previewIndex, setPreviewIndex] = useState(0);
     const [activeTab2, setActiveTab2] = useState("Free");
+    const [selectedLanguage, setSelectedLanguage] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState('');
 
 
     const inputTypes = [
@@ -81,6 +64,10 @@ const Audio = () => {
         { id: 'text', label: 'URL' }
     ];
 
+    const accessTypes = [
+        { id: 'Free', label: 'Free' },
+        { id: 'Premium', label: 'Premium' }
+    ]
 
     const getCategoryName = (categoryId) => {
         const cat = category.find(c => c.CategoryId === parseInt(categoryId));
@@ -172,7 +159,7 @@ const Audio = () => {
             .then((res) => {
                 const newData = res.data.data;
                 setData(newData);
-                filterAudioData(newData, activeTab);
+                filterAudioData(newData);
                 setLoading(false);
             })
             .catch((err) => {
@@ -188,73 +175,69 @@ const Audio = () => {
     }, []);
 
 
-    const getFilteredCount = (options = {}) => {
-        const {
-            categoryId = null,
-            languageId = null,
-            languageTab = 'all'
-        } = options;
+    // const getFilteredCount = (options = {}) => {
+    //     const {
+    //         categoryId = null,
+    //         languageId = null,
+    //         languageTab = 'all'
+    //     } = options;
 
-        // Start with base filtering by safe/unsafe
-        let filtered = data.filter(item => item.Safe === isOn);
+    //     // Start with base filtering by safe/unsafe
+    //     let filtered = data.filter(item => item.Safe === isOn);
 
-        // Apply language filter
-        if (languageTab !== 'all') {
-            const selectedLanguage = language.find(cat => cat.LanguageName.toLowerCase() === languageTab);
-            if (selectedLanguage) {
-                filtered = filtered.filter(item => item.LanguageId === selectedLanguage.LanguageId);
-            }
-        }
+    //     // Apply language filter
+    //     if (languageTab !== 'all') {
+    //         const selectedLanguage = language.find(cat => cat.LanguageName.toLowerCase() === languageTab);
+    //         if (selectedLanguage) {
+    //             filtered = filtered.filter(item => item.LanguageId === selectedLanguage.LanguageId);
+    //         }
+    //     }
 
-        // Apply specific language filter if provided
-        if (languageId) {
-            filtered = filtered.filter(item => item.LanguageId === languageId);
-        }
+    //     // Apply specific language filter if provided
+    //     if (languageId) {
+    //         filtered = filtered.filter(item => item.LanguageId === languageId);
+    //     }
 
-        // Apply language filter
-        if (categoryId) {
-            filtered = filtered.filter(item => item.CategoryId === parseInt(categoryId));
-        }
+    //     // Apply language filter
+    //     if (categoryId) {
+    //         filtered = filtered.filter(item => item.CategoryId === parseInt(categoryId));
+    //     }
 
-        // Apply additional filters
-        if (selectedCategoryFilter) {
-            filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
-        }
+    //     // Apply additional filters
+    //     if (selectedCategoryFilter) {
+    //         filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
+    //     }
 
-        // Apply safe/unsafe filter
-        // if (safeFilter) {
-        //     filtered = filtered.filter(item => {
-        //         if (safeFilter === 'Safe') return !item.Hide;
-        //         if (safeFilter === 'Unsafe') return item.Hide;
-        //         return true;
-        //     });
-        // }
+    //     // Apply safe/unsafe filter
+    //     // if (safeFilter) {
+    //     //     filtered = filtered.filter(item => {
+    //     //         if (safeFilter === 'Safe') return !item.Hide;
+    //     //         if (safeFilter === 'Unsafe') return item.Hide;
+    //     //         return true;
+    //     //     });
+    //     // }
 
-        // Apply premium/free filter based on activeTab (Free or Premium)
-        if (activeTab2 === "Premium") {
-            filtered = filtered.filter(item => item.AudioPremium); // Only show premium items
-        } else if (activeTab2 === "Free") {
-            filtered = filtered.filter(item => !item.AudioPremium); // Only show free items
-        }
+    //     // Apply premium/free filter based on activeTab (Free or Premium)
+    //     if (activeTab2 === "Premium") {
+    //         filtered = filtered.filter(item => item.AudioPremium); // Only show premium items
+    //     } else if (activeTab2 === "Free") {
+    //         filtered = filtered.filter(item => !item.AudioPremium); // Only show free items
+    //     }
 
-        return filtered.length;
-    };
+    //     return filtered.length;
+    // };
 
     const filterAudioData = () => {
-        // Start with base filtering by safe/unsafe
         let filtered = data.filter(item => item.Safe === isOn);
 
-        // Apply language filter if not "all"
-        if (activeTab !== 'all') {
-            const selectedLanguage = language.find(lang => lang.LanguageName.toLowerCase() === activeTab.toLowerCase());
-            if (selectedLanguage) {
-                filtered = filtered.filter(item => item.LanguageId === selectedLanguage.LanguageId);
-            }
+        // Apply language filter
+        if (selectedLanguage) {
+            filtered = filtered.filter(item => item.LanguageId === parseInt(selectedLanguage));
         }
 
-        // Apply category filter if one is selected
-        if (selectedCategoryFilter) {
-            filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategoryFilter));
+        // Apply category filter
+        if (selectedCategory) {
+            filtered = filtered.filter(item => item.CategoryId === parseInt(selectedCategory));
         }
 
         // Apply premium/free filter
@@ -267,11 +250,36 @@ const Audio = () => {
         setFilteredData(filtered);
     };
 
-    // Update useEffect dependencies to include all relevant filters
+    // Handle language selection
+    const handleLanguageChange = (value) => {
+        setSelectedLanguage(value);
+        setSelectedCategory(''); // Reset category when language changes
+        setCurrentPage(1); // Reset to first page
+    };
+
+    // Handle category selection
+    const handleCategoryChange = (value) => {
+        setSelectedCategory(value);
+        setCurrentPage(1); // Reset to first page
+    };
+
+    // Update useEffect to include new filters
     useEffect(() => {
         filterAudioData();
-    }, [activeTab, activeTab2, selectedCategoryFilter, data, isOn]);
+    }, [selectedLanguage, selectedCategory, data, isOn, activeTab2]);
 
+    // Helper functions for dropdown display
+    const getSelectedLanguageName = () => {
+        if (!selectedLanguage) return 'Select Language';
+        const lang = language.find(l => l.LanguageId === parseInt(selectedLanguage));
+        return lang ? lang.LanguageName : 'Select Language';
+    };
+
+    const getSelectedCategoryName = () => {
+        if (!selectedCategory) return 'Select Category';
+        const cat = category.find(c => c.CategoryId === parseInt(selectedCategory));
+        return cat ? cat.CategoryName : 'Select Category';
+    };
 
     const audioSchema = Yup.object().shape({
         AudioName: Yup.string().required('Audio Prank Name is required'),
@@ -553,41 +561,54 @@ const Audio = () => {
     };
 
     // Pagination logic
-    const itemsPerPage = 15;
-    const [currentPage, setCurrentPage] = useState(1);
-
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
-
-    const renderPaginationItems = () => {
-        let items = [];
-        const totalPagesToShow = 4;
-
-        let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
-        let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
-
-        if (endPage - startPage < totalPagesToShow - 1) {
-            startPage = Math.max(1, endPage - totalPagesToShow + 1);
-        }
-
-        for (let i = startPage; i <= endPage; i++) {
-            items.push(
-                <Pagination.Item
-                    key={i}
-                    active={i === currentPage}
-                    onClick={() => paginate(i)}
-                >
-                    {i}
-                </Pagination.Item>
-            );
-        }
-
-        return items;
-    };
+        const [currentPage, setCurrentPage] = useState(1);
+        const [itemsPerPage, setItemsPerPage] = useState(10);
+        const itemsPerPageOptions = [10, 25, 50, 100];
+    
+        const handleItemsPerPageChange = (value) => {
+            setItemsPerPage(value);
+            setCurrentPage(1); // Reset to first page when changing items per page
+        };
+    
+        // Calculate pagination values
+        const totalItems = filteredData.length;
+        const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+        const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+        const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+    
+        // Handle page changes
+        const paginate = (pageNumber) => {
+            setCurrentPage(pageNumber);
+        };
+    
+        // Render pagination controls
+        const renderPaginationItems = () => {
+            let items = [];
+            const totalPagesToShow = 4;
+    
+            let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
+            let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
+    
+            if (endPage - startPage < totalPagesToShow - 1) {
+                startPage = Math.max(1, endPage - totalPagesToShow + 1);
+            }
+    
+            for (let i = startPage; i <= endPage; i++) {
+                items.push(
+                    <Pagination.Item
+                        key={i}
+                        active={i === currentPage}
+                        onClick={() => paginate(i)}
+                    >
+                        {i}
+                    </Pagination.Item>
+                );
+            }
+    
+            return items;
+        };
 
     const handleCopyToClipboard = (audio) => {
         navigator.clipboard.writeText(audio)
@@ -785,80 +806,316 @@ const Audio = () => {
                     </Form>
                 </div>
             </div>
-            <div className='mt-4 border p-3 rounded-4 d-inline-block' style={{ background: "#FFF0E7" }}>
-                <p className='fw-bold fs-6'><FontAwesomeIcon icon={faClipboard} className='pe-3' />Notes :</p>
-                <p className='m-0' style={{ fontSize: "13px" }}> * Use the Safe/Unsafe toggle to control content visibility.</p>
-                <p className='m-0' style={{ fontSize: "13px" }}> * Switch between Free and Premium content using the tabs.</p>
-                <p className='m-0' style={{ fontSize: "13px" }}> * Select a language tab to find content in your preferred language.</p>
-                <p className='m-0' style={{ fontSize: "13px" }}> * Use the dropdown to filter content by category.</p>
-            </div>
-            <div className='d-flex flex-wrap gap-3 justify-content-between align-items-center mt-4'>
-                <Button
-                    onClick={() => toggleModal('add')}
-                    className='rounded-3 border-0'
-                    style={{ backgroundColor: "#F9E238", color: "black" }}
-                >
-                    Add Audio Prank
-                </Button>
-
-                <AccessTabs
-                    activeTab2={activeTab2}
-                    onTabChange={(tab) => {
-                        setActiveTab2(tab);
-                        setCurrentPage(1);
-                    }}
-                />
-            </div>
-
-
-            <div className='d-flex gap-4 flex-wrap align-items-end mb-3 justify-content-between'>
-                <div className='d-inline-block '>
-                    <Nav variant="tabs" className='pt-5 mt-3'>
-                        <Nav.Item>
-                            <Nav.Link
-                                active={activeTab === 'all'}
-                                className={activeTab === 'all' ? 'active-tab' : ''}
-                                onClick={() => setActiveTab('all')}
+           
+            <div className='bg-white mt-3' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                <div className='d-flex flex-wrap align-items-center justify-content-between pb-2 px-4'>
+                    {/* Language Filter */}
+                    <div className="d-flex align-items-center gap-2 my-2">
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="language-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "320px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
                             >
-                                All ({getFilteredCount({
-                                    categoryId: selectedCategoryFilter
-                                })})
-                            </Nav.Link>
-                        </Nav.Item>
-                        {language.map((cat) => (
-                            <Nav.Item key={cat.LanguageId}>
-                                <Nav.Link
-                                    active={activeTab === cat.LanguageName.toLowerCase()}
-                                    className={activeTab === cat.LanguageName.toLowerCase() ? 'active-tab' : ''}
-                                    onClick={() => setActiveTab(cat.LanguageName.toLowerCase())}
+                                <div className="d-flex align-items-center">
+                                    <img src={filter} alt="filter" width={18} className="me-2" />
+                                    {getSelectedLanguageName()}
+                                </div>
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                <Dropdown.Item
+                                    onClick={() => handleLanguageChange('')}
+                                    active={selectedLanguage === ''}
+                                    className="custom-dropdown-item"
                                 >
-                                    <span className="pe-2">{cat.LanguageName}</span>
-                                    ({getFilteredCount({
-                                        languageId: cat.LanguageId,
-                                        categoryId: selectedCategoryFilter,
-                                        languageTab: cat.LanguageName.toLowerCase()
-                                    })})
-                                </Nav.Link>
-                            </Nav.Item>
-                        ))}
-                    </Nav>
+                                    <input type="checkbox" checked={selectedLanguage === ''} readOnly className="me-2" />
+                                    All Languages
+                                </Dropdown.Item>
+                                {language.map((lang) => (
+                                    <Dropdown.Item
+                                        key={lang.LanguageId}
+                                        onClick={() => handleLanguageChange(lang.LanguageId.toString())}
+                                        active={selectedLanguage === lang.LanguageId.toString()}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedLanguage === lang.LanguageId.toString()}
+                                            readOnly
+                                            className="me-2"
+                                        />
+                                        {lang.LanguageName}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
+
+                    {/* Category Filter */}
+                    <div className="d-flex align-items-center gap-2 my-2">
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="category-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "320px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
+                            >
+                                <div className="d-flex align-items-center">
+                                    <img src={filter} alt="filter" width={18} className="me-2" />
+                                    {getSelectedCategoryName()}
+                                </div>
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                <Dropdown.Item
+                                    onClick={() => handleCategoryChange('')}
+                                    active={selectedCategory === ''}
+                                    className="custom-dropdown-item"
+                                >
+                                    <input type="checkbox" checked={selectedCategory === ''} readOnly className="me-2" />
+                                    All Categories
+                                </Dropdown.Item>
+                                {category.map((cat) => (
+                                    <Dropdown.Item
+                                        key={cat.CategoryId}
+                                        onClick={() => handleCategoryChange(cat.CategoryId.toString())}
+                                        active={selectedCategory === cat.CategoryId.toString()}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedCategory === cat.CategoryId.toString()}
+                                            readOnly
+                                            className="me-2"
+                                        />
+                                        {cat.CategoryName}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
+
+                    {/* Access Type Filter (replacing second language filter) */}
+                    <div className="d-flex align-items-center gap-2 my-2">
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="access-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "320px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
+                            >
+                                <div className="d-flex align-items-center">
+                                    <img src={filter} alt="filter" width={18} className="me-2" />
+                                    {activeTab2 === '' ? 'All Access Types' : activeTab2}
+                                </div>
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                <Dropdown.Item
+                                    onClick={() => setActiveTab2('')}
+                                    active={activeTab2 === ''}
+                                    className="custom-dropdown-item"
+                                >
+                                    <input type="checkbox" checked={activeTab2 === ''} readOnly className="me-2" />
+                                    All Access Types
+                                </Dropdown.Item>
+                                {accessTypes.map((type) => (
+                                    <Dropdown.Item
+                                        key={type.id}
+                                        onClick={() => setActiveTab2(type.id)}
+                                        active={activeTab2 === type.id}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={activeTab2 === type.id}
+                                            readOnly
+                                            className="me-2"
+                                        />
+                                        {type.label}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
                 </div>
-                <div className='d-flex gap-2 align-items-center'>
-                    <span className='mb-0 fw-bold fs-6'>Category :</span>
-                    <Form.Select
-                        value={selectedCategoryFilter}
-                        onChange={(e) => setSelectedCategoryFilter(e.target.value)}
-                        style={{ width: 'auto' }}
-                        className='bg-white fs-6'
+
+
+                <div className='d-flex justify-content-between align-items-center px-4 py-3' style={{ borderBottom: "1px solid #E4E6E8", borderTop: "1px solid #E4E6E8" }}>
+                    <div className='d-flex align-items-center gap-2'>
+                        <span>Show</span>
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="access-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "120px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
+                            >
+                                {itemsPerPage || 'Select Items Per Page'}
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                {itemsPerPageOptions.map((option) => (
+                                    <Dropdown.Item
+                                        key={option}
+                                        onClick={() => handleItemsPerPageChange(option)}
+                                        active={itemsPerPage === option}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        {option}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+
+                    </div>
+
+                    <Button
+                        onClick={() => toggleModal('add')}
+                        className="rounded-3 border-0 py-2"
+                        style={{ backgroundColor: "#F9E238", color: "black", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}
                     >
-                        <option value="">All Categories</option>
-                        {category.map((lang) => (
-                            <option key={lang.CategoryId} value={lang.CategoryId}>
-                                {lang.CategoryName}
-                            </option>
-                        ))}
-                    </Form.Select>
+                        <FontAwesomeIcon icon={faPlus} className='pe-2' /> Add Audio Prank
+                    </Button>
                 </div>
+
+                <div className="table-responsive px-4">
+                    <Table className='text-center fs-6 w-100 bg-white'>
+                        <thead>
+                            <tr>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Audio Prank Name</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Artist Name</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Audio Prank Image</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Audio Prank File</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Prank Language</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Prank Category</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Premium</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Safe</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Trending</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentItems && currentItems.length > 0 ? (
+                                currentItems.map((audio, index) => (
+                                    <tr key={audio._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                        <td>{indexOfFirstItem + index + 1}</td>
+                                        <td>{audio.AudioName}</td>
+                                        <td>{audio.ArtistName}</td>
+                                        <td>
+                                            <div className='d-flex2'>
+                                                <button
+                                                    style={{
+                                                        background: 'none',
+                                                        border: 'none',
+                                                        padding: 0,
+                                                        cursor: 'pointer',
+                                                    }}
+                                                    onClick={() => handleShowPreview(index)}
+                                                >
+                                                    <img
+                                                        src={audio.AudioImage}
+                                                        alt="Audio thumbnail"
+                                                        style={{ width: '50px', height: '50px' }}
+                                                    />
+                                                </button>
+                                                <Button
+                                                    className="edit-dlt-btn text-black"
+                                                    onClick={() => handleCopyToClipboard(audio.AudioImage)} // Use an arrow function to pass the parameter
+                                                >
+                                                    <FontAwesomeIcon icon={faCopy} />
+                                                </Button>
+                                            </div>
+                                        </td>
+                                        <td >
+                                            <div className='d-flex2'>
+                                                <audio controls>
+                                                    <source src={audio.Audio} type="audio/mpeg" />
+                                                    <track
+                                                        kind="captions"
+                                                        src={audio.AudioName}
+                                                        srcLang="en"
+                                                        label="English"
+                                                        default
+                                                    />
+                                                    Your browser does not support the audio element.
+                                                </audio>
+
+                                                <Button
+                                                    className="edit-dlt-btn text-black"
+                                                    onClick={() => handleCopyToClipboard(audio.Audio)} // Use an arrow function to pass the parameter
+                                                >
+                                                    <FontAwesomeIcon icon={faCopy} />
+                                                </Button>
+                                            </div>
+                                        </td>
+                                        <td>{getLanguageName(audio.LanguageId)}</td>
+                                        <td>{getCategoryName(audio.CategoryId)}</td>
+                                        <td>
+                                            <Button
+                                                className='bg-transparent border-0 fs-4'
+                                                style={{ color: audio.AudioPremium ? "#0385C3" : "#6c757d" }}
+                                                onClick={() => handlePremiumToggle(audio._id, audio.AudioPremium)}
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={audio.AudioPremium ? faToggleOn : faToggleOff}
+                                                    title={audio.AudioPremium ? "Premium ON" : "Premium OFF"}
+                                                />
+                                            </Button>
+                                        </td>
+                                        <td>
+                                            <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(audio._id, audio.Safe)}>
+                                                <FontAwesomeIcon icon={audio.Safe ? faEye : faEyeSlash} />
+                                            </Button></td>
+                                        <td>
+                                            <FontAwesomeIcon
+                                                icon={audio.trending ? faArrowTrendUp : faArrowTrendDown}
+                                                title={audio.trending ? "up" : "down"}
+                                                className='fs-5'
+                                                style={{ color: audio.trending ? 'green' : 'red' }}
+                                            />
+                                        </td>
+                                        <td>
+                                            <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
+                                                <FontAwesomeIcon icon={faEdit} />
+                                            </Button>
+                                            <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(audio._id)}>
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={11} className="text-center pb-4">No Data Found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
+                </div>
+                {totalPages > 1 && (
+                    <div className='d-flex justify-content-between px-4 pt-1 align-items-center' style={{ borderTop: "1px solid #E4E6E8" }}>
+                        <p className='m-0 fs-6' style={{ color: "#BFC3C7" }}>
+                            Showing {startItem} to {endItem} of {totalItems} entries
+                        </p>
+                        <Pagination>
+                            {renderPaginationItems()}
+                        </Pagination>
+                    </div>
+                )}
+
             </div>
 
             <Modal
@@ -1036,129 +1293,6 @@ const Audio = () => {
                 </Modal.Body>
             </Modal >
 
-            <Table striped bordered hover responsive className='text-center fs-6'>
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Audio Prank Name</th>
-                        <th>Artist Name</th>
-                        <th>Audio Prank Image</th>
-                        <th>Audio Prank File</th>
-                        <th>Prank Language</th>
-                        <th>Prank Category</th>
-                        <th>Premium</th>
-                        <th>Safe</th>
-                        <th>Trending</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((audio, index) => (
-                            <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td>{indexOfFirstItem + index + 1}</td>
-                                <td>{audio.AudioName}</td>
-                                <td>{audio.ArtistName}</td>
-                                <td>
-                                    <div className='d-flex2'>
-                                        <button
-                                            style={{
-                                                background: 'none',
-                                                border: 'none',
-                                                padding: 0,
-                                                cursor: 'pointer',
-                                            }}
-                                            onClick={() => handleShowPreview(index)}
-                                        >
-                                            <img
-                                                src={audio.AudioImage}
-                                                alt="Audio thumbnail"
-                                                style={{ width: '50px', height: '50px' }}
-                                            />
-                                        </button>
-                                        <Button
-                                            className="edit-dlt-btn text-black"
-                                            onClick={() => handleCopyToClipboard(audio.AudioImage)} // Use an arrow function to pass the parameter
-                                        >
-                                            <FontAwesomeIcon icon={faCopy} />
-                                        </Button>
-                                    </div>
-                                </td>
-                                <td >
-                                    <div className='d-flex2'>
-                                        <audio controls>
-                                            <source src={audio.Audio} type="audio/mpeg" />
-                                            <track
-                                                kind="captions"
-                                                src={audio.AudioName}
-                                                srcLang="en"
-                                                label="English"
-                                                default
-                                            />
-                                            Your browser does not support the audio element.
-                                        </audio>
-
-                                        <Button
-                                            className="edit-dlt-btn text-black"
-                                            onClick={() => handleCopyToClipboard(audio.Audio)} // Use an arrow function to pass the parameter
-                                        >
-                                            <FontAwesomeIcon icon={faCopy} />
-                                        </Button>
-                                    </div>
-                                </td>
-                                <td>{getLanguageName(audio.LanguageId)}</td>
-                                <td>{getCategoryName(audio.CategoryId)}</td>
-                                <td>
-                                    <Button
-                                        className='bg-transparent border-0 fs-4'
-                                        style={{ color: audio.AudioPremium ? "#0385C3" : "#6c757d" }}
-                                        onClick={() => handlePremiumToggle(audio._id, audio.AudioPremium)}
-                                    >
-                                        <FontAwesomeIcon
-                                            icon={audio.AudioPremium ? faToggleOn : faToggleOff}
-                                            title={audio.AudioPremium ? "Premium ON" : "Premium OFF"}
-                                        />
-                                    </Button>
-                                </td>
-                                <td>
-                                    <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(audio._id, audio.Safe)}>
-                                        <FontAwesomeIcon icon={audio.Safe ? faEye : faEyeSlash} />
-                                    </Button></td>
-                                <td>
-                                    <FontAwesomeIcon
-                                        icon={audio.trending ? faArrowTrendUp : faArrowTrendDown}
-                                        title={audio.trending ? "up" : "down"}
-                                        className='fs-5'
-                                        style={{ color: audio.trending ? 'green' : 'red' }}
-                                    />
-                                </td>
-                                <td>
-                                    <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
-                                        <FontAwesomeIcon icon={faEdit} />
-                                    </Button>
-                                    <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(audio._id)}>
-                                        <FontAwesomeIcon icon={faTrash} />
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan={11} className="text-center">No Data Found</td>
-                        </tr>
-                    )}
-                </tbody>
-            </Table>
-
-            {
-                totalPages > 1 && (
-                    <div className='d-flex justify-content-center'>
-                        <Pagination>
-                            {renderPaginationItems()}
-                        </Pagination>
-                    </div>
-                )
-            }
 
             <ImagePreviewModal
                 show={showPreview}

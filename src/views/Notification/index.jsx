@@ -1,12 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Row, Col, Spinner, Pagination } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Row, Col, Spinner, Pagination, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-
-const ITEMS_PER_PAGE = 15;
 
 const notificationTypes = [
     { id: 'Prankster', label: 'English' },
@@ -22,20 +20,13 @@ const Notification = () => {
     const [description, setDescription] = useState('');
     const [errors, setErrors] = useState({});
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-
-    // Derived state
-    const indexOfLastItem = currentPage * ITEMS_PER_PAGE;
-    const indexOfFirstItem = indexOfLastItem - ITEMS_PER_PAGE;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(data.length / ITEMS_PER_PAGE);
 
     // API calls
     const getData = async () => {
         try {
             setLoading(true);
             const response = await axios.post('https://pslink.world/api/notification/read');
-            const reversedData = response.data.data.reverse(); 
+            const reversedData = response.data.data.reverse();
             setData(reversedData);
         } catch (err) {
             console.error(err);
@@ -44,7 +35,7 @@ const Notification = () => {
             setLoading(false);
         }
     };
-    
+
 
     useEffect(() => {
         getData();
@@ -60,7 +51,7 @@ const Notification = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         const validationErrors = validate();
-        
+
         if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
             return;
@@ -68,11 +59,11 @@ const Notification = () => {
 
         try {
             setIsSubmitting(true);
-            const endpoint = id 
+            const endpoint = id
                 ? `https://pslink.world/api/notification/update/${id}`
                 : 'https://pslink.world/api/notification/create';
             const method = id ? 'patch' : 'post';
-            
+
             const response = await axios[method](endpoint, {
                 Title: selectedType,
                 Description: description
@@ -147,32 +138,56 @@ const Notification = () => {
         }
     };
 
-    // Pagination
+    // Pagination logic
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPageOptions = [10, 25, 50, 100];
+
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(value);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
+
+    // Calculate pagination values
+    const totalItems = data.length;
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const currentItems = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+
+    // Handle page changes
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Render pagination controls
     const renderPaginationItems = () => {
-        const items = [];
+        let items = [];
         const totalPagesToShow = 4;
-        
+
         let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
         let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
-        
+
         if (endPage - startPage < totalPagesToShow - 1) {
             startPage = Math.max(1, endPage - totalPagesToShow + 1);
         }
-        
+
         for (let i = startPage; i <= endPage; i++) {
             items.push(
                 <Pagination.Item
                     key={i}
                     active={i === currentPage}
-                    onClick={() => setCurrentPage(i)}
+                    onClick={() => paginate(i)}
                 >
                     {i}
                 </Pagination.Item>
             );
         }
-        
+
         return items;
     };
+
 
     if (loading) return (
         <div
@@ -198,15 +213,100 @@ const Notification = () => {
                 </div>
             </div>
 
-            <Button
-                onClick={() => setVisible(true)}
-                className="my-4 rounded-3 border-0"
-                style={{ backgroundColor: "#F9E238" }}
-                disabled={isSubmitting}
-            >
-                Add Auto Notification
-            </Button>
+            <div className='bg-white py-3 my-4' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                <div className='d-flex flex-wrap justify-content-between align-items-center'>
+                    <p className='fs-5 px-4'>Search Filters</p>
+                </div>
+                <div className='d-flex align-items-center justify-content-between px-4' style={{ borderBottom: "1px solid #E4E6E8" , borderTop: "1px solid #E4E6E8" }}>
 
+                    <div className='d-flex align-items-center gap-2'>
+                        <span>Show</span>
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="access-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "120px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
+                            >
+                                {itemsPerPage || 'Select Items Per Page'}
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                {itemsPerPageOptions.map((option) => (
+                                    <Dropdown.Item
+                                        key={option}
+                                        onClick={() => handleItemsPerPageChange(option)}
+                                        active={itemsPerPage === option}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        {option}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
+                    <Button
+                        onClick={() => setVisible(true)}
+                        className="my-3 rounded-3 border-0"
+                        style={{ backgroundColor: "#F9E238", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}
+                        disabled={isSubmitting}
+                    >
+                        Add Auto Notification
+                    </Button>
+                </div>
+
+
+                <div className="table-responsive px-4">
+                    <Table className='text-center fs-6 w-100 bg-white'>
+                        <thead>
+                            <tr>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Index</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Notification Title</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Notification Description</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentItems.map((notification, index) => (
+                                <tr key={notification._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <td>{indexOfFirstItem + index + 1}</td>
+                                    <td>{notification.Title}</td>
+                                    <td>{notification.Description}</td>
+                                    <td>
+                                        <Button
+                                            className="edit-dlt-btn"
+                                            style={{ color: "#0385C3" }}
+                                            onClick={() => handleEdit(notification)}
+                                            disabled={isSubmitting}
+                                        >
+                                            <FontAwesomeIcon icon={faEdit} />
+                                        </Button>
+                                        <Button
+                                            className="edit-dlt-btn text-danger"
+                                            onClick={() => handleDelete(notification._id)}
+                                            disabled={isSubmitting}
+                                        >
+                                            <FontAwesomeIcon icon={faTrash} />
+                                        </Button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </Table>
+                </div>
+                {totalPages > 1 && (
+                    <div className='d-flex justify-content-between px-4 pt-1 align-items-center' style={{ borderTop: "1px solid #E4E6E8" }}>
+                        <p className='m-0 fs-6' style={{ color: "#BFC3C7" }}>
+                            Showing {startItem} to {endItem} of {totalItems} entries
+                        </p>
+                        <Pagination>
+                            {renderPaginationItems()}
+                        </Pagination>
+                    </div>
+                )}
+            </div>
             <Modal
                 show={visible}
                 onHide={() => !isSubmitting && resetForm()}
@@ -230,9 +330,8 @@ const Notification = () => {
                                         type="button"
                                         key={type.id}
                                         onClick={() => handleTypeSelect(type.id)}
-                                        className={`cursor-pointer px-3 py-1 rounded-3 ${
-                                            selectedType === type.id ? 'bg-primary' : 'bg-light'
-                                        }`}
+                                        className={`cursor-pointer px-3 py-1 rounded-3 ${selectedType === type.id ? 'bg-primary' : 'bg-light'
+                                            }`}
                                         style={{
                                             cursor: isSubmitting ? 'not-allowed' : 'pointer',
                                             transition: 'all 0.3s ease',
@@ -295,50 +394,7 @@ const Notification = () => {
                 </Modal.Body>
             </Modal>
 
-            <Table striped bordered hover responsive className="text-center fs-6">
-                <thead>
-                    <tr>
-                        <th>Index</th>
-                        <th>Notification Title</th>
-                        <th>Notification Description</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems.map((notification, index) => (
-                        <tr key={notification._id} className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}>
-                            <td>{indexOfFirstItem + index + 1}</td>
-                            <td>{notification.Title}</td>
-                            <td>{notification.Description}</td>
-                            <td>
-                                <Button
-                                    className="edit-dlt-btn"
-                                    style={{ color: "#0385C3" }}
-                                    onClick={() => handleEdit(notification)}
-                                    disabled={isSubmitting}
-                                >
-                                    <FontAwesomeIcon icon={faEdit} />
-                                </Button>
-                                <Button
-                                    className="edit-dlt-btn text-danger"
-                                    onClick={() => handleDelete(notification._id)}
-                                    disabled={isSubmitting}
-                                >
-                                    <FontAwesomeIcon icon={faTrash} />
-                                </Button>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </Table>
-
             <ToastContainer />
-
-            {totalPages > 1 && (
-                <div className="d-flex justify-content-center">
-                    <Pagination>{renderPaginationItems()}</Pagination>
-                </div>
-            )}
         </div>
     );
 };

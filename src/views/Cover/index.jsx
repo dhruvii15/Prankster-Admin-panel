@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Pagination, Spinner, Row, Col, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass, faTimes, faCrown, faTag } from '@fortawesome/free-solid-svg-icons';
-import { faClipboard, faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faMagnifyingGlass, faTimes, faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -11,24 +11,8 @@ import 'react-toastify/dist/ReactToastify.css';
 import TagSelector from 'views/TagSelector';
 import ImagePreviewModal from 'components/ImagePreviewModal';
 
-const AccessTabs = ({ activeTab, onTabChange }) => {
-    return (
-        <div className="d-flex border rounded-pill overflow-hidden border bg-white" style={{ height: "40px", width: "210px" }}>
-            <button
-                className={`border-0 w-50 rounded-pill ${activeTab === "Free" ? "bg-tab" : "bg-white"}`}
-                onClick={() => onTabChange("Free")}
-            >
-                <FontAwesomeIcon icon={faTag} /> Free
-            </button>
-            <button
-                className={`border-0 w-50 rounded-pill ${activeTab === "Premium" ? "bg-tab" : "bg-white"}`}
-                onClick={() => onTabChange("Premium")}
-            >
-                <FontAwesomeIcon icon={faCrown} /> Premium
-            </button>
-        </div>
-    );
-};
+// img
+import filter from "../../assets/images/filter.png"
 
 
 const CoverURL = () => {
@@ -41,8 +25,6 @@ const CoverURL = () => {
     const [previewUrl, setPreviewUrl] = useState(null);
 
     const [isEditing, setIsEditing] = useState(false);
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 15;
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [TagName, setTagName] = useState([]);
     const [customTagName, setCustomTagName] = useState('');
@@ -60,7 +42,10 @@ const CoverURL = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [activeTab, setActiveTab] = useState("Free");
 
-
+    const accessTypes = [
+        { id: 'Free', label: 'Free' },
+        { id: 'Premium', label: 'Premium' }
+    ]
 
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -124,23 +109,89 @@ const CoverURL = () => {
     ];
 
 
+    // Pagination logic
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPageOptions = [10, 25, 50, 100];
+
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(value);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
+
+    const filterData = (covers) => {
+        if (!covers) return [];
+
+        // First filter by unsafe status based on isOn state
+        let filteredData = covers.filter(cover => cover.Safe === isOn);
+
+        // Apply access filter based on active tab
+        if (activeTab === "Premium") {
+            filteredData = filteredData.filter(cover => cover.CoverPremium);
+        } else if (activeTab === "Free") {
+            filteredData = filteredData.filter(cover => !cover.CoverPremium);
+        }
+
+        // Apply search filter if search term exists
+        if (searchTerm.trim()) {
+            const searchLower = searchTerm.toLowerCase();
+            filteredData = filteredData.filter(item => {
+                if (Array.isArray(item.TagName)) {
+                    return item.TagName.some(tag =>
+                        tag.toLowerCase().includes(searchLower)
+                    );
+                }
+                return item.TagName?.toLowerCase().includes(searchLower) || false;
+            });
+        }
+
+        return filteredData;
+    };
+
+    // Calculate pagination values
+    const filteredItems = filterData(data);
+    const totalItems = filteredItems.length;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    const currentItems = filteredItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+    // Handle page changes
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Render pagination controls
     const renderPaginationItems = () => {
-        const totalPages = Math.ceil(filterData(data).length / itemsPerPage);
+        let items = [];
         const totalPagesToShow = 4;
+
         let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
         let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
-        const items = [];
 
         if (endPage - startPage < totalPagesToShow - 1) {
             startPage = Math.max(1, endPage - totalPagesToShow + 1);
         }
 
+        // Add first page if not included
+        if (startPage > 1) {
+            items.push(
+                <Pagination.Item key={1} onClick={() => paginate(1)}>
+                    1
+                </Pagination.Item>
+            );
+            if (startPage > 2) {
+                items.push(<Pagination.Ellipsis key="ellipsis1" />);
+            }
+        }
+
+        // Add page numbers
         for (let i = startPage; i <= endPage; i++) {
             items.push(
                 <Pagination.Item
                     key={i}
                     active={i === currentPage}
-                    onClick={() => setCurrentPage(i)}
+                    onClick={() => paginate(i)}
                 >
                     {i}
                 </Pagination.Item>
@@ -149,6 +200,11 @@ const CoverURL = () => {
 
         return items;
     };
+
+    // Reset to first page when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, activeTab, isOn]);
 
     const toggleModal = (mode) => {
         if (!isSubmitting) {
@@ -335,34 +391,6 @@ const CoverURL = () => {
             // Update the preview index
             setPreviewIndex(newGlobalIndex);
         }
-    };
-
-
-    const filterData = (covers) => {
-        // First filter by unsafe status based on isOn state
-        let filteredData = covers.filter(cover => cover.Safe === isOn);
-
-        // Apply access filter based on active tab
-        if (activeTab === "Premium") {
-            filteredData = filteredData.filter(cover => cover.CoverPremium);
-        } else if (activeTab === "Free") {
-            filteredData = filteredData.filter(cover => !cover.CoverPremium);
-        }
-
-        // Apply search filter if search term exists
-        if (searchTerm.trim()) {
-            const searchLower = searchTerm.toLowerCase();
-            filteredData = filteredData.filter(item => {
-                if (Array.isArray(item.TagName)) {
-                    return item.TagName.some(tag =>
-                        tag.toLowerCase().includes(searchLower)
-                    );
-                }
-                return item.TagName.toLowerCase().includes(searchLower);
-            });
-        }
-
-        return filteredData;
     };
 
     const coverSchema = Yup.object().shape({
@@ -669,11 +697,6 @@ const CoverURL = () => {
         }
     };
 
-    const filteredItems = filterData(data);
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredItems.slice(indexOfFirstItem, indexOfLastItem);
-
     return (
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
@@ -696,195 +719,267 @@ const CoverURL = () => {
                 </div>
             </div>
 
-            <div className='mt-4 border p-3 rounded-4 d-inline-block' style={{ background: "#FFF0E7" }}>
-                <p className='fw-bold fs-6'><FontAwesomeIcon icon={faClipboard} className='pe-3' />Notes :</p>
-                <p className='m-0' style={{ fontSize: "13px" }}> * Use the Safe/Unsafe toggle to control content visibility.</p>
-                <p className='m-0' style={{ fontSize: "13px" }}> * Switch between Free and Premium content using the tabs.</p>
-            </div>
 
-            <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap">
-                <Button
-                    onClick={() => toggleModal('add')}
-                    className='rounded-3 border-0'
-                    style={{ backgroundColor: "#F9E238" }}
-                >
-                    Add CoverImage
-                </Button>
-                <div className='d-flex gap-3 flex-wrap align-items-center'>
-                    <div ref={searchContainerRef} className="position-relative">
-                        <div className="flex items-center search-bar-container my-3">
-                            <input
-                                type="text"
-                                placeholder="Search by Tagname"
-                                className="search-input"
-                                value={searchTerm}
-                                onChange={handleSearch}
-                                onFocus={handleInputFocus}
-                            />
-                            <button
-                                className="search-button"
-                                onClick={searchTerm ? handleClearSearch : undefined}
-                                style={{ cursor: searchTerm ? "pointer" : "default" }}
+
+            {/* =========================================================== */}
+            <div className='bg-white mt-3' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+            <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap px-4">
+                <div className='d-flex align-items-center gap-2'>
+                        <span>Show</span>
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="access-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "120px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
                             >
-                                <span role="img" aria-label={searchTerm ? "clear-search" : "search-icon"}>
-                                    <FontAwesomeIcon icon={searchTerm ? faTimes : faMagnifyingGlass} />
-                                </span>
-                            </button>
-                        </div>
+                                {itemsPerPage || 'Select Items Per Page'}
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
 
-                        {showSuggestions && (
-                            <div className="suggestion-box shadow d-flex flex-wrap align-items-center p-2 overflow-hidden">
-                                {loading ? (
-                                    <div>Loading...</div>
-                                ) : suggestions.length > 0 ? (
-                                    suggestions.slice(0, 15).map((suggestion, index) => (
-                                        <button
-                                            key={index}
-                                            className="px-3 py-1 rounded-3 border mx-1 mb-1"
-                                            onClick={() => handleSuggestionClick(suggestion)}
-                                            style={{ cursor: "pointer", fontSize: "13px" }}
-                                        >
-                                            {suggestion}
-                                        </button>
-                                    ))
-                                ) : (
-                                    <div className="p-2 text-center text-gray-500">No suggestions available</div>
-                                )}
-                            </div>
-                        )}
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                {itemsPerPageOptions.map((option) => (
+                                    <Dropdown.Item
+                                        key={option}
+                                        onClick={() => handleItemsPerPageChange(option)}
+                                        active={itemsPerPage === option}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        {option}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
 
                     </div>
+                    <div className='d-flex gap-2 flex-wrap align-items-center'>
+                        <div ref={searchContainerRef} className="position-relative">
+                            <div className="flex items-center search-bar-container my-3">
+                                <input
+                                    type="text"
+                                    placeholder="Search by Tagname"
+                                    className="search-input"
+                                    value={searchTerm}
+                                    onChange={handleSearch}
+                                    onFocus={handleInputFocus}
+                                />
+                                <button
+                                    className="search-button"
+                                    onClick={searchTerm ? handleClearSearch : undefined}
+                                    style={{ cursor: searchTerm ? "pointer" : "default" }}
+                                >
+                                    <span role="img" aria-label={searchTerm ? "clear-search" : "search-icon"}>
+                                        <FontAwesomeIcon icon={searchTerm ? faTimes : faMagnifyingGlass} />
+                                    </span>
+                                </button>
+                            </div>
 
-                    <AccessTabs
-                        activeTab={activeTab}
-                        onTabChange={(tab) => {
-                            setActiveTab(tab);
-                            setCurrentPage(1);
-                        }}
-                    />
+                            {showSuggestions && (
+                                <div className="suggestion-box shadow d-flex flex-wrap align-items-center p-2 overflow-hidden">
+                                    {loading ? (
+                                        <div>Loading...</div>
+                                    ) : suggestions.length > 0 ? (
+                                        suggestions.slice(0, 15).map((suggestion, index) => (
+                                            <button
+                                                key={index}
+                                                className="px-3 py-1 rounded-3 border mx-1 mb-1"
+                                                onClick={() => handleSuggestionClick(suggestion)}
+                                                style={{ cursor: "pointer", fontSize: "13px" }}
+                                            >
+                                                {suggestion}
+                                            </button>
+                                        ))
+                                    ) : (
+                                        <div className="p-2 text-center text-gray-500">No suggestions available</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="d-flex align-items-center gap-2 my-2">
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="access-dropdown"
+                                className="bg-white border rounded-3 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "320px" , padding:"9px 10px"}}
+                                bsPrefix="d-flex align-items-center justify-content-between"
+                            >
+                                <div className="d-flex align-items-center">
+                                    <img src={filter} alt="filter" width={18} className="me-2" />
+                                    {activeTab === '' ? 'All Access Types' : activeTab}
+                                </div>
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                <Dropdown.Item
+                                    onClick={() => setActiveTab('')}
+                                    active={activeTab === ''}
+                                    className="custom-dropdown-item"
+                                >
+                                    <input type="checkbox" checked={activeTab === ''} readOnly className="me-2" />
+                                    All Access Types
+                                </Dropdown.Item>
+                                {accessTypes.map((type) => (
+                                    <Dropdown.Item
+                                        key={type.id}
+                                        onClick={() => setActiveTab(type.id)}
+                                        active={activeTab === type.id}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={activeTab === type.id}
+                                            readOnly
+                                            className="me-2"
+                                        />
+                                        {type.label}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
+                    </div>
                 </div>
-            </div>
 
+                <div className='d-flex justify-content-end align-items-center px-4 py-3' style={{ borderBottom: "1px solid #E4E6E8", borderTop: "1px solid #E4E6E8" }}>
+                    <Button
+                        onClick={() => toggleModal('add')}
+                        className='rounded-3 border-0'
+                        style={{ backgroundColor: "#F9E238" ,boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}
+                    >
+                        Add CoverImage
+                    </Button>
+                </div>
 
-            <Table striped bordered hover responsive className='text-center fs-6 mt-4'>
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>CoverName</th>
-                        <th>Cover Image</th>
-                        <th>TagName</th>
-                        <th>Premium</th>
-                        <th>Safe</th>
-                        <th>Trending</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((cover, index) => (
-                            <tr key={cover._id}>
-                                <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
-                                <td>{cover.CoverName || 'No Name'}</td>
-                                <td className='d-flex2'>
-                                    <button
-                                        style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            padding: 0,
-                                            cursor: 'pointer',
-                                        }}
-                                        onClick={() => {
-                                            setPreviewIndex(getGlobalIndex(index));
-                                            setShowPreview(true);
-                                        }}
-                                    >
-                                        <img
-                                            src={cover.CoverURL || 'placeholder.jpg'}
-                                            alt="CoverImage"
-                                            style={{
-                                                width: '150px',
-                                                height: '120px',
-                                                objectFit: 'cover',
-                                            }}
-                                        />
-                                    </button>
-
-                                    <Button
-                                        className="edit-dlt-btn text-black"
-                                        onClick={() => handleCopyToClipboard(cover)}
-                                    >
-                                        <FontAwesomeIcon icon={faCopy} />
-                                    </Button>
-                                </td>
-
-                                <td>
-                                    {cover.TagName?.filter(Boolean).slice(0, 7).join(', ') || 'No Tags'}
-                                </td>
-                                <td>
-                                    <Button
-                                        className="bg-transparent border-0 fs-4"
-                                        style={{ color: cover.CoverPremium ? "#0385C3" : "#6c757d" }}
-                                        onClick={() => handlePremiumToggle(cover._id, cover.CoverPremium)}
-                                    >
-                                        <FontAwesomeIcon
-                                            icon={cover.CoverPremium ? faToggleOn : faToggleOff}
-                                            title={cover.CoverPremium ? "Premium ON" : "Premium OFF"}
-                                        />
-                                    </Button>
-                                </td>
-                                <td>
-                                    <Button
-                                        className="bg-transparent border-0 fs-5"
-                                        style={{ color: "#0385C3" }}
-                                        onClick={() => handleSafeToggle(cover._id, cover.Safe)}
-                                    >
-                                        <FontAwesomeIcon
-                                            icon={cover.Safe ? faEye : faEyeSlash}
-                                            title={cover.Safe ? "Hidden" : "Visible"}
-                                        />
-                                    </Button>
-                                </td>
-                                <td>
-                                    <FontAwesomeIcon
-                                        icon={cover.trending ? faArrowTrendUp : faArrowTrendDown}
-                                        title={cover.trending ? "up" : "down"}
-                                        className='fs-5'
-                                        style={{ color: cover.trending ? 'green' : 'red' }}
-                                    />
-                                </td>
-                                <td>
-
-                                    <Button
-                                        className="edit-dlt-btn"
-                                        style={{ color: "#0385C3" }}
-                                        onClick={() => handleEdit(cover)}
-                                    >
-                                        <FontAwesomeIcon icon={faEdit} />
-                                    </Button>
-                                    <Button
-                                        className="edit-dlt-btn text-danger"
-                                        onClick={() => handleDelete(cover._id)}
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} />
-                                    </Button>
-                                </td>
+                <div className="table-responsive px-4">
+                    <Table className='text-center fs-6 w-100 bg-white'>
+                        <thead>
+                            <tr>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>CoverName</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Cover Image</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>TagName</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Premium</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Safe</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Trending</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
                             </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan={8} className="text-center">No Data Found</td>
-                        </tr>
-                    )}
-                </tbody>
-            </Table>
+                        </thead>
+                        <tbody>
+                            {currentItems && currentItems.length > 0 ? (
+                                currentItems.map((cover, index) => (
+                                    <tr key={cover._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                        <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
+                                        <td>{cover.CoverName || 'No Name'}</td>
+                                        <td className='d-flex2'>
+                                            <button
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    padding: 0,
+                                                    cursor: 'pointer',
+                                                }}
+                                                onClick={() => {
+                                                    setPreviewIndex(getGlobalIndex(index));
+                                                    setShowPreview(true);
+                                                }}
+                                            >
+                                                <img
+                                                    src={cover.CoverURL || 'placeholder.jpg'}
+                                                    alt="CoverImage"
+                                                    style={{
+                                                        width: '80px',
+                                                        height: '80px',
+                                                        objectFit: 'cover',
+                                                    }}
+                                                />
+                                            </button>
 
-            {Math.ceil(filteredItems.length / itemsPerPage) > 1 && (
-                <div className='d-flex justify-content-center'>
-                    <Pagination>
-                        {renderPaginationItems()}
-                    </Pagination>
+                                            <Button
+                                                className="edit-dlt-btn text-black"
+                                                onClick={() => handleCopyToClipboard(cover)}
+                                            >
+                                                <FontAwesomeIcon icon={faCopy} />
+                                            </Button>
+                                        </td>
+
+                                        <td>
+                                            {cover.TagName?.filter(Boolean).slice(0, 7).join(', ') || 'No Tags'}
+                                        </td>
+                                        <td>
+                                            <Button
+                                                className="bg-transparent border-0 fs-4"
+                                                style={{ color: cover.CoverPremium ? "#0385C3" : "#6c757d" }}
+                                                onClick={() => handlePremiumToggle(cover._id, cover.CoverPremium)}
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={cover.CoverPremium ? faToggleOn : faToggleOff}
+                                                    title={cover.CoverPremium ? "Premium ON" : "Premium OFF"}
+                                                />
+                                            </Button>
+                                        </td>
+                                        <td>
+                                            <Button
+                                                className="bg-transparent border-0 fs-5"
+                                                style={{ color: "#0385C3" }}
+                                                onClick={() => handleSafeToggle(cover._id, cover.Safe)}
+                                            >
+                                                <FontAwesomeIcon
+                                                    icon={cover.Safe ? faEye : faEyeSlash}
+                                                    title={cover.Safe ? "Hidden" : "Visible"}
+                                                />
+                                            </Button>
+                                        </td>
+                                        <td>
+                                            <FontAwesomeIcon
+                                                icon={cover.trending ? faArrowTrendUp : faArrowTrendDown}
+                                                title={cover.trending ? "up" : "down"}
+                                                className='fs-5'
+                                                style={{ color: cover.trending ? 'green' : 'red' }}
+                                            />
+                                        </td>
+                                        <td>
+
+                                            <Button
+                                                className="edit-dlt-btn"
+                                                style={{ color: "#0385C3" }}
+                                                onClick={() => handleEdit(cover)}
+                                            >
+                                                <FontAwesomeIcon icon={faEdit} />
+                                            </Button>
+                                            <Button
+                                                className="edit-dlt-btn text-danger"
+                                                onClick={() => handleDelete(cover._id)}
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={8} className="text-center pb-2">No Data Found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
                 </div>
-            )}
+                {Math.ceil(filteredItems.length / itemsPerPage) > 1 && (
+                    <div className='d-flex justify-content-between px-4 pt-1 align-items-center' style={{ borderTop: "1px solid #E4E6E8" }}>
+                        <p className='m-0 fs-6' style={{ color: "#BFC3C7" }}>
+                            Showing {startItem} to {endItem} of {totalItems} entries
+                        </p>
+                        <Pagination>
+                            {renderPaginationItems()}
+                        </Pagination>
+                    </div>
+                )}
+
+            </div>
 
             <Modal
                 show={visible}

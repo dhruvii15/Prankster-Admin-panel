@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form, Modal, Spinner, Row, Col } from 'react-bootstrap';
+import { Button, Table, Pagination, Form, Modal, Spinner, Row, Col, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faCheck, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faChevronDown, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // img
 import { faCopy } from '@fortawesome/free-regular-svg-icons';
@@ -44,9 +44,6 @@ const UserAudio = () => {
         hide: false
     });
 
-    // Pagination states
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 15;
 
     const getData = () => {
         setLoading(true);
@@ -163,13 +160,29 @@ const UserAudio = () => {
     };
 
     // Pagination logic
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPageOptions = [10, 25, 50, 100];
 
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(value);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
 
+    // Calculate pagination values
+    const totalItems = filteredData.length;
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+
+    // Handle page changes
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Render pagination controls
     const renderPaginationItems = () => {
         let items = [];
         const totalPagesToShow = 4;
@@ -250,70 +263,116 @@ const UserAudio = () => {
                 </div>
             </div>
 
-            <Table striped bordered hover responsive className='text-center fs-6'>
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Audio Name</th>
-                        <th>Audio</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((audio, index) => (
-                            <tr key={audio._id} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td>{indexOfFirstItem + index + 1}</td>
-                                <td>{audio.AudioName}</td>
-                                <td>
-                                    <audio controls>
-                                        <source src={audio.Audio} type="audio/mpeg" />
-                                        <track
-                                            kind="captions"
-                                            src={audio.AudioName}
-                                            srcLang="en"
-                                            label="English"
-                                            default
-                                        />
-                                        Your browser does not support the audio element.
-                                    </audio>
-                                </td>
-                                <td>
-                                    <Button
-                                        className="edit-dlt-btn"
-                                        onClick={() => handleDownload(audio.Audio)} // Pass your image URL here
+            <div className='bg-white py-3' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                <div className='d-flex flex-wrap justify-content-between align-items-center'>
+                    <p className='fs-5 px-4'>Search Filters</p>
+                    <div className='d-flex align-items-center gap-2 p-4'>
+                        <span>Show</span>
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="access-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "120px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
+                            >
+                                {itemsPerPage || 'Select Items Per Page'}
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                {itemsPerPageOptions.map((option) => (
+                                    <Dropdown.Item
+                                        key={option}
+                                        onClick={() => handleItemsPerPageChange(option)}
+                                        active={itemsPerPage === option}
+                                        className="custom-dropdown-item mt-1"
                                     >
-                                        <FontAwesomeIcon icon={faDownload} />
-                                    </Button>
-                                    <Button
-                                        className="edit-dlt-btn text-black"
-                                        onClick={() => handleCopyToClipboard(audio.Audio)}
-                                    >
-                                        <FontAwesomeIcon icon={faCopy} />
-                                    </Button>
-                                    <Button
-                                        className='edit-dlt-btn'
-                                        style={{ color: "#0385C3" }}
-                                        onClick={() => handleModalShow(audio)}
-                                    >
-                                        <FontAwesomeIcon icon={faCheck} />
-                                    </Button>
-                                    <Button
-                                        className='edit-dlt-btn text-danger'
-                                        onClick={() => handleDelete(audio._id)}
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} />
-                                    </Button>
-                                </td>
+                                        {option}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
+                </div>
+
+                <div className="table-responsive px-4">
+                    <Table className='text-center fs-6 w-100 bg-white'>
+                        <thead>
+                            <tr>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Audio Name</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Audio</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
                             </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan={4} className="text-center">No Data Found</td>
-                        </tr>
-                    )}
-                </tbody>
-            </Table>
+                        </thead>
+                        <tbody>
+                            {currentItems && currentItems.length > 0 ? (
+                                currentItems.map((audio, index) => (
+                                    <tr key={audio._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                        <td>{indexOfFirstItem + index + 1}</td>
+                                        <td>{audio.AudioName}</td>
+                                        <td>
+                                            <audio controls>
+                                                <source src={audio.Audio} type="audio/mpeg" />
+                                                <track
+                                                    kind="captions"
+                                                    src={audio.AudioName}
+                                                    srcLang="en"
+                                                    label="English"
+                                                    default
+                                                />
+                                                Your browser does not support the audio element.
+                                            </audio>
+                                        </td>
+                                        <td>
+                                            <Button
+                                                className="edit-dlt-btn"
+                                                onClick={() => handleDownload(audio.Audio)} // Pass your image URL here
+                                            >
+                                                <FontAwesomeIcon icon={faDownload} />
+                                            </Button>
+                                            <Button
+                                                className="edit-dlt-btn text-black"
+                                                onClick={() => handleCopyToClipboard(audio.Audio)}
+                                            >
+                                                <FontAwesomeIcon icon={faCopy} />
+                                            </Button>
+                                            <Button
+                                                className='edit-dlt-btn'
+                                                style={{ color: "#0385C3" }}
+                                                onClick={() => handleModalShow(audio)}
+                                            >
+                                                <FontAwesomeIcon icon={faCheck} />
+                                            </Button>
+                                            <Button
+                                                className='edit-dlt-btn text-danger'
+                                                onClick={() => handleDelete(audio._id)}
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={4} className="text-center">No Data Found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
+                </div>
+                {totalPages > 1 && (
+                    <div className='d-flex justify-content-between px-4 pt-1 align-items-center' style={{ borderTop: "1px solid #E4E6E8" }}>
+                        <p className='m-0 fs-6' style={{ color: "#BFC3C7" }}>
+                            Showing {startItem} to {endItem} of {totalItems} entries
+                        </p>
+                        <Pagination>
+                            {renderPaginationItems()}
+                        </Pagination>
+                    </div>
+                )}
+            </div>
 
             {/* Modal for category selection and artist name */}
             <Modal show={showModal} onHide={handleModalClose} centered>
@@ -363,11 +422,11 @@ const UserAudio = () => {
                             >
                                 <option value="">Select a Prank Category</option>
                                 {category.map((cat) => {
-                                        return (
-                                            <option key={cat._id} value={cat.CategoryId}>
-                                                {cat.CategoryName}
-                                            </option>
-                                        );
+                                    return (
+                                        <option key={cat._id} value={cat.CategoryId}>
+                                            {cat.CategoryName}
+                                        </option>
+                                    );
                                 })}
                             </Form.Control>
                             <Form.Control.Feedback type="invalid">
@@ -393,11 +452,11 @@ const UserAudio = () => {
                             >
                                 <option value="">Select a Prank Language</option>
                                 {language.map((cat) => {
-                                        return (
-                                            <option key={cat._id} value={cat.LanguageId}>
-                                                {cat.LanguageName}
-                                            </option>
-                                        );
+                                    return (
+                                        <option key={cat._id} value={cat.LanguageId}>
+                                            {cat.LanguageName}
+                                        </option>
+                                    );
                                 })}
                             </Form.Control>
                             <Form.Control.Feedback type="invalid">
@@ -464,15 +523,6 @@ const UserAudio = () => {
                     </Form>
                 </Modal.Body>
             </Modal>
-
-
-            {totalPages > 1 && (
-                <div className='d-flex justify-content-center'>
-                    <Pagination>
-                        {renderPaginationItems()}
-                    </Pagination>
-                </div>
-            )}
 
             <ToastContainer />
         </div>

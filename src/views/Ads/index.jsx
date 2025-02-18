@@ -1,38 +1,15 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Row, Col, Spinner } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Row, Col, Spinner, Pagination, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faChevronDown, faEdit, faTrash } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const PlatformTabs = ({ activeTab, onTabChange }) => {
-    return (
-        <div className="d-flex border rounded-pill overflow-hidden border bg-white p-0" style={{ height: "40px", width: "240px" }}>
-            <button
-                className={`border-0 p-0 rounded-pill ${activeTab === "" ? "bg-tab" : "bg-white"}`}
-                style={{width:"33.33%"}}
-                onClick={() => onTabChange("")}
-            >
-                All
-            </button>
-            <button
-                className={`border-0 p-0 rounded-pill ${activeTab === "ios" ? "bg-tab" : "bg-white"}`}
-                style={{width:"33.33%"}}
-                onClick={() => onTabChange("ios")}
-            >
-                iOS
-            </button>
-            <button
-                className={`border-0 p-0 rounded-pill ${activeTab === "android" ? "bg-tab" : "bg-white"}`}
-                style={{width:"33.33%"}}
-                onClick={() => onTabChange("android")}
-            >
-                Android
-            </button>
-        </div>
-    );
-};
+// img
+import filter from "../../assets/images/filter.png"
+
+
 
 const Ads = () => {
     const [visible, setVisible] = useState(false);
@@ -191,6 +168,55 @@ const Ads = () => {
         }
     };
 
+
+    // Pagination logic
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPageOptions = [10, 25, 50, 100];
+
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(value);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
+
+    // Calculate pagination values
+    const totalItems = data.length;
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+    // Handle page changes
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Render pagination controls
+    const renderPaginationItems = () => {
+        let items = [];
+        const totalPagesToShow = 4;
+
+        let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
+
+        if (endPage - startPage < totalPagesToShow - 1) {
+            startPage = Math.max(1, endPage - totalPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            items.push(
+                <Pagination.Item
+                    key={i}
+                    active={i === currentPage}
+                    onClick={() => paginate(i)}
+                >
+                    {i}
+                </Pagination.Item>
+            );
+        }
+
+        return items;
+    };
+
     if (loading) return (
         <div
             style={{
@@ -229,23 +255,148 @@ const Ads = () => {
                 </Form>
             </div>
 
-            <div className='d-flex align-items-center justify-content-between py-2 flex-wrap'>
-                <Button
-                    onClick={() => toggleModal('add')}
-                    className='my-4 rounded-3 border-0'
-                    style={{ backgroundColor: "#F9E238" }}
-                    disabled={isSubmitting}
-                >
-                    Add New Ad
-                </Button>
-
-                <div className='d-flex gap-2 align-items-center'>
-                    <span className='mb-0 fw-bold fs-6'>Platform :</span>
-                    <PlatformTabs
-                        activeTab={platformFilter}
-                        onTabChange={setPlatformFilter}
-                    />
+            <div className='bg-white py-3 my-4 px-4' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                <div className='d-flex flex-wrap justify-content-between align-items-center pb-2'>
+                    <p className='fs-5'>Search Filters</p>
+                    <div className='d-flex align-items-center justify-content-between py-2 flex-wrap'>
+                        <div className='d-flex gap-2 align-items-center'>
+                            <span className='mb-0 fw-bold fs-6'>Platform :</span>
+                            <Dropdown>
+                                <Dropdown.Toggle
+                                    variant="light"
+                                    id="platform-dropdown"
+                                    className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                    style={{ minWidth: "320px" }}
+                                    bsPrefix="d-flex align-items-center justify-content-between"
+                                >
+                                    <div className="d-flex align-items-center">
+                                        <img src={filter} alt="filter" width={18} className="me-2" />
+                                        {platformFilter === '' ? 'All Platforms' : platformFilter}
+                                    </div>
+                                    <FontAwesomeIcon icon={faChevronDown} />
+                                </Dropdown.Toggle>
+                                <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                    <Dropdown.Item
+                                        onClick={() => setPlatformFilter('')}
+                                        active={platformFilter === ''}
+                                        className="custom-dropdown-item"
+                                    >
+                                        <input type="checkbox" checked={platformFilter === ''} readOnly className="me-2" />
+                                        All Platforms
+                                    </Dropdown.Item>
+                                    {platformTypes.map((type) => (
+                                        <Dropdown.Item
+                                            key={type.id}
+                                            onClick={() => setPlatformFilter(type.id)}
+                                            active={platformFilter === type.id}
+                                            className="custom-dropdown-item mt-1"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={platformFilter === type.id}
+                                                readOnly
+                                                className="me-2"
+                                            />
+                                            {type.label}
+                                        </Dropdown.Item>
+                                    ))}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
+                    </div>
                 </div>
+                <div className='d-flex align-items-center justify-content-between' style={{ borderBottom: "1px solid #E4E6E8" , borderTop: "1px solid #E4E6E8" }}>
+                    <div className='d-flex align-items-center gap-2'>
+                        <span>Show</span>
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="access-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "120px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
+                            >
+                                {itemsPerPage || 'Select Items Per Page'}
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                {itemsPerPageOptions.map((option) => (
+                                    <Dropdown.Item
+                                        key={option}
+                                        onClick={() => handleItemsPerPageChange(option)}
+                                        active={itemsPerPage === option}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        {option}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
+                    <Button
+                        onClick={() => setVisible(true)}
+                        className="my-3 rounded-3 border-0"
+                        style={{ backgroundColor: "#F9E238", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}
+                        disabled={isSubmitting}
+                    >
+                        Add New Ad
+                    </Button>
+                </div>
+
+
+                <div className="table-responsive px-4">
+                    <Table className='text-center fs-6 w-100 bg-white'>
+                        <thead>
+                            <tr>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Index</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>AdsName</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Platform</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Ads ID</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {data
+                                .filter(ads => !platformFilter || ads.Platform === platformFilter)
+                                .map((ads, index) => (
+                                    <tr key={ads._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                        <td>{index + 1}</td>
+                                        <td>{ads.AdsName}</td>
+                                        <td>{ads.Platform}</td>
+                                        <td>{ads.AdsId}</td>
+                                        <td>
+                                            <Button
+                                                className='edit-dlt-btn'
+                                                style={{ color: "#0385C3" }}
+                                                onClick={() => handleEdit(ads)}
+                                                disabled={isSubmitting}
+                                            >
+                                                <FontAwesomeIcon icon={faEdit} />
+                                            </Button>
+                                            <Button
+                                                className='edit-dlt-btn text-danger'
+                                                onClick={() => handleDelete(ads._id)}
+                                                disabled={isSubmitting}
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </Button>
+                                        </td>
+                                    </tr>
+                                ))}
+                        </tbody>
+                    </Table>
+                </div>
+                {totalPages > 1 && (
+                    <div className='d-flex justify-content-between px-4 pt-1 align-items-center' style={{ borderTop: "1px solid #E4E6E8" }}>
+                        <p className='m-0 fs-6' style={{ color: "#BFC3C7" }}>
+                            Showing {startItem} to {endItem} of {totalItems} entries
+                        </p>
+                        <Pagination>
+                            {renderPaginationItems()}
+                        </Pagination>
+                    </div>
+                )}
             </div>
 
             <Modal
@@ -363,46 +514,7 @@ const Ads = () => {
                 </Modal.Body>
             </Modal>
 
-            <Table striped bordered hover responsive className='text-center fs-6'>
-                <thead>
-                    <tr>
-                        <th>Index</th>
-                        <th>AdsName</th>
-                        <th>Platform</th>
-                        <th>Ads ID</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {data
-                        .filter(ads => !platformFilter || ads.Platform === platformFilter)
-                        .map((ads, index) => (
-                            <tr key={ads._id} className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}>
-                                <td>{index + 1}</td>
-                                <td>{ads.AdsName}</td>
-                                <td>{ads.Platform}</td>
-                                <td>{ads.AdsId}</td>
-                                <td>
-                                    <Button
-                                        className='edit-dlt-btn'
-                                        style={{ color: "#0385C3" }}
-                                        onClick={() => handleEdit(ads)}
-                                        disabled={isSubmitting}
-                                    >
-                                        <FontAwesomeIcon icon={faEdit} />
-                                    </Button>
-                                    <Button
-                                        className='edit-dlt-btn text-danger'
-                                        onClick={() => handleDelete(ads._id)}
-                                        disabled={isSubmitting}
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} />
-                                    </Button>
-                                </td>
-                            </tr>
-                        ))}
-                </tbody>
-            </Table>
+
 
             <ToastContainer />
         </div>

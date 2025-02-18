@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { Link } from 'react-router-dom';
 import { ListGroup, Collapse } from 'react-bootstrap';
-import { faA, faBell, faChartSimple, faChevronDown, faChevronUp, faHome, faLayerGroup, faLink, faPhotoFilm, faRectangleAd, faVideo } from '@fortawesome/free-solid-svg-icons';
+import { faA, faBell, faChartSimple, faChevronDown, faChevronRight, faHome, faLayerGroup, faLink, faPhotoFilm, faRectangleAd, faVideo } from '@fortawesome/free-solid-svg-icons';
 import { faFileAudio, faImage } from '@fortawesome/free-regular-svg-icons';
 import { faAndroid, faAppStoreIos, faGoogle, faJs, faMeta } from '@fortawesome/free-brands-svg-icons';
 
@@ -32,35 +32,41 @@ const NavigationDropdowns = () => {
         <div className="navigation-container">
             <ListGroup variant="flush">
                 {/* Dashboard Item */}
-                <ListGroup.Item className={`nav-item p-0 py-3 ${isSelected('dashboard')}`}>
-                    <Link to="/dashboard" className="nav-link fw-bold" onClick={() => handleSelectItem('dashboard')}>
+                <ListGroup.Item className={`p-0 py-2 ${isSelected('dashboard')}`}>
+                    <Link to="/dashboard" className="nav-link" onClick={() => handleSelectItem('dashboard')}>
                         <FontAwesomeIcon icon={faHome} className="me-2" />
                         Dashboard
                     </Link>
                 </ListGroup.Item>
 
                 {/* Content Management Dropdown */}
-                <ListGroup.Item className="nav-item p-0 py-3">
+                <ListGroup.Item className="nav-item p-0 py-2">
                     <button
                         className="nav-link w-100 p-2 d-flex justify-content-between align-items-center border-0 bg-transparent"
                         onClick={() => toggleDropdown('content')}
                         style={{ cursor: "pointer" }}
                     >
-                        <div className="fw-bold d-flex align-items-center">
+                        <div className="d-flex align-items-center ps-1">
                             <FontAwesomeIcon icon={faLayerGroup} className="me-2" />
                             Content Management
                         </div>
-                        <FontAwesomeIcon icon={openDropdowns.content ? faChevronUp : faChevronDown} />
+                        <FontAwesomeIcon icon={openDropdowns.content ? faChevronDown : faChevronRight} />
                     </button>
 
                     <Collapse in={openDropdowns.content}>
                         <ListGroup variant="flush">
+                            <div className="p-2 fw-bold">
+                                Cover Image
+                            </div>
                             <ListGroup.Item className={`${isSelected('cover')}`}>
                                 <Link to="/cover" className="nav-link" onClick={() => handleSelectItem('cover')}>
                                     <FontAwesomeIcon icon={faImage} className="me-2" />
                                     Cover Image
                                 </Link>
                             </ListGroup.Item>
+                            <div className="p-2 fw-bold">
+                                Prank Category
+                            </div>
                             <ListGroup.Item className={`nav-link ${isSelected('category')}`}>
                                 <Link to="/category" className="nav-link" onClick={() => handleSelectItem('category')}>
                                     <FontAwesomeIcon icon={faLayerGroup} className="me-2" />
@@ -153,18 +159,18 @@ const NavigationDropdowns = () => {
                 </ListGroup.Item>
 
                 {/* Analytics Dropdown */}
-                <ListGroup.Item className="nav-item p-0 py-3">
+                <ListGroup.Item className="nav-item p-0 py-2">
                     <button
                         className="nav-link"
                         onClick={() => toggleDropdown('analytics')}
                         style={{ cursor: "pointer", background: "none", border: "none", width: "100%" }}
                     >
                         <div className="d-flex justify-content-between align-items-center w-100">
-                            <div className='fw-bold d-flex align-items-center'>
+                            <div className='d-flex align-items-center'>
                                 <FontAwesomeIcon icon={faChartSimple} className="me-2" />
                                 Analytics
                             </div>
-                            <FontAwesomeIcon icon={openDropdowns.analytics ? faChevronUp : faChevronDown} />
+                            <FontAwesomeIcon icon={openDropdowns.analytics ? faChevronDown : faChevronRight} />
                         </div>
                     </button>
 

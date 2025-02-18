@@ -94,7 +94,7 @@ const NavContent = () => {
       // Vertical layout
       return (
         <div className="navbar-content next-scroll">
-          <PerfectScrollbar className="border pb-4">
+          <PerfectScrollbar className="pb-4">
             <ListGroup 
               variant="flush" 
               as="ul" 

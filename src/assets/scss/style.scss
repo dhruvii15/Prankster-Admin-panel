@@ -59,28 +59,28 @@ File: style.css
 
 // ===================== dashboard =====================
 
-.dash-color-1{
+.dash-color-1 {
     background-color: #f89d36;
 }
 
-.dash-color-2{
+.dash-color-2 {
     background-color: #7E3A99;
 }
 
-.dash-color-3{
+.dash-color-3 {
     background-color: #47C054;
 }
 
-.dash-color-4{
+.dash-color-4 {
     background-color: #FF6560;
 }
 
-.dash-color-5{
+.dash-color-5 {
     background-color: #43b0b8;
 }
 
 // ====== NavRight =============
-.logout-icon{
+.logout-icon {
     width: 35px;
     height: 35px;
     border-radius: 50%;
@@ -92,7 +92,7 @@ File: style.css
     justify-content: center;
 }
 
-.bg-light2{
+.bg-light2 {
     background-color: rgb(240, 238, 238);
 }
 
@@ -100,8 +100,8 @@ File: style.css
 
 
 // ==========================================================================
-.dropdown-menu{
-    height: 130px !important;
+.dropdown-menu {
+    min-height: 130px !important;
     overflow-y: scroll;
 }
 
@@ -213,17 +213,17 @@ File: style.css
 // ================= Paginatio =========================
 /* For the active/selected page button */
 .pagination .page-item.active .page-link {
-    background-color: #F9E238;  
-    border-color:  #ababac;     
-    color:  black;
+    background-color: #F9E238;
+    border-color: #ababac;
+    color: black;
     margin: 10px 3px;
 }
 
 /* For inactive/unselected page buttons */
 .pagination .page-item .page-link {
-    background-color: #ffffff; 
-    color:  #ababac;   
-    margin: 10px 3px;    
+    background-color: #ffffff;
+    color: #ababac;
+    margin: 10px 3px;
 }
 
 // /* Hover state for inactive buttons */
@@ -233,78 +233,81 @@ File: style.css
 
 .active-tab {
     color: black !important;
-    background-color: #F9E238 !important; 
+    background-color: #F9E238 !important;
     border-radius: 4px;
 }
 
 .nav-tabs .nav-link:hover {
-    color: black; 
-    background-color: #f8f9fa; 
-    border-radius: 4px; 
+    color: black;
+    background-color: #f8f9fa;
+    border-radius: 4px;
 }
 
 
 .nav-tabs .nav-link {
-    border: 1px solid #c1c1c1 !important; 
+    border: 1px solid #c1c1c1 !important;
 }
 
-.submit{
+.submit {
     background-color: #F9E238 !important;
 }
 
 .form-check-input:checked {
-    background-color: #F9E238;  
-    border-color: #F9E238;    
+    background-color: #F9E238;
+    border-color: #F9E238;
     background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23000' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='M6 10l3 3l6-6'/%3e%3c/svg%3e") !important;
 }
 
-.form-check-input{
+.form-check-input {
     border-color: black;
     box-shadow: none !important;
 }
 
-.form-check-input:focus{
+.form-check-input:focus {
     border-color: black;
 }
 
 ::-webkit-scrollbar {
-    width: 5px; 
-    height: 5px; 
-  }
-  
-  ::-webkit-scrollbar-track {
-    background: white; /* Background of the scrollbar track */
-  }
-  
-  ::-webkit-scrollbar-thumb {
-    background-color: #C1C1C1; /* Color of the scrollbar thumb */
-    border-radius: 10px; /* Round corners for the scrollbar thumb */
-    border: 2px solid #C1C1C1; /* Space around the thumb */
-  }
+    width: 5px;
+    height: 5px;
+}
 
-  .edit-dlt-btn{
+::-webkit-scrollbar-track {
+    background: white;
+    /* Background of the scrollbar track */
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: #C1C1C1;
+    /* Color of the scrollbar thumb */
+    border-radius: 10px;
+    /* Round corners for the scrollbar thumb */
+    border: 2px solid #C1C1C1;
+    /* Space around the thumb */
+}
+
+.edit-dlt-btn {
     height: 38px;
     width: 38px;
     text-align: center;
-    border: 1px solid black;
-    background-color: #e0e0e0;
+    border: 1px solid white;
+    background-color: transparent;
     border-radius: 5px;
-    margin: 5px;
     font-size: 16px !important;
     padding-left: 10px !important;
-  }
+}
 
-  .edit-dlt-btn:hover{
-    background-color: #e0e0e0;
-    border: 1px solid black;
-  }
+.edit-dlt-btn:hover {
+    background-color: transparent;
+    border: 1px solid white;
+}
 
-  .rounded-circle{
+.rounded-circle {
     width: 45px;
     height: 45px;
     line-height: 45px !important;
     border-radius: 100%;
-  }
+}
 
 
 //   ======================== Sreach bar =================
@@ -316,34 +319,39 @@ File: style.css
     padding: 5px 10px;
     width: 340px;
     background-color: #fff;
-  }
-  
-  .search-input {
+}
+
+.search-input {
     border: none;
     outline: none;
     flex: 1;
     padding: 5px;
     font-size: 14px;
-  }
-  
-  .search-button {
+}
+
+.search-button {
     border: none;
     background: none;
     cursor: pointer;
     font-size: 16px;
-  }
-  
-  .search-button span {
-    color: #555;
-  }
-
-  @media (min-width:1080px) {
-    .w-25-cal{
-        width: 35%;
-    }
-    
 }
 
+.search-button span {
+    color: #555;
+}
+
+@media (min-width:1080px) {
+    .w-25-cal {
+        width: 35%;
+    }
+}
+
+@media (min-width:992px) {
+    .nav-res{
+        display: none !important;
+    }
+
+}
 
 .dots-loader {
     display: flex;
@@ -359,34 +367,54 @@ File: style.css
     animation: bounce 1.2s infinite ease-in-out;
 }
 
-.dots-loader span:nth-child(1) { animation-delay: 0s; }
-.dots-loader span:nth-child(2) { animation-delay: 0.2s; }
-.dots-loader span:nth-child(3) { animation-delay: 0.4s; }
+.dots-loader span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.dots-loader span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.dots-loader span:nth-child(3) {
+    animation-delay: 0.4s;
+}
 
 
 @keyframes bounce {
-    0%, 80%, 100% { transform: scale(0); opacity: 0.2; }
-    40% { transform: scale(1); opacity: 1; }
+
+    0%,
+    80%,
+    100% {
+        transform: scale(0);
+        opacity: 0.2;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 
 .nav-link {
-    color: #4d4c4c !important; /* Ensure the color is inherited and doesn't change on hover */
+    color: #4d4c4c !important;
+    /* Ensure the color is inherited and doesn't change on hover */
 }
 
 .nav-link:hover {
     text-decoration: none;
-    color: inherit; /* Prevent hover color change */
+    color: inherit;
+    /* Prevent hover color change */
 }
 
-.d-flex2{
+.d-flex2 {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 15px;
 }
 
-.suggestion-box{
+.suggestion-box {
     position: absolute !important;
     top: 60px;
     left: 0px;
@@ -397,12 +425,43 @@ File: style.css
     height: 180px;
 }
 
-.bg-bg{
+.bg-bg {
     background-color: #EFEFEF;
     border-left: 4px solid #F9E238 !important;
 }
 
-.bg-tab{
-    background-color: #43B0B8;
+.bg-tab {
+    background-color: #8469E1;
     color: white;
+}
+
+.bg-tab2 {
+    background-color: #F5F4F7 !important;
+    color: #a09f9f;
+}
+
+.custom-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.custom-dropdown-menu .dropdown-item.active,
+.custom-dropdown-menu .dropdown-item:hover {
+    background-color: #5379F6 !important;
+    color: white !important;
+}
+
+.custom-dropdown-item input[type="checkbox"] {
+    background-color: black;
+    /* Keep background white */
+    border: 1px solid white;
+    /* Black border */
+}
+
+.custom-dropdown-item input[type="checkbox"]:checked {
+    border-color: white;
+    /* Keep white border when checked */
+    accent-color: white;
+    /* Change the checkmark color to black */
 }

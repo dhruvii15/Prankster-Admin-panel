@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Row, Col, Spinner, Pagination } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Row, Col, Spinner, Pagination, Dropdown } from 'react-bootstrap';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 
 
 const PushNotification = () => {
@@ -113,16 +115,29 @@ const PushNotification = () => {
     };
 
     // Pagination logic
-    const itemsPerPage = 15;
     const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPageOptions = [10, 25, 50, 100];
 
-    const indexOfLastItem = currentPage * itemsPerPage;
-    const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-    const currentItems = data.slice(indexOfFirstItem, indexOfLastItem);
-    const totalPages = Math.ceil(data.length / itemsPerPage);
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(value);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
 
-    const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    // Calculate pagination values
+    const totalItems = data.length;
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const currentItems = data.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
 
+    // Handle page changes
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Render pagination controls
     const renderPaginationItems = () => {
         let items = [];
         const totalPagesToShow = 4;
@@ -173,14 +188,93 @@ const PushNotification = () => {
                 </div>
             </div>
 
-            <Button
-                onClick={() => toggleModal('add')}
-                className='my-4 rounded-3 border-0'
-                style={{ backgroundColor: "#F9E238" }}
-                disabled={isSubmitting}
-            >
-                Push Notification
-            </Button>
+            <div className='bg-white py-3 my-4' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                <div className='d-flex flex-wrap justify-content-between align-items-center'>
+                    <p className='fs-5 px-4'>Search Filters</p>
+                </div>
+                <div className='d-flex align-items-center justify-content-between px-4' style={{ borderBottom: "1px solid #E4E6E8" , borderTop: "1px solid #E4E6E8" }}>
+
+                    <div className='d-flex align-items-center gap-2'>
+                        <span>Show</span>
+                        <Dropdown>
+                            <Dropdown.Toggle
+                                variant="light"
+                                id="access-dropdown"
+                                className="bg-white border rounded-2 d-flex align-items-center justify-content-between"
+                                style={{ minWidth: "120px" }}
+                                bsPrefix="d-flex align-items-center justify-content-between"
+                            >
+                                {itemsPerPage || 'Select Items Per Page'}
+                                <FontAwesomeIcon icon={faChevronDown} />
+                            </Dropdown.Toggle>
+
+                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
+                                {itemsPerPageOptions.map((option) => (
+                                    <Dropdown.Item
+                                        key={option}
+                                        onClick={() => handleItemsPerPageChange(option)}
+                                        active={itemsPerPage === option}
+                                        className="custom-dropdown-item mt-1"
+                                    >
+                                        {option}
+                                    </Dropdown.Item>
+                                ))}
+                            </Dropdown.Menu>
+                        </Dropdown>
+                    </div>
+                    <Button
+                        onClick={() => toggleModal('add')}
+                        className='my-3 rounded-3 border-0'
+                        style={{ backgroundColor: "#F9E238" , boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}
+                        disabled={isSubmitting}
+                    >
+                        Push Notification
+                    </Button>
+                </div>
+
+
+                <div className="table-responsive px-4">
+                    <Table className='text-center fs-6 w-100 bg-white'>
+                        <thead>
+                            <tr>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Index</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Notification Title</td>
+                                <td className='py-4' style={{ fontWeight: "600" }}>Notification Description</td>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {currentItems.length > 0 ? (
+                                currentItems.map((notification, index) => (
+                                    <tr
+                                        key={notification._id}
+                                        style={{ borderTop: "1px solid #E4E6E8" }}
+                                    >
+                                        <td>{indexOfFirstItem + index + 1}</td>
+                                        <td>{notification.Title}</td>
+                                        <td>{notification.Description}</td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="3" className="text-center">
+                                        No notifications to display.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
+                </div>
+                {totalPages > 1 && (
+                    <div className='d-flex justify-content-between px-4 pt-1 align-items-center' style={{ borderTop: "1px solid #E4E6E8" }}>
+                        <p className='m-0 fs-6' style={{ color: "#BFC3C7" }}>
+                            Showing {startItem} to {endItem} of {totalItems} entries
+                        </p>
+                        <Pagination>
+                            {renderPaginationItems()}
+                        </Pagination>
+                    </div>
+                )}
+            </div>
 
             <Modal
                 show={visible}
@@ -270,44 +364,6 @@ const PushNotification = () => {
                     </Form>
                 </Modal.Body>
             </Modal>
-
-            <Table striped bordered hover responsive className="text-center fs-6">
-                <thead>
-                    <tr>
-                        <th>Index</th>
-                        <th>Notification Title</th>
-                        <th>Notification Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems.length > 0 ? (
-                        currentItems.map((notification, index) => (
-                            <tr
-                                key={notification._id}
-                                className={index % 2 === 1 ? 'bg-light2' : 'bg-blue'}
-                            >
-                                <td>{indexOfFirstItem + index + 1}</td>
-                                <td>{notification.Title}</td>
-                                <td>{notification.Description}</td>
-                            </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan="3" className="text-center">
-                                No notifications to display.
-                            </td>
-                        </tr>
-                    )}
-                </tbody>
-            </Table>
-
-            {totalPages > 1 && (
-                <div className='d-flex justify-content-center'>
-                    <Pagination>
-                        {renderPaginationItems()}
-                    </Pagination>
-                </div>
-            )}
 
             <ToastContainer />
         </div>
