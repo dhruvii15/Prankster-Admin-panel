@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form, Modal, Spinner, Row, Col, Dropdown } from 'react-bootstrap';
+import { Table, Pagination, Form, Modal, Spinner, Row, Col, Dropdown, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -9,6 +9,7 @@ import { faCheck, faChevronDown, faDownload, faTrash } from '@fortawesome/free-s
 // img
 import ImagePreviewModal from 'components/ImagePreviewModal';
 import { faCopy } from '@fortawesome/free-regular-svg-icons';
+import TruncatedText from 'components/TruncatedText';
 
 const UserGallery = () => {
     const category = [
@@ -163,54 +164,54 @@ const UserGallery = () => {
     };
 
     // Pagination logic
-        const [currentPage, setCurrentPage] = useState(1);
-        const [itemsPerPage, setItemsPerPage] = useState(10);
-        const itemsPerPageOptions = [10, 25, 50, 100];
-    
-        const handleItemsPerPageChange = (value) => {
-            setItemsPerPage(value);
-            setCurrentPage(1); // Reset to first page when changing items per page
-        };
-    
-        // Calculate pagination values
-        const totalItems = filteredData.length;
-        const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-        const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-        const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-    
-        // Handle page changes
-        const paginate = (pageNumber) => {
-            setCurrentPage(pageNumber);
-        };
-    
-        // Render pagination controls
-        const renderPaginationItems = () => {
-            let items = [];
-            const totalPagesToShow = 4;
-    
-            let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
-            let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
-    
-            if (endPage - startPage < totalPagesToShow - 1) {
-                startPage = Math.max(1, endPage - totalPagesToShow + 1);
-            }
-    
-            for (let i = startPage; i <= endPage; i++) {
-                items.push(
-                    <Pagination.Item
-                        key={i}
-                        active={i === currentPage}
-                        onClick={() => paginate(i)}
-                    >
-                        {i}
-                    </Pagination.Item>
-                );
-            }
-    
-            return items;
-        };
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPageOptions = [10, 25, 50, 100];
+
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(value);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
+
+    // Calculate pagination values
+    const totalItems = filteredData.length;
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+
+    // Handle page changes
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Render pagination controls
+    const renderPaginationItems = () => {
+        let items = [];
+        const totalPagesToShow = 4;
+
+        let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
+
+        if (endPage - startPage < totalPagesToShow - 1) {
+            startPage = Math.max(1, endPage - totalPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            items.push(
+                <Pagination.Item
+                    key={i}
+                    active={i === currentPage}
+                    onClick={() => paginate(i)}
+                >
+                    {i}
+                </Pagination.Item>
+            );
+        }
+
+        return items;
+    };
 
     const handleDelete = (galleryId) => {
         if (window.confirm("Are you sure you want to delete this Gallery Image?")) {
@@ -300,79 +301,79 @@ const UserGallery = () => {
                 </div>
 
                 <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
-                    <tr>
-                        <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
-                        <td className='py-4' style={{ fontWeight: "600" }}>Gallery Name</td>
-                        <td className='py-4' style={{ fontWeight: "600" }}>Gallery Image</td>
-                        <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
-                    </tr>
-                </thead>
-                <tbody>
-                    {currentItems && currentItems.length > 0 ? (
-                        currentItems.map((gallery, index) => (
-                            <tr key={gallery._id} style={{ borderTop: "1px solid #E4E6E8" }}>
-                                <td>{indexOfFirstItem + index + 1}</td>
-                                <td>{gallery.GalleryName}</td>
-                                <td>
-                                    <button
-                                        style={{
-                                            background: 'none',
-                                            border: 'none',
-                                            padding: 0,
-                                            cursor: 'pointer',
-                                        }}
-                                        onClick={() => {
-                                            setPreviewIndex(getAbsoluteIndex(index));
-                                            setShowPreview(true);
-                                        }}
-                                    >
-                                        <img
-                                            src={gallery.GalleryImage || 'placeholder.jpg'}
-                                            alt="gallery thumbnail"
-                                            style={{ width: '100px', height: '100px', objectFit: 'cover' }}
-                                        />
-                                    </button>
-                                </td>
-
-                                <td>
-                                    <Button
-                                        className="edit-dlt-btn"
-                                        onClick={() => handleDownload(gallery.GalleryImage)} // Pass your image URL here
-                                    >
-                                        <FontAwesomeIcon icon={faDownload} />
-                                    </Button>
-                                    <Button
-                                        className="edit-dlt-btn text-black"
-                                        onClick={() => handleCopyToClipboard(gallery.GalleryImage)}
-                                    >
-                                        <FontAwesomeIcon icon={faCopy} />
-                                    </Button>
-                                    <Button
-                                        className='edit-dlt-btn'
-                                        style={{ color: "#0385C3" }}
-                                        onClick={() => handleModalShow(gallery)}
-                                    >
-                                        <FontAwesomeIcon icon={faCheck} />
-                                    </Button>
-                                    <Button
-                                        className='edit-dlt-btn text-danger'
-                                        onClick={() => handleDelete(gallery._id)}
-                                    >
-                                        <FontAwesomeIcon icon={faTrash} />
-                                    </Button>
-                                </td>
+                            <tr>
+                                <TruncatedText text={'Id'} />
+                                <TruncatedText text={'Gallery Name'} />
+                                <TruncatedText text={'Gallery Image'} />
+                                <TruncatedText text={'Actions'} />
                             </tr>
-                        ))
-                    ) : (
-                        <tr>
-                            <td colSpan={4} className="text-center">No Data Found</td>
-                        </tr>
-                    )}
-                </tbody>
-            </Table>
-            </div>
+                        </thead>
+                        <tbody>
+                            {currentItems && currentItems.length > 0 ? (
+                                currentItems.map((gallery, index) => (
+                                    <tr key={gallery._id}>
+                                        <td>{indexOfFirstItem + index + 1}</td>
+                                        <td>{gallery.GalleryName}</td>
+                                        <td>
+                                            <button
+                                                style={{
+                                                    background: 'none',
+                                                    border: 'none',
+                                                    padding: 0,
+                                                    cursor: 'pointer',
+                                                }}
+                                                onClick={() => {
+                                                    setPreviewIndex(getAbsoluteIndex(index));
+                                                    setShowPreview(true);
+                                                }}
+                                            >
+                                                <img
+                                                    src={gallery.GalleryImage || 'placeholder.jpg'}
+                                                    alt="gallery thumbnail"
+                                                    style={{ width: '100px', height: '100px', objectFit: 'cover' }}
+                                                />
+                                            </button>
+                                        </td>
+
+                                        <td>
+                                            <button
+                                                className="edit-dlt-btn"
+                                                onClick={() => handleDownload(gallery.GalleryImage)} // Pass your image URL here
+                                            >
+                                                <FontAwesomeIcon icon={faDownload} />
+                                            </button>
+                                            <button
+                                                className="edit-dlt-btn text-black"
+                                                onClick={() => handleCopyToClipboard(gallery.GalleryImage)}
+                                            >
+                                                <FontAwesomeIcon icon={faCopy} />
+                                            </button>
+                                            <button
+                                                className='edit-dlt-btn'
+                                                style={{ color: "#0385C3" }}
+                                                onClick={() => handleModalShow(gallery)}
+                                            >
+                                                <FontAwesomeIcon icon={faCheck} />
+                                            </button>
+                                            <button
+                                                className='edit-dlt-btn text-danger'
+                                                onClick={() => handleDelete(gallery._id)}
+                                            >
+                                                <FontAwesomeIcon icon={faTrash} />
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan={4} className="text-center">No Data Found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </Table>
+                </div>
                 {totalPages > 1 && (
                     <div className='d-flex justify-content-between px-4 pt-1 align-items-center' style={{ borderTop: "1px solid #E4E6E8" }}>
                         <p className='m-0 fs-6' style={{ color: "#BFC3C7" }}>
@@ -434,11 +435,11 @@ const UserGallery = () => {
                             >
                                 <option value="">Select a Prank Category</option>
                                 {category.map((cat) => {
-                                        return (
-                                            <option key={cat._id} value={cat.CategoryId}>
-                                                {cat.CategoryName}
-                                            </option>
-                                        );
+                                    return (
+                                        <option key={cat._id} value={cat.CategoryId}>
+                                            {cat.CategoryName}
+                                        </option>
+                                    );
                                 })}
                             </Form.Control>
                             <Form.Control.Feedback type="invalid">
@@ -464,11 +465,11 @@ const UserGallery = () => {
                             >
                                 <option value="">Select a Prank Language</option>
                                 {language.map((cat) => {
-                                        return (
-                                            <option key={cat._id} value={cat.LanguageId}>
-                                                {cat.LanguageName}
-                                            </option>
-                                        );
+                                    return (
+                                        <option key={cat._id} value={cat.LanguageId}>
+                                            {cat.LanguageName}
+                                        </option>
+                                    );
                                 })}
                             </Form.Control>
                             <Form.Control.Feedback type="invalid">

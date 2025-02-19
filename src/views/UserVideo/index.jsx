@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form, Modal, Spinner, Row, Col, Dropdown } from 'react-bootstrap';
+import { Table, Pagination, Form, Modal, Spinner, Row, Col, Dropdown, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { faCheck, faChevronDown, faDownload, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faChevronDown, faDownload, faExpand, faTrash } from '@fortawesome/free-solid-svg-icons';
 
 // img
 import { faCopy } from '@fortawesome/free-regular-svg-icons';
+import TruncatedText from 'components/TruncatedText';
 
 const UserVideo = () => {
     const category = [
@@ -255,6 +256,18 @@ const UserVideo = () => {
         </div>
     );
 
+    const handleFullscreen = (videoElement) => {
+        if (videoElement) {
+            if (videoElement.requestFullscreen) {
+                videoElement.requestFullscreen();
+            } else if (videoElement.webkitRequestFullscreen) {
+                videoElement.webkitRequestFullscreen();
+            } else if (videoElement.msRequestFullscreen) {
+                videoElement.msRequestFullscreen();
+            }
+        }
+    };
+
     return (
         <div>
             <div className='d-sm-flex justify-content-between align-items-center pb-5'>
@@ -297,60 +310,74 @@ const UserVideo = () => {
                 </div>
 
                 <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Video Name</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Video</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                                <TruncatedText text={'Id'} />
+                                <TruncatedText text={'Video Name'} />
+                                <TruncatedText text={'Video'} />
+                                <TruncatedText text={'Actions'} />
                             </tr>
                         </thead>
                         <tbody>
                             {currentItems && currentItems.length > 0 ? (
                                 currentItems.map((video, index) => (
-                                    <tr key={video._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <tr key={video._id}>
                                         <td>{indexOfFirstItem + index + 1}</td>
                                         <td>{video.VideoName}</td>
-                                        <td>
-                                            <video controls width="240">
-                                                <source src={video.Video} type="video/mp4" />
-                                                <track
-                                                    kind="captions"
-                                                    src={video.VideoName}
-                                                    srcLang="en"
-                                                    label="English"
-                                                    default
-                                                />
-                                                Your browser does not support the video element.
-                                            </video>
+                                        <td className='d-flex align-items-center justify-content-center gap-3'>
+                                            <div className="position-relative">
+                                                <video
+                                                    controls
+                                                    width="110px"
+                                                    height="110px"
+                                                    id={`video-${video._id}`}
+                                                >
+                                                    <source src={video.Video} type="video/mp4" />
+                                                    <track
+                                                        kind="captions"
+                                                        src={video.VideoName}
+                                                        srcLang="en"
+                                                        label="English"
+                                                        default
+                                                    />
+                                                    Your browser does not support the video element.
+                                                </video>
+                                            </div>
+                                            <button
+                                                className="edit-dlt-btn text-black pt-1"
+                                                onClick={() => handleFullscreen(document.getElementById(`video-${video._id}`))}
+                                                title="Fullscreen"
+                                            >
+                                                <FontAwesomeIcon icon={faExpand} />
+                                            </button>
                                         </td>
                                         <td>
-                                            <Button
+                                            <button
                                                 className="edit-dlt-btn"
                                                 onClick={() => handleDownload(video.Video)}
                                             >
                                                 <FontAwesomeIcon icon={faDownload} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className="edit-dlt-btn text-black"
                                                 onClick={() => handleCopyToClipboard(video.Video)}
                                             >
                                                 <FontAwesomeIcon icon={faCopy} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className='edit-dlt-btn'
                                                 style={{ color: "#0385C3" }}
                                                 onClick={() => handleModalShow(video)}
                                             >
                                                 <FontAwesomeIcon icon={faCheck} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className='edit-dlt-btn text-danger'
                                                 onClick={() => handleDelete(video._id)}
                                             >
                                                 <FontAwesomeIcon icon={faTrash} />
-                                            </Button>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -498,7 +525,7 @@ const UserVideo = () => {
                             </Form.Group>
                         </div>
 
-                        {/* Submit Button */}
+                        {/* Submit button */}
                         <Row className="mt-5">
                             <Col xs={6}>
                                 <Button

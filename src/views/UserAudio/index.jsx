@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form, Modal, Spinner, Row, Col, Dropdown } from 'react-bootstrap';
+import { Table, Pagination, Form, Modal, Spinner, Row, Col, Dropdown, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -8,6 +8,7 @@ import { faCheck, faChevronDown, faDownload, faTrash } from '@fortawesome/free-s
 
 // img
 import { faCopy } from '@fortawesome/free-regular-svg-icons';
+import TruncatedText from 'components/TruncatedText';
 
 const UserAudio = () => {
     const category = [
@@ -297,19 +298,19 @@ const UserAudio = () => {
                 </div>
 
                 <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Audio Name</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Audio</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                                <TruncatedText text={'Id'} />
+                                <TruncatedText text={'Audio Name'} />
+                                <TruncatedText text={'Audio'} />
+                                <TruncatedText text={'Actions'} />
                             </tr>
                         </thead>
                         <tbody>
                             {currentItems && currentItems.length > 0 ? (
                                 currentItems.map((audio, index) => (
-                                    <tr key={audio._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <tr key={audio._id}>
                                         <td>{indexOfFirstItem + index + 1}</td>
                                         <td>{audio.AudioName}</td>
                                         <td>
@@ -326,31 +327,31 @@ const UserAudio = () => {
                                             </audio>
                                         </td>
                                         <td>
-                                            <Button
+                                            <button
                                                 className="edit-dlt-btn"
                                                 onClick={() => handleDownload(audio.Audio)} // Pass your image URL here
                                             >
                                                 <FontAwesomeIcon icon={faDownload} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className="edit-dlt-btn text-black"
                                                 onClick={() => handleCopyToClipboard(audio.Audio)}
                                             >
                                                 <FontAwesomeIcon icon={faCopy} />
-                                            </Button>
-                                            <Button
-                                                className='edit-dlt-btn'
+                                            </button>
+                                            <button
+                                                className='edit-dlt-btn pt-1'
                                                 style={{ color: "#0385C3" }}
                                                 onClick={() => handleModalShow(audio)}
                                             >
                                                 <FontAwesomeIcon icon={faCheck} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className='edit-dlt-btn text-danger'
                                                 onClick={() => handleDelete(audio._id)}
                                             >
                                                 <FontAwesomeIcon icon={faTrash} />
-                                            </Button>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))

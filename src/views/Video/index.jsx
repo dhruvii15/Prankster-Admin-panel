@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faChevronDown, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faChevronDown, faPlus, faExpand } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -11,6 +11,7 @@ import { faCopy, faEye, faEyeSlash } from '@fortawesome/free-regular-svg-icons';
 
 // img
 import filter from "../../assets/images/filter.png"
+import TruncatedText from 'components/TruncatedText';
 
 
 const Video = () => {
@@ -54,7 +55,12 @@ const Video = () => {
     const [selectedLanguage, setSelectedLanguage] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
 
-
+    const clearAllFilters = () => {
+        setSelectedLanguage('');
+        setSelectedCategory('');
+        setActiveTab2('Free'); // Reset to default 'Free' state
+        setCurrentPage(1); // Reset to first page
+    };
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
         { id: 'text', label: 'URL' }
@@ -85,7 +91,7 @@ const Video = () => {
     const getAdminData = () => {
         axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
-                setIsOn(res.data.data[0].VideoSafe);
+                // setIsOn(res.data.data[0].VideoSafe);
                 setAdminId(res.data.data[0]._id);
             })
             .catch((err) => {
@@ -507,6 +513,18 @@ const Video = () => {
         }
     };
 
+    const handleFullscreen = (videoElement) => {
+        if (videoElement) {
+            if (videoElement.requestFullscreen) {
+                videoElement.requestFullscreen();
+            } else if (videoElement.webkitRequestFullscreen) {
+                videoElement.webkitRequestFullscreen();
+            } else if (videoElement.msRequestFullscreen) {
+                videoElement.msRequestFullscreen();
+            }
+        }
+    };
+
     if (loading) return (
         <div
             style={{
@@ -548,7 +566,17 @@ const Video = () => {
 
 
             <div className='bg-white mt-3' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
-                <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                <div className='d-flex align-items-center justify-content-between'>
+                    <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                    <Button
+                        onClick={clearAllFilters}
+                        variant="outline-secondary"
+                        className="d-flex align-items-center gap-2 py-1 border-0 bg-transparent text-secondary"
+                        style={{ fontSize: "14px" }}
+                    >
+                        CLEAR ALL
+                    </Button>
+                </div>
                 <div className='d-flex flex-wrap align-items-center justify-content-between pb-2 px-4'>
                     {/* Language Filter */}
                     <div className="d-flex align-items-center gap-2 my-2">
@@ -690,7 +718,7 @@ const Video = () => {
                 </div>
 
 
-                <div className='d-flex justify-content-between align-items-center px-4 py-3' style={{ borderBottom: "1px solid #E4E6E8", borderTop: "1px solid #E4E6E8" }}>
+                <div className='d-flex justify-content-between align-items-center px-4 py-3' style={{ borderTop: "1px solid #E4E6E8" }}>
                     <div className='d-flex align-items-center gap-2'>
                         <span>Show</span>
                         <Dropdown>
@@ -730,53 +758,72 @@ const Video = () => {
                     </Button>
                 </div>
 
-                <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                <div className="table-responsive px-4 pt-4">
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Video Prank Name</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Artist Name</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Video Prank File</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Prank Language</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Prank Category</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Premium</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Safe</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Trending</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                                <TruncatedText text={'Id'} />
+                                <TruncatedText text={'Video Prank Name'} />
+                                <TruncatedText text={'Artist Name'} />
+                                <TruncatedText text={'Video Prank File'} />
+                                <TruncatedText text={'Prank Language'} />
+                                <TruncatedText text={'Prank Category'} />
+                                <TruncatedText text={'Premium'} />
+                                <TruncatedText text={'Safe'} />
+                                <TruncatedText text={'Trending'} />
+                                <TruncatedText text={'Actions'} />
                             </tr>
                         </thead>
                         <tbody>
                             {currentItems && currentItems.length > 0 ? (
                                 currentItems.map((video, index) => (
-                                    <tr key={video._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <tr key={video._id}>
                                         <td>{indexOfFirstItem + index + 1}</td>
                                         <td>{video.VideoName}</td>
                                         <td>{video.ArtistName}</td>
-                                        <td className='d-flex2'>
-                                            <video controls width="110px" height="110px">
-                                                <source src={video.Video} type="video/mp4" />
-                                                <track
-                                                    kind="captions"
-                                                    src={video.VideoName}
-                                                    srcLang="en"
-                                                    label="English"
-                                                    default
-                                                />
-                                                Your browser does not support the video element.
-                                            </video>
+                                        <td className='position-relative'>
+                                            <div className="d-flex align-items-center justify-content-center gap-2">
+                                                <div className="position-relative">
+                                                    <video
+                                                        controls
+                                                        width="110px"
+                                                        height="110px"
+                                                        id={`video-${video._id}`}
+                                                    >
+                                                        <source src={video.Video} type="video/mp4" />
+                                                        <track
+                                                            kind="captions"
+                                                            src={video.VideoName}
+                                                            srcLang="en"
+                                                            label="English"
+                                                            default
+                                                        />
+                                                        Your browser does not support the video element.
+                                                    </video>
+                                                </div>
 
-                                            <Button
-                                                className="edit-dlt-btn text-black"
-                                                onClick={() => handleCopyToClipboard(video)}
-                                            >
-                                                <FontAwesomeIcon icon={faCopy} />
-                                            </Button>
+                                                <div>
+                                                    <button
+                                                        className="edit-dlt-btn text-black pt-1"
+                                                        onClick={() => handleFullscreen(document.getElementById(`video-${video._id}`))}
+                                                        title="Fullscreen"
+                                                    >
+                                                        <FontAwesomeIcon icon={faExpand} />
+                                                    </button>
+                                                    <button
+                                                        className="edit-dlt-btn text-black pt-1"
+                                                        onClick={() => handleCopyToClipboard(video)}
+                                                    >
+                                                        <FontAwesomeIcon icon={faCopy} />
+                                                    </button>
+                                                </div>
+
+                                            </div>
                                         </td>
                                         <td>{getLanguageName(video.LanguageId)}</td>
                                         <td>{getCategoryName(video.CategoryId)}</td>
                                         <td>
-                                            <Button
+                                            <button
                                                 className='bg-transparent border-0 fs-4'
                                                 style={{ color: video.VideoPremium ? "#0385C3" : "#6c757d" }}
                                                 onClick={() => handlePremiumToggle(video._id, video.VideoPremium)}
@@ -785,28 +832,29 @@ const Video = () => {
                                                     icon={video.VideoPremium ? faToggleOn : faToggleOff}
                                                     title={video.VideoPremium ? "Premium ON" : "Premium OFF"}
                                                 />
-                                            </Button>
+                                            </button>
                                         </td>
                                         <td>
-                                            <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(video._id, video.Safe)}>
+                                            <button className='bg-transparent edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(video._id, video.Safe)}>
                                                 <FontAwesomeIcon icon={video.Safe ? faEye : faEyeSlash} />
-                                            </Button>
+                                            </button>
                                         </td>
                                         <td>
-                                            <FontAwesomeIcon
-                                                icon={video.trending ? faArrowTrendUp : faArrowTrendDown}
-                                                title={video.trending ? "up" : "down"}
-                                                className='fs-5'
-                                                style={{ color: video.trending ? 'green' : 'red' }}
-                                            />
+                                            <div className='edit-dlt-btn2'>
+                                                <FontAwesomeIcon
+                                                    icon={video.trending ? faArrowTrendUp : faArrowTrendDown}
+                                                    title={video.trending ? "up" : "down"}
+                                                    style={{ color: video.trending ? 'green' : 'red' }}
+                                                />
+                                            </div>
                                         </td>
                                         <td>
-                                            <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(video)}>
+                                            <button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(video)}>
                                                 <FontAwesomeIcon icon={faEdit} />
-                                            </Button>
-                                            <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(video._id)}>
+                                            </button>
+                                            <button className='edit-dlt-btn text-danger' onClick={() => handleDelete(video._id)}>
                                                 <FontAwesomeIcon icon={faTrash} />
-                                            </Button>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))

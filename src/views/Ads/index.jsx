@@ -305,7 +305,7 @@ const Ads = () => {
                         </div>
                     </div>
                 </div>
-                <div className='d-flex align-items-center justify-content-between' style={{ borderBottom: "1px solid #E4E6E8" , borderTop: "1px solid #E4E6E8" }}>
+                <div className='d-flex align-items-center justify-content-between' style={{ borderTop: "1px solid #E4E6E8" }}>
                     <div className='d-flex align-items-center gap-2'>
                         <span>Show</span>
                         <Dropdown>
@@ -345,8 +345,8 @@ const Ads = () => {
                 </div>
 
 
-                <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                <div className="table-responsive px-4 pt-4">
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
                                 <td className='py-4' style={{ fontWeight: "600" }}>Index</td>
@@ -360,27 +360,27 @@ const Ads = () => {
                             {data
                                 .filter(ads => !platformFilter || ads.Platform === platformFilter)
                                 .map((ads, index) => (
-                                    <tr key={ads._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <tr key={ads._id}>
                                         <td>{index + 1}</td>
                                         <td>{ads.AdsName}</td>
                                         <td>{ads.Platform}</td>
                                         <td>{ads.AdsId}</td>
                                         <td>
-                                            <Button
+                                            <button
                                                 className='edit-dlt-btn'
                                                 style={{ color: "#0385C3" }}
                                                 onClick={() => handleEdit(ads)}
                                                 disabled={isSubmitting}
                                             >
                                                 <FontAwesomeIcon icon={faEdit} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className='edit-dlt-btn text-danger'
                                                 onClick={() => handleDelete(ads._id)}
                                                 disabled={isSubmitting}
                                             >
                                                 <FontAwesomeIcon icon={faTrash} />
-                                            </Button>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))}

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Modal, Form, Table, Pagination, Row, Col, Spinner, Dropdown } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faChevronDown, faPlus, } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTrash, faToggleOn, faToggleOff, faArrowUpFromBracket, faArrowTrendUp, faArrowTrendDown, faChevronDown, faPlus } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -13,6 +13,7 @@ import ImagePreviewModal from 'components/ImagePreviewModal';
 
 // img
 import filter from "../../assets/images/filter.png"
+import TruncatedText from 'components/TruncatedText';
 
 
 const Gallery = () => {
@@ -57,6 +58,13 @@ const Gallery = () => {
     const [selectedLanguage, setSelectedLanguage] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
 
+    const clearAllFilters = () => {
+        setSelectedLanguage('');
+        setSelectedCategory('');
+        setActiveTab2('Free'); // Reset to default 'Free' state
+        setCurrentPage(1); // Reset to first page
+    };
+
     const inputTypes = [
         { id: 'file', label: 'File Upload' },
         { id: 'text', label: 'URL' }
@@ -88,7 +96,7 @@ const Gallery = () => {
     const getAdminData = () => {
         axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
-                setIsOn(res.data.data[0].ImageSafe);
+                // setIsOn(res.data.data[0].ImageSafe);
                 setAdminId(res.data.data[0]._id);
             })
             .catch((err) => {
@@ -715,7 +723,17 @@ const Gallery = () => {
 
             {/* =========================================================== */}
             <div className='bg-white mt-3' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
-                <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                <div className='d-flex align-items-center justify-content-between'>
+                    <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                    <Button
+                        onClick={clearAllFilters}
+                        variant="outline-secondary"
+                        className="d-flex align-items-center gap-2 py-1 border-0 bg-transparent text-secondary"
+                        style={{ fontSize: "14px" }}
+                    >
+                        CLEAR ALL
+                    </Button>
+                </div>
                 <div className='d-flex flex-wrap align-items-center justify-content-between pb-2 px-4'>
                     {/* Language Filter */}
                     <div className="d-flex align-items-center gap-2 my-2">
@@ -856,8 +874,8 @@ const Gallery = () => {
                     </div>
                 </div>
 
-                
-                <div className='d-flex justify-content-between align-items-center px-4 py-3' style={{ borderBottom: "1px solid #E4E6E8" , borderTop: "1px solid #E4E6E8" }}>
+
+                <div className='d-flex justify-content-between align-items-center px-4 py-3' style={{ borderTop: "1px solid #E4E6E8" }}>
                     <div className='d-flex align-items-center gap-2'>
                         <span>Show</span>
                         <Dropdown>
@@ -893,29 +911,29 @@ const Gallery = () => {
                         className="rounded-3 border-0 py-2"
                         style={{ backgroundColor: "#F9E238", color: "black", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}
                     >
-                        <FontAwesomeIcon icon={faPlus}  className='pe-2'/> Add Image Prank
+                        <FontAwesomeIcon icon={faPlus} className='pe-2' /> Add Image Prank
                     </Button>
                 </div>
 
-                <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                <div className="table-responsive px-4 pt-4">
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Image Prank Name</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Image Prank Image</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Prank Language</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Prank Category</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Premium</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Safe</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Trending</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                                <TruncatedText text={'Id'} />
+                                <TruncatedText text={'Image Prank Name'} />
+                                <TruncatedText text={'Image Prank Image'} />
+                                <TruncatedText text={'Prank Language'} />
+                                <TruncatedText text={'Prank Category'} />
+                                <TruncatedText text={'Premium'} />
+                                <TruncatedText text={'Safe'} />
+                                <TruncatedText text={'Trending'} />
+                                <TruncatedText text={'Actions'} />
                             </tr>
                         </thead>
                         <tbody>
                             {currentItems && currentItems.length > 0 ? (
                                 currentItems.map((gallery, index) => (
-                                    <tr key={gallery._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <tr key={gallery._id}>
                                         <td>{indexOfFirstItem + index + 1}</td>
                                         <td>{gallery.GalleryName}</td>
                                         <td className='d-flex2 p-2'>
@@ -959,17 +977,18 @@ const Gallery = () => {
                                             </button>
                                         </td>
                                         <td>
-                                            <button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(gallery._id, gallery.Safe)}>
+                                            <button className='bg-transparent edit-dlt-btn fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(gallery._id, gallery.Safe)}>
                                                 <FontAwesomeIcon icon={gallery.Safe ? faEye : faEyeSlash} />
                                             </button>
                                         </td>
                                         <td>
-                                            <FontAwesomeIcon
-                                                icon={gallery.trending ? faArrowTrendUp : faArrowTrendDown}
-                                                title={gallery.trending ? "up" : "down"}
-                                                className='fs-5'
-                                                style={{ color: gallery.trending ? 'green' : 'red' }}
-                                            />
+                                            <div className='edit-dlt-btn2'>
+                                                <FontAwesomeIcon
+                                                    icon={gallery.trending ? faArrowTrendUp : faArrowTrendDown}
+                                                    title={gallery.trending ? "up" : "down"}
+                                                    style={{ color: gallery.trending ? 'green' : 'red' }}
+                                                />
+                                            </div>
                                         </td>
                                         <td>
                                             <button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(gallery)}>

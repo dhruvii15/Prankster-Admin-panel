@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Table, Pagination, Form, Modal, Row, Col, Dropdown } from 'react-bootstrap';
+import { Table, Pagination, Form, Modal, Row, Col, Dropdown, Button } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCheck, faTrash, faTimes, faChevronUp, faChevronDown, faDownload } from '@fortawesome/free-solid-svg-icons';
 import axios from 'axios';
@@ -7,6 +7,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import ImagePreviewModal from 'components/ImagePreviewModal';
 import { faCopy } from '@fortawesome/free-regular-svg-icons';
+import TruncatedText from 'components/TruncatedText';
 
 const UserCover = () => {
     const [loading, setLoading] = useState(true);
@@ -336,19 +337,19 @@ const UserCover = () => {
                 </div>
 
                 <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Cover Name</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Cover Image</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                                <TruncatedText text={'Id'} />
+                                <TruncatedText text={'Cover Name'} />
+                                <TruncatedText text={'Cover Image'} />
+                                <TruncatedText text={'Actions'} />
                             </tr>
                         </thead>
                         <tbody>
                             {currentItems && currentItems.length > 0 ? (
                                 currentItems.map((cover, index) => (
-                                    <tr key={cover._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <tr key={cover._id}>
                                         <td>{indexOfFirstItem + index + 1}</td>
                                         <td>{cover.CoverName}</td>
                                         <td>
@@ -370,31 +371,31 @@ const UserCover = () => {
                                         </td>
 
                                         <td>
-                                            <Button
+                                            <button
                                                 className="edit-dlt-btn"
                                                 onClick={() => handleDownload(cover.CoverURL)} // Pass your image URL here
                                             >
                                                 <FontAwesomeIcon icon={faDownload} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className="edit-dlt-btn text-black"
                                                 onClick={() => handleCopyToClipboard(cover.CoverURL)}
                                             >
                                                 <FontAwesomeIcon icon={faCopy} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className="edit-dlt-btn"
                                                 style={{ color: "#0385C3" }}
                                                 onClick={() => handleCheckClick(cover)}
                                             >
                                                 <FontAwesomeIcon icon={faCheck} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className="edit-dlt-btn text-danger"
                                                 onClick={() => handleDelete(cover._id)}
                                             >
                                                 <FontAwesomeIcon icon={faTrash} />
-                                            </Button>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))
@@ -458,13 +459,13 @@ const UserCover = () => {
                                     style={{ border: "1px solid #c1c1c1" }}
                                 >
                                     <span>{tag}</span>
-                                    <Button
+                                    <button
                                         variant="link"
-                                        className="p-0 ms-2"
+                                        className="p-0 ms-2 border-0"
                                         onClick={() => removeTag(tag)}
                                     >
                                         <FontAwesomeIcon icon={faTimes} className="text-danger" />
-                                    </Button>
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -479,14 +480,14 @@ const UserCover = () => {
                                 placeholder="Add custom tag"
                                 className={formErrors.tags ? "is-invalid" : ""}
                             />
-                            <Button
+                            <button
                                 style={{ backgroundColor: "#F9E238", color: "black" }}
                                 className="border-0 rounded-2 px-5"
                                 onClick={handleCustomTagAdd}
                                 disabled={!customTagName.trim() || selectedTags.length >= maxTags || selectedTags.includes(customTagName.trim())}
                             >
                                 Add
-                            </Button>
+                            </button>
                         </div>
 
                         {/* Tags List */}
@@ -499,7 +500,7 @@ const UserCover = () => {
                         >
                             <div className="d-flex flex-wrap gap-2 align-items-center">
                                 {visibleTags.map((tag, index) => (
-                                    <Button
+                                    <button
                                         key={index}
                                         onClick={() => handleTagSelect(tag)}
                                         disabled={selectedTags.includes(tag) || selectedTags.length >= maxTags}
@@ -513,10 +514,10 @@ const UserCover = () => {
                                         }}
                                     >
                                         {tag}
-                                    </Button>
+                                    </button>
                                 ))}
 
-                                {/* Toggle Expand Button */}
+                                {/* Toggle Expand button */}
                                 {totalTags > 7 && !isExpanded && (
                                     <span
                                         style={{ marginLeft: "8px", fontWeight: "bold", cursor: "pointer" }}
@@ -533,7 +534,7 @@ const UserCover = () => {
                                 )}
 
                                 {totalTags > 7 && (
-                                    <Button
+                                    <button
                                         onClick={toggleExpand}
                                         className="py-1 px-2 ms-auto"
                                         onKeyDown={(e) => {
@@ -552,7 +553,7 @@ const UserCover = () => {
                                         ) : (
                                             <FontAwesomeIcon icon={faChevronDown} />
                                         )}
-                                    </Button>
+                                    </button>
                                 )}
                             </div>
                         </div>

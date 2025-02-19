@@ -12,6 +12,7 @@ import ImagePreviewModal from 'components/ImagePreviewModal';
 
 // img
 import filter from "../../assets/images/filter.png"
+import TruncatedText from 'components/TruncatedText';
 
 
 const Audio = () => {
@@ -82,7 +83,7 @@ const Audio = () => {
     const getAdminData = () => {
         axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
-                setIsOn(res.data.data[0].AudioSafe);
+                // setIsOn(res.data.data[0].AudioSafe);
                 setAdminId(res.data.data[0]._id);
             })
             .catch((err) => {
@@ -561,54 +562,54 @@ const Audio = () => {
     };
 
     // Pagination logic
-        const [currentPage, setCurrentPage] = useState(1);
-        const [itemsPerPage, setItemsPerPage] = useState(10);
-        const itemsPerPageOptions = [10, 25, 50, 100];
-    
-        const handleItemsPerPageChange = (value) => {
-            setItemsPerPage(value);
-            setCurrentPage(1); // Reset to first page when changing items per page
-        };
-    
-        // Calculate pagination values
-        const totalItems = filteredData.length;
-        const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
-        const endItem = Math.min(currentPage * itemsPerPage, totalItems);
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-        const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
-    
-        // Handle page changes
-        const paginate = (pageNumber) => {
-            setCurrentPage(pageNumber);
-        };
-    
-        // Render pagination controls
-        const renderPaginationItems = () => {
-            let items = [];
-            const totalPagesToShow = 4;
-    
-            let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
-            let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
-    
-            if (endPage - startPage < totalPagesToShow - 1) {
-                startPage = Math.max(1, endPage - totalPagesToShow + 1);
-            }
-    
-            for (let i = startPage; i <= endPage; i++) {
-                items.push(
-                    <Pagination.Item
-                        key={i}
-                        active={i === currentPage}
-                        onClick={() => paginate(i)}
-                    >
-                        {i}
-                    </Pagination.Item>
-                );
-            }
-    
-            return items;
-        };
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
+    const itemsPerPageOptions = [10, 25, 50, 100];
+
+    const handleItemsPerPageChange = (value) => {
+        setItemsPerPage(value);
+        setCurrentPage(1); // Reset to first page when changing items per page
+    };
+
+    // Calculate pagination values
+    const totalItems = filteredData.length;
+    const startItem = totalItems === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+    const endItem = Math.min(currentPage * itemsPerPage, totalItems);
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const currentItems = filteredData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+    const indexOfFirstItem = (currentPage - 1) * itemsPerPage;
+
+    // Handle page changes
+    const paginate = (pageNumber) => {
+        setCurrentPage(pageNumber);
+    };
+
+    // Render pagination controls
+    const renderPaginationItems = () => {
+        let items = [];
+        const totalPagesToShow = 4;
+
+        let startPage = Math.max(1, currentPage - Math.floor(totalPagesToShow / 2));
+        let endPage = Math.min(totalPages, startPage + totalPagesToShow - 1);
+
+        if (endPage - startPage < totalPagesToShow - 1) {
+            startPage = Math.max(1, endPage - totalPagesToShow + 1);
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            items.push(
+                <Pagination.Item
+                    key={i}
+                    active={i === currentPage}
+                    onClick={() => paginate(i)}
+                >
+                    {i}
+                </Pagination.Item>
+            );
+        }
+
+        return items;
+    };
 
     const handleCopyToClipboard = (audio) => {
         navigator.clipboard.writeText(audio)
@@ -785,6 +786,13 @@ const Audio = () => {
         </div>
     );
 
+    const clearAllFilters = () => {
+        setSelectedLanguage('');
+        setSelectedCategory('');
+        setActiveTab2('Free'); // Reset to default 'Free' state
+        setCurrentPage(1); // Reset to first page
+    };
+
     return (
         <div>
             <div className='d-sm-flex justify-content-between align-items-center'>
@@ -806,9 +814,19 @@ const Audio = () => {
                     </Form>
                 </div>
             </div>
-           
+
             <div className='bg-white mt-3' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
-                <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                <div className='d-flex align-items-center justify-content-between'>
+                    <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                    <Button
+                        onClick={clearAllFilters}
+                        variant="outline-secondary"
+                        className="d-flex align-items-center gap-2 py-1 border-0 bg-transparent text-secondary"
+                        style={{ fontSize: "14px" }}
+                    >
+                        CLEAR ALL
+                    </Button>
+                </div>
                 <div className='d-flex flex-wrap align-items-center justify-content-between pb-2 px-4'>
                     {/* Language Filter */}
                     <div className="d-flex align-items-center gap-2 my-2">
@@ -950,7 +968,7 @@ const Audio = () => {
                 </div>
 
 
-                <div className='d-flex justify-content-between align-items-center px-4 py-3' style={{ borderBottom: "1px solid #E4E6E8", borderTop: "1px solid #E4E6E8" }}>
+                <div className='d-flex justify-content-between align-items-center px-4 py-3' style={{ borderTop: "1px solid #E4E6E8" }}>
                     <div className='d-flex align-items-center gap-2'>
                         <span>Show</span>
                         <Dropdown>
@@ -990,27 +1008,27 @@ const Audio = () => {
                     </Button>
                 </div>
 
-                <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                <div className="table-responsive px-4 pt-4">
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Audio Prank Name</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Artist Name</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Audio Prank Image</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Audio Prank File</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Prank Language</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Prank Category</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Premium</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Safe</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Trending</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                                    <TruncatedText text={'id'} />
+                                    <TruncatedText text={'Audio Prank Name'} />
+                                    <TruncatedText text={'Artist Name'} />
+                                    <TruncatedText text={'Audio Prank Image'} />
+                                    <TruncatedText text={'Audio Prank File'} />
+                                    <TruncatedText text={'Prank Language'} />
+                                    <TruncatedText text={'Prank Category'} />
+                                    <TruncatedText text={'Premium'} />
+                                    <TruncatedText text={'Safe'} />
+                                    <TruncatedText text={'Trending'} />
+                                    <TruncatedText text={'Actions'} />
                             </tr>
                         </thead>
                         <tbody>
                             {currentItems && currentItems.length > 0 ? (
                                 currentItems.map((audio, index) => (
-                                    <tr key={audio._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <tr key={audio._id}>
                                         <td>{indexOfFirstItem + index + 1}</td>
                                         <td>{audio.AudioName}</td>
                                         <td>{audio.ArtistName}</td>
@@ -1031,12 +1049,12 @@ const Audio = () => {
                                                         style={{ width: '50px', height: '50px' }}
                                                     />
                                                 </button>
-                                                <Button
+                                                <button
                                                     className="edit-dlt-btn text-black"
                                                     onClick={() => handleCopyToClipboard(audio.AudioImage)} // Use an arrow function to pass the parameter
                                                 >
                                                     <FontAwesomeIcon icon={faCopy} />
-                                                </Button>
+                                                </button>
                                             </div>
                                         </td>
                                         <td >
@@ -1053,12 +1071,12 @@ const Audio = () => {
                                                     Your browser does not support the audio element.
                                                 </audio>
 
-                                                <Button
+                                                <button
                                                     className="edit-dlt-btn text-black"
                                                     onClick={() => handleCopyToClipboard(audio.Audio)} // Use an arrow function to pass the parameter
                                                 >
                                                     <FontAwesomeIcon icon={faCopy} />
-                                                </Button>
+                                                </button>
                                             </div>
                                         </td>
                                         <td>{getLanguageName(audio.LanguageId)}</td>
@@ -1076,24 +1094,25 @@ const Audio = () => {
                                             </Button>
                                         </td>
                                         <td>
-                                            <Button className='bg-transparent border-0 fs-5' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(audio._id, audio.Safe)}>
+                                            <button className='bg-transparent edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleSafeToggle(audio._id, audio.Safe)}>
                                                 <FontAwesomeIcon icon={audio.Safe ? faEye : faEyeSlash} />
-                                            </Button></td>
+                                            </button></td>
                                         <td>
-                                            <FontAwesomeIcon
-                                                icon={audio.trending ? faArrowTrendUp : faArrowTrendDown}
-                                                title={audio.trending ? "up" : "down"}
-                                                className='fs-5'
-                                                style={{ color: audio.trending ? 'green' : 'red' }}
-                                            />
+                                            <div className='edit-dlt-btn2'>
+                                                <FontAwesomeIcon
+                                                    icon={audio.trending ? faArrowTrendUp : faArrowTrendDown}
+                                                    title={audio.trending ? "up" : "down"}
+                                                    style={{ color: audio.trending ? 'green' : 'red' }}
+                                                />
+                                            </div>
                                         </td>
                                         <td>
-                                            <Button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
+                                            <button className='edit-dlt-btn' style={{ color: "#0385C3" }} onClick={() => handleEdit(audio)}>
                                                 <FontAwesomeIcon icon={faEdit} />
-                                            </Button>
-                                            <Button className='edit-dlt-btn text-danger' onClick={() => handleDelete(audio._id)}>
+                                            </button>
+                                            <button className='edit-dlt-btn text-danger' onClick={() => handleDelete(audio._id)}>
                                                 <FontAwesomeIcon icon={faTrash} />
-                                            </Button>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))

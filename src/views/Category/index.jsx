@@ -35,39 +35,41 @@ const Category = () => {
             </div>
 
 
-            <Table striped bordered hover responsive className='text-center fs-6 mt-5'>
-                <thead>
-                    <tr>
-                        <th>Id</th>
-                        <th>Prank Language</th>
-                        <th>Prank Category Name</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {language && language.length > 0 ? (
-                        language.map((cardBg, index) => (
-                            <tr key={index} className={index % 2 === 1 ? 'bg-light2' : ''}>
-                                <td>{index + 1}</td>
-                                <td>{cardBg.LanguageName}</td>
-                                <td>
-                                    {data && data.length > 0 ? (
-                                        data.map((cardBg, index) => (
-                                            <p key={index}>{cardBg.CategoryName}</p>
-                                        ))
-                                    ) : (
-                                        
-                                            <p>No Data Found</p>
-                                    )}
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
+            <div className="table-responsive py-4">
+                <Table bordered className='text-center fs-6 w-100 bg-white rounded-3'>
+                    <thead>
                         <tr>
-                            <td colSpan={5} className="text-center">No Data Found</td>
+                            <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
+                            <td className='py-4' style={{ fontWeight: "600" }}>Prank Language</td>
+                            <td className='py-4' style={{ fontWeight: "600" }}>Prank Category Name</td>
                         </tr>
-                    )}
-                </tbody>
-            </Table>
+                    </thead>
+                    <tbody>
+                        {language && language.length > 0 ? (
+                            language.map((cardBg, index) => (
+                                <tr key={index}>
+                                    <td>{index + 1}</td>
+                                    <td>{cardBg.LanguageName}</td>
+                                    <td>
+                                        {data && data.length > 0 ? (
+                                            data.map((cardBg, index) => (
+                                                <p key={index}>{cardBg.CategoryName}</p>
+                                            ))
+                                        ) : (
+
+                                            <p>No Data Found</p>
+                                        )}
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan={5} className="text-center">No Data Found</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </Table>
+            </div>
 
         </div>
     );

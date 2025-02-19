@@ -192,7 +192,7 @@ const PushNotification = () => {
                 <div className='d-flex flex-wrap justify-content-between align-items-center'>
                     <p className='fs-5 px-4'>Search Filters</p>
                 </div>
-                <div className='d-flex align-items-center justify-content-between px-4' style={{ borderBottom: "1px solid #E4E6E8" , borderTop: "1px solid #E4E6E8" }}>
+                <div className='d-flex align-items-center justify-content-between px-4' style={{borderTop: "1px solid #E4E6E8" }}>
 
                     <div className='d-flex align-items-center gap-2'>
                         <span>Show</span>
@@ -233,8 +233,8 @@ const PushNotification = () => {
                 </div>
 
 
-                <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                <div className="table-responsive px-4 pt-4">
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
                                 <td className='py-4' style={{ fontWeight: "600" }}>Index</td>
@@ -247,7 +247,6 @@ const PushNotification = () => {
                                 currentItems.map((notification, index) => (
                                     <tr
                                         key={notification._id}
-                                        style={{ borderTop: "1px solid #E4E6E8" }}
                                     >
                                         <td>{indexOfFirstItem + index + 1}</td>
                                         <td>{notification.Title}</td>

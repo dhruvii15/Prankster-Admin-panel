@@ -13,6 +13,7 @@ import ImagePreviewModal from 'components/ImagePreviewModal';
 
 // img
 import filter from "../../assets/images/filter.png"
+import TruncatedText from 'components/TruncatedText';
 
 
 const CoverURL = () => {
@@ -50,6 +51,11 @@ const CoverURL = () => {
     const [suggestions, setSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const searchContainerRef = useRef(null);
+
+    const clearAllFilters = () => {
+        setActiveTab('Free'); // Reset to default 'Free' state
+        setCurrentPage(1); // Reset to first page
+    };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -351,7 +357,6 @@ const CoverURL = () => {
     const getAdminData = () => {
         axios.get('https://pslink.world/api/admin/read')
             .then((res) => {
-                setIsOn(res.data.data[0].CoverSafe);
                 setAdminId(res.data.data[0]._id);
             })
             .catch((err) => {
@@ -723,9 +728,19 @@ const CoverURL = () => {
 
             {/* =========================================================== */}
             <div className='bg-white mt-3' style={{ borderRadius: "10px", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
-            <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                <div className='d-flex align-items-center justify-content-between'>
+                    <p className='fs-5 pt-4 px-4'>Search Filters</p>
+                    <Button
+                        onClick={clearAllFilters}
+                        variant="outline-secondary"
+                        className="d-flex align-items-center gap-2 py-1 border-0 bg-transparent text-secondary"
+                        style={{ fontSize: "14px" }}
+                    >
+                        CLEAR ALL
+                    </Button>
+                </div>
                 <div className="d-flex justify-content-between align-items-center mt-3 flex-wrap px-4">
-                <div className='d-flex align-items-center gap-2'>
+                    <div className='d-flex align-items-center gap-2'>
                         <span>Show</span>
                         <Dropdown>
                             <Dropdown.Toggle
@@ -799,80 +814,80 @@ const CoverURL = () => {
                         </div>
 
                         <div className="d-flex align-items-center gap-2 my-2">
-                        <Dropdown>
-                            <Dropdown.Toggle
-                                variant="light"
-                                id="access-dropdown"
-                                className="bg-white border rounded-3 d-flex align-items-center justify-content-between"
-                                style={{ minWidth: "320px" , padding:"9px 10px"}}
-                                bsPrefix="d-flex align-items-center justify-content-between"
-                            >
-                                <div className="d-flex align-items-center">
-                                    <img src={filter} alt="filter" width={18} className="me-2" />
-                                    {activeTab === '' ? 'All Access Types' : activeTab}
-                                </div>
-                                <FontAwesomeIcon icon={faChevronDown} />
-                            </Dropdown.Toggle>
-
-                            <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
-                                <Dropdown.Item
-                                    onClick={() => setActiveTab('')}
-                                    active={activeTab === ''}
-                                    className="custom-dropdown-item"
+                            <Dropdown>
+                                <Dropdown.Toggle
+                                    variant="light"
+                                    id="access-dropdown"
+                                    className="bg-white border rounded-3 d-flex align-items-center justify-content-between"
+                                    style={{ minWidth: "320px", padding: "9px 10px" }}
+                                    bsPrefix="d-flex align-items-center justify-content-between"
                                 >
-                                    <input type="checkbox" checked={activeTab === ''} readOnly className="me-2" />
-                                    All Access Types
-                                </Dropdown.Item>
-                                {accessTypes.map((type) => (
+                                    <div className="d-flex align-items-center">
+                                        <img src={filter} alt="filter" width={18} className="me-2" />
+                                        {activeTab === '' ? 'All Access Types' : activeTab}
+                                    </div>
+                                    <FontAwesomeIcon icon={faChevronDown} />
+                                </Dropdown.Toggle>
+
+                                <Dropdown.Menu className="w-100 custom-dropdown-menu overflow-hidden" style={{ boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}>
                                     <Dropdown.Item
-                                        key={type.id}
-                                        onClick={() => setActiveTab(type.id)}
-                                        active={activeTab === type.id}
-                                        className="custom-dropdown-item mt-1"
+                                        onClick={() => setActiveTab('')}
+                                        active={activeTab === ''}
+                                        className="custom-dropdown-item"
                                     >
-                                        <input
-                                            type="checkbox"
-                                            checked={activeTab === type.id}
-                                            readOnly
-                                            className="me-2"
-                                        />
-                                        {type.label}
+                                        <input type="checkbox" checked={activeTab === ''} readOnly className="me-2" />
+                                        All Access Types
                                     </Dropdown.Item>
-                                ))}
-                            </Dropdown.Menu>
-                        </Dropdown>
-                    </div>
+                                    {accessTypes.map((type) => (
+                                        <Dropdown.Item
+                                            key={type.id}
+                                            onClick={() => setActiveTab(type.id)}
+                                            active={activeTab === type.id}
+                                            className="custom-dropdown-item mt-1"
+                                        >
+                                            <input
+                                                type="checkbox"
+                                                checked={activeTab === type.id}
+                                                readOnly
+                                                className="me-2"
+                                            />
+                                            {type.label}
+                                        </Dropdown.Item>
+                                    ))}
+                                </Dropdown.Menu>
+                            </Dropdown>
+                        </div>
                     </div>
                 </div>
 
-                <div className='d-flex justify-content-end align-items-center px-4 py-3' style={{ borderBottom: "1px solid #E4E6E8", borderTop: "1px solid #E4E6E8" }}>
+                <div className='d-flex justify-content-end align-items-center px-4 py-3' style={{ borderTop: "1px solid #E4E6E8" }}>
                     <Button
                         onClick={() => toggleModal('add')}
                         className='rounded-3 border-0'
-                        style={{ backgroundColor: "#F9E238" ,boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}
+                        style={{ backgroundColor: "#F9E238", boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)" }}
                     >
                         Add CoverImage
                     </Button>
                 </div>
 
-                <div className="table-responsive px-4">
-                    <Table className='text-center fs-6 w-100 bg-white'>
+                <div className="table-responsive px-4 pt-4">
+                    <Table bordered className='text-center fs-6 w-100 bg-white'>
                         <thead>
                             <tr>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Id</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>CoverName</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Cover Image</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>TagName</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Premium</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Safe</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Trending</td>
-                                <td className='py-4' style={{ fontWeight: "600" }}>Actions</td>
+                                <TruncatedText text={'id'} />
+                                <TruncatedText text={'CoverName'} />
+                                <TruncatedText text={'Cover Image'} />
+                                <TruncatedText text={'TagName'} />
+                                <TruncatedText text={'Premium'} />
+                                <TruncatedText text={'Safe'} />
+                                <TruncatedText text={'Trending'} />
+                                <TruncatedText text={'Actions'} />
                             </tr>
                         </thead>
                         <tbody>
                             {currentItems && currentItems.length > 0 ? (
                                 currentItems.map((cover, index) => (
-                                    <tr key={cover._id} style={{ borderTop: "1px solid #E4E6E8" }}>
+                                    <tr key={cover._id}>
                                         <td>{(currentPage - 1) * itemsPerPage + index + 1}</td>
                                         <td>{cover.CoverName || 'No Name'}</td>
                                         <td className='d-flex2'>
@@ -899,12 +914,12 @@ const CoverURL = () => {
                                                 />
                                             </button>
 
-                                            <Button
+                                            <button
                                                 className="edit-dlt-btn text-black"
                                                 onClick={() => handleCopyToClipboard(cover)}
                                             >
                                                 <FontAwesomeIcon icon={faCopy} />
-                                            </Button>
+                                            </button>
                                         </td>
 
                                         <td>
@@ -923,8 +938,8 @@ const CoverURL = () => {
                                             </Button>
                                         </td>
                                         <td>
-                                            <Button
-                                                className="bg-transparent border-0 fs-5"
+                                            <button
+                                                className="bg-transparent edit-dlt-btn fs-5"
                                                 style={{ color: "#0385C3" }}
                                                 onClick={() => handleSafeToggle(cover._id, cover.Safe)}
                                             >
@@ -932,31 +947,32 @@ const CoverURL = () => {
                                                     icon={cover.Safe ? faEye : faEyeSlash}
                                                     title={cover.Safe ? "Hidden" : "Visible"}
                                                 />
-                                            </Button>
+                                            </button>
                                         </td>
                                         <td>
-                                            <FontAwesomeIcon
-                                                icon={cover.trending ? faArrowTrendUp : faArrowTrendDown}
-                                                title={cover.trending ? "up" : "down"}
-                                                className='fs-5'
-                                                style={{ color: cover.trending ? 'green' : 'red' }}
-                                            />
+                                            <div className='edit-dlt-btn2'>
+                                                <FontAwesomeIcon
+                                                    icon={cover.trending ? faArrowTrendUp : faArrowTrendDown}
+                                                    title={cover.trending ? "up" : "down"}
+                                                    style={{ color: cover.trending ? 'green' : 'red' }}
+                                                />
+                                            </div>
                                         </td>
                                         <td>
 
-                                            <Button
+                                            <button
                                                 className="edit-dlt-btn"
                                                 style={{ color: "#0385C3" }}
                                                 onClick={() => handleEdit(cover)}
                                             >
                                                 <FontAwesomeIcon icon={faEdit} />
-                                            </Button>
-                                            <Button
+                                            </button>
+                                            <button
                                                 className="edit-dlt-btn text-danger"
                                                 onClick={() => handleDelete(cover._id)}
                                             >
                                                 <FontAwesomeIcon icon={faTrash} />
-                                            </Button>
+                                            </button>
                                         </td>
                                     </tr>
                                 ))

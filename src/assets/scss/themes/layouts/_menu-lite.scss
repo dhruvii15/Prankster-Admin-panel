@@ -839,12 +839,12 @@
   }
 
   &.navbar-collapsed {
-    width: $Menu-collapsed-width;
+    width: 0;
     height: 100%;
     transition: all 0.15s ease-in-out;
 
     .header-logo {
-      width: $Menu-collapsed-width;
+      width: 0;
       padding: 10px 20px;
 
       img {
@@ -958,7 +958,7 @@
     }
 
     ~ .pcoded-main-container {
-      margin-left: $Menu-collapsed-width;
+      margin-left: 0;
     }
 
     .pcoded-badge {
